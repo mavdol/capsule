@@ -1,0 +1,9 @@
+[workflow]
+name = "hello-world"
+version = "0.1.0"
+entrypoint = "main.py"
+
+[resources]
+default_compute = "LOW"
+default_timeout = "5s"
+default_ram = "128MB"
