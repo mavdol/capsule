@@ -1,7 +1,7 @@
 import asyncio
 from capsule import task
 
-@task(name="greet", compute="LOW", ram="64MB", timeout="5s")
+@task(name="greet", compute="LOW", ram="64MB", timeout="5s", max_retries=2)
 def greet(name: str) -> str:
     """A simple greeting task running in isolation."""
     return f"Hello, {name}!"
@@ -12,7 +12,7 @@ def calculate(x: int, y: int) -> str:
     result = x + y
     return f"The answer is {result}"
 
-@task(name="format_message", compute="LOW", ram="64MB", timeout="5s")
+@task(name="format_message", compute="LOW", ram="64MB", timeout="5s", max_retries=1)
 def format_message(prefix: str, suffix: str) -> str:
     """A message formatting task."""
     return f"{prefix} to {suffix}"
