@@ -8,8 +8,8 @@
 
 > ⚠️ **Status**: Request for Comments (RFC) Capsule is currently in active research & development. The code in this repository represents the Architecture Design and API Specification.
 >
-> I am building the core Rust engine in public. 
-> 👉 **Subscribe to the [Engineering Log](https://substack.com/@capsuleruntime)** to follow the journey from design to v0.1.
+> I am building the core Rust engine in public.<br>
+> 👉 **Subscribe to the [Engineering Log](https://capsuleruntime.substack.com)** to follow the journey from design to v0.1.
 
 ## 🎯 What is Capsule?
 
@@ -86,15 +86,16 @@ Capsule bridges your language with the safety of Rust.
 - [ ] **CLI:** `capsule run main.py` with JIT compilation.
 - [ ] **Limits:** Basic Fuel metering for CPU protection.
 
-Check the full [roadmap](ROADMAP) for details.
+Check the full [Roadmap](ROADMAP.md) for details.
 
 ---
 
 ## 🤝 Contributing
 Capsule is not yet ready for code contributions, as the core engine is being scaffolded. However, I am looking for feedback on the API Design.
 
-- Does the Python syntax look idiomatic?
-- What feature from LangChain/CrewAI do you miss the most?
+- Does the Python syntax feel idiomatic?
+- What features from LangChain/CrewAI/Temporal would you want?
+- What isolation/monitoring capabilities matter most for your use case?
 
 Open an Issue to discuss
 
@@ -102,6 +103,8 @@ Open an Issue to discuss
 
 ## 📄 License
 
-This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache 2.0 License
+
+see the [LICENSE](LICENSE) file for details.
 
 ---
