@@ -4,7 +4,6 @@ use std::fmt;
 
 use crate::storage::database::{Database, DatabaseError};
 
-
 #[derive(Debug)]
 pub enum LogError {
     DatabaseError(String),
@@ -61,7 +60,6 @@ impl Log {
         })
     }
 }
-
 
 #[cfg(test)]
 mod tests {
