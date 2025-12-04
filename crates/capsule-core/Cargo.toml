@@ -1,0 +1,8 @@
+[package]
+name = "capsule-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rusqlite = "0.37.0"
+serde_json = "1.0.145"
