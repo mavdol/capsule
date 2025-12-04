@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use std::fmt;
 
-use crate::storage::database::{Database, DatabaseError};
+use crate::config::database::{Database, DatabaseError};
 
 #[derive(Debug)]
 pub enum LogError {
