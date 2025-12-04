@@ -1,7 +1,7 @@
 use rusqlite::{Connection, Error as SqliteError, Result as SqliteResult, Row};
 use std::fmt;
 use std::sync::{Arc, Mutex};
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Debug)]
 pub enum DatabaseError {
@@ -13,9 +13,9 @@ pub enum DatabaseError {
 impl fmt::Display for DatabaseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DatabaseError::SqliteError(msg) => write!(f, "SQLite error: {}", msg),
-            DatabaseError::FsError(msg) => write!(f, "File system error: {}", msg),
-            DatabaseError::InvalidQuery(msg) => write!(f, "Invalid query: {}", msg),
+            DatabaseError::SqliteError(msg) => write!(f, "SQLite error > {}", msg),
+            DatabaseError::FsError(msg) => write!(f, "File system error > {}", msg),
+            DatabaseError::InvalidQuery(msg) => write!(f, "Invalid query > {}", msg),
         }
     }
 }
@@ -46,13 +46,15 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new(path: Option<&PathBuf>, database_name: &str) -> Result<Self, DatabaseError> {
+    pub fn new(path: Option<&str>, database_name: &str) -> Result<Self, DatabaseError> {
         let conn = match path {
             Some(path) => {
-                std::fs::create_dir_all(&path)?;
+                let database_path = &format!("{}/{}", path, database_name);
+                if !Path::new(&database_path).exists() {
+                    std::fs::create_dir_all(&path)?;
+                }
 
-                let db_path = path.join(database_name);
-                Connection::open(&db_path)?
+                Connection::open(&database_path)?
             }
             None => Connection::open(":memory:")?,
         };
