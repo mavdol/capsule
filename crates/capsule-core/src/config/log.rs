@@ -142,14 +142,13 @@ impl Log {
         Ok(())
     }
 
-
     pub fn update_log(&self, log: UpdateInstanceLog) -> Result<(), LogError> {
         self.db.execute(
             "UPDATE instance_log SET state = ?, fuel_consumed = ? WHERE task_id = ?",
             [
                 &log.state.to_string(),
                 &log.fuel_consumed.to_string(),
-                &log.task_id.to_string()
+                &log.task_id.to_string(),
             ],
         )?;
 
@@ -189,14 +188,11 @@ impl Log {
     }
 
     pub fn delete_log(&self, task_id: &str) -> Result<(), LogError> {
-        self.db.execute(
-            "DELETE FROM instance_log WHERE task_id = ?",
-            [task_id],
-        )?;
+        self.db
+            .execute("DELETE FROM instance_log WHERE task_id = ?", [task_id])?;
 
         Ok(())
     }
-
 }
 
 #[cfg(test)]
@@ -296,28 +292,33 @@ mod tests {
                 ]).expect("Failed to insert test data");
             }
 
-            let _ = log.update_log(
-                UpdateInstanceLog {
-                    task_id: "test_task_123".to_string(),
-                    state: InstanceState::Running,
-                    fuel_consumed: 10,
-                }
-            );
+            let _ = log.update_log(UpdateInstanceLog {
+                task_id: "test_task_123".to_string(),
+                state: InstanceState::Running,
+                fuel_consumed: 10,
+            });
 
             let conn = log.db.conn.lock().unwrap();
 
             let state: String = conn
-                .query_row("SELECT state FROM instance_log WHERE task_id = 'test_task_123'", [], |row| row.get(0))
+                .query_row(
+                    "SELECT state FROM instance_log WHERE task_id = 'test_task_123'",
+                    [],
+                    |row| row.get(0),
+                )
                 .expect("Failed to query state");
 
             let fuel_consumed: i64 = conn
-                .query_row("SELECT fuel_consumed FROM instance_log WHERE task_id = 'test_task_123'", [], |row| row.get(0))
+                .query_row(
+                    "SELECT fuel_consumed FROM instance_log WHERE task_id = 'test_task_123'",
+                    [],
+                    |row| row.get(0),
+                )
                 .expect("Failed to query fuel_consumed");
 
             assert_eq!(state, "running", "State should be updated to running");
             assert_eq!(fuel_consumed, 10, "Fuel consumed should be updated to 10");
         }
-
     }
 
     mod queries {
@@ -387,25 +388,66 @@ mod tests {
 
             assert_eq!(logs.len(), 3, "Expected 3 logs for test_task_123");
 
-            assert_eq!(logs[0].state.to_string(), "completed", "First log should be completed");
-            assert_eq!(logs[0].fuel_consumed, 8500, "First log fuel_consumed should be 8500");
-            assert_eq!(logs[0].created_at, 3000, "First log created_at should be 3000");
+            assert_eq!(
+                logs[0].state.to_string(),
+                "completed",
+                "First log should be completed"
+            );
+            assert_eq!(
+                logs[0].fuel_consumed, 8500,
+                "First log fuel_consumed should be 8500"
+            );
+            assert_eq!(
+                logs[0].created_at, 3000,
+                "First log created_at should be 3000"
+            );
 
-            assert_eq!(logs[1].state.to_string(), "running", "Second log should be running");
-            assert_eq!(logs[1].fuel_consumed, 5000, "Second log fuel_consumed should be 5000");
-            assert_eq!(logs[1].created_at, 2000, "Second log created_at should be 2000");
+            assert_eq!(
+                logs[1].state.to_string(),
+                "running",
+                "Second log should be running"
+            );
+            assert_eq!(
+                logs[1].fuel_consumed, 5000,
+                "Second log fuel_consumed should be 5000"
+            );
+            assert_eq!(
+                logs[1].created_at, 2000,
+                "Second log created_at should be 2000"
+            );
 
-            assert_eq!(logs[2].state.to_string(), "created", "Third log should be created");
-            assert_eq!(logs[2].fuel_consumed, 0, "Third log fuel_consumed should be 0");
-            assert_eq!(logs[2].created_at, 1000, "Third log created_at should be 1000");
+            assert_eq!(
+                logs[2].state.to_string(),
+                "created",
+                "Third log should be created"
+            );
+            assert_eq!(
+                logs[2].fuel_consumed, 0,
+                "Third log fuel_consumed should be 0"
+            );
+            assert_eq!(
+                logs[2].created_at, 1000,
+                "Third log created_at should be 1000"
+            );
 
             for log_entry in &logs {
-                assert_eq!(log_entry.task_id, "test_task_123", "All logs should have task_id test_task_123");
-                assert_eq!(log_entry.agent_name, "test_agent", "All logs should have agent_name test_agent");
-                assert_eq!(log_entry.task_name, "Test Task", "All logs should have task_name Test Task");
+                assert_eq!(
+                    log_entry.task_id, "test_task_123",
+                    "All logs should have task_id test_task_123"
+                );
+                assert_eq!(
+                    log_entry.agent_name, "test_agent",
+                    "All logs should have agent_name test_agent"
+                );
+                assert_eq!(
+                    log_entry.task_name, "Test Task",
+                    "All logs should have task_name Test Task"
+                );
             }
 
-            let empty_logs = log.get_logs("non_existent_task").expect("Failed to get logs for non-existent task");
+            let empty_logs = log
+                .get_logs("non_existent_task")
+                .expect("Failed to get logs for non-existent task");
             assert_eq!(empty_logs.len(), 0, "Expected 0 logs for non-existent task");
         }
 
@@ -456,18 +498,44 @@ mod tests {
                 ]).expect("Failed to insert task to keep");
             }
 
-            let logs_before = log.get_logs("task_to_delete").expect("Failed to get logs before deletion");
-            assert_eq!(logs_before.len(), 2, "Expected 2 logs for task_to_delete before deletion");
+            let logs_before = log
+                .get_logs("task_to_delete")
+                .expect("Failed to get logs before deletion");
+            assert_eq!(
+                logs_before.len(),
+                2,
+                "Expected 2 logs for task_to_delete before deletion"
+            );
 
-            log.delete_log("task_to_delete").expect("Failed to delete logs");
+            log.delete_log("task_to_delete")
+                .expect("Failed to delete logs");
 
-            let logs_after = log.get_logs("task_to_delete").expect("Failed to get logs after deletion");
-            assert_eq!(logs_after.len(), 0, "Expected 0 logs for task_to_delete after deletion");
+            let logs_after = log
+                .get_logs("task_to_delete")
+                .expect("Failed to get logs after deletion");
+            assert_eq!(
+                logs_after.len(),
+                0,
+                "Expected 0 logs for task_to_delete after deletion"
+            );
 
-            let kept_logs = log.get_logs("task_to_keep").expect("Failed to get logs for task_to_keep");
-            assert_eq!(kept_logs.len(), 1, "Expected 1 log for task_to_keep to remain");
-            assert_eq!(kept_logs[0].task_id, "task_to_keep", "Kept log should have correct task_id");
-            assert_eq!(kept_logs[0].state.to_string(), "completed", "Kept log should have correct state");
+            let kept_logs = log
+                .get_logs("task_to_keep")
+                .expect("Failed to get logs for task_to_keep");
+            assert_eq!(
+                kept_logs.len(),
+                1,
+                "Expected 1 log for task_to_keep to remain"
+            );
+            assert_eq!(
+                kept_logs[0].task_id, "task_to_keep",
+                "Kept log should have correct task_id"
+            );
+            assert_eq!(
+                kept_logs[0].state.to_string(),
+                "completed",
+                "Kept log should have correct state"
+            );
         }
     }
 }
