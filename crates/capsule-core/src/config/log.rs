@@ -23,7 +23,7 @@ impl From<DatabaseError> for LogError {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum InstanceState {
     Created,
@@ -155,10 +155,10 @@ impl Log {
         Ok(())
     }
 
-    pub fn get_logs(&self, task_id: &str) -> Result<Vec<InstanceLog>, LogError> {
+    pub fn get_logs(&self) -> Result<Vec<InstanceLog>, LogError> {
         let logs = self.db.query(
-            "SELECT id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at FROM instance_log WHERE task_id = ? ORDER BY created_at DESC",
-            [task_id],
+            "SELECT id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at FROM instance_log ORDER BY created_at DESC",
+            [],
             |row| {
                 let id_str: String = row.get(0)?;
                 let state_str: String = row.get(5)?;
@@ -187,6 +187,18 @@ impl Log {
         Ok(logs)
     }
 
+    pub fn clear_logs(&self) -> Result<(), LogError> {
+        let logs = self.get_logs()?;
+
+        for log in logs {
+            if log.state != InstanceState::Completed && log.state != InstanceState::Running {
+                self.delete_log(&log.task_id)?;
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn delete_log(&self, task_id: &str) -> Result<(), LogError> {
         self.db
             .execute("DELETE FROM instance_log WHERE task_id = ?", [task_id])?;
@@ -199,7 +211,7 @@ impl Log {
 mod tests {
     use super::*;
 
-    mod creation {
+    mod execution {
         use super::*;
 
         #[test]
@@ -319,6 +331,108 @@ mod tests {
             assert_eq!(state, "running", "State should be updated to running");
             assert_eq!(fuel_consumed, 10, "Fuel consumed should be updated to 10");
         }
+
+        #[test]
+        fn test_delete_log() {
+            let log = Log::new(None, "state.db-wal").unwrap();
+
+            {
+                let conn = log.db.conn.lock().unwrap();
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &Uuid::new_v4().to_string(),
+                    "test_agent",
+                    "1.0.0",
+                    "task_to_delete",
+                    "Task To Delete",
+                    "created",
+                    "10000",
+                    "0",
+                    "1000",
+                    "1000",
+                ]).expect("Failed to insert first test log");
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &Uuid::new_v4().to_string(),
+                    "test_agent",
+                    "1.0.0",
+                    "task_to_delete",
+                    "Task To Delete",
+                    "running",
+                    "10000",
+                    "5000",
+                    "2000",
+                    "2000",
+                ]).expect("Failed to insert second test log");
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &Uuid::new_v4().to_string(),
+                    "other_agent",
+                    "2.0.0",
+                    "task_to_keep",
+                    "Task To Keep",
+                    "completed",
+                    "5000",
+                    "2500",
+                    "1500",
+                    "1500",
+                ]).expect("Failed to insert task to keep");
+            }
+
+            let conn = log.db.conn.lock().unwrap();
+
+            let count_before: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_to_delete'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("Failed to count logs before deletion");
+            assert_eq!(
+                count_before, 2,
+                "Expected 2 logs for task_to_delete before deletion"
+            );
+
+            drop(conn);
+
+            log.delete_log("task_to_delete")
+                .expect("Failed to delete logs");
+
+            let conn = log.db.conn.lock().unwrap();
+
+            let count_after: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_to_delete'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("Failed to count logs after deletion");
+            assert_eq!(
+                count_after, 0,
+                "Expected 0 logs for task_to_delete after deletion"
+            );
+
+            let count_kept: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_to_keep'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("Failed to count kept logs");
+            assert_eq!(count_kept, 1, "Expected 1 log for task_to_keep to remain");
+
+            let kept_state: String = conn
+                .query_row(
+                    "SELECT state FROM instance_log WHERE task_id = 'task_to_keep'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("Failed to query kept log state");
+            assert_eq!(
+                kept_state, "completed",
+                "Kept log should have correct state"
+            );
+        }
     }
 
     mod queries {
@@ -384,9 +498,10 @@ mod tests {
                 ]).expect("Failed to insert other task log");
             }
 
-            let logs = log.get_logs("test_task_123").expect("Failed to get logs");
+            let logs = log.get_logs().expect("Failed to get logs");
 
-            assert_eq!(logs.len(), 3, "Expected 3 logs for test_task_123");
+            // get_logs now returns ALL logs, so we expect 4 total (3 for test_task_123 + 1 for other_task_456)
+            assert_eq!(logs.len(), 4, "Expected 4 total logs");
 
             assert_eq!(
                 logs[0].state.to_string(),
@@ -417,42 +532,71 @@ mod tests {
             );
 
             assert_eq!(
+                logs[2].task_id, "other_task_456",
+                "Third log should be other_task_456"
+            );
+            assert_eq!(
                 logs[2].state.to_string(),
-                "created",
-                "Third log should be created"
+                "failed",
+                "Third log should be failed"
             );
             assert_eq!(
-                logs[2].fuel_consumed, 0,
-                "Third log fuel_consumed should be 0"
-            );
-            assert_eq!(
-                logs[2].created_at, 1000,
-                "Third log created_at should be 1000"
+                logs[2].created_at, 1500,
+                "Third log created_at should be 1500"
             );
 
-            for log_entry in &logs {
-                assert_eq!(
-                    log_entry.task_id, "test_task_123",
-                    "All logs should have task_id test_task_123"
-                );
+            assert_eq!(
+                logs[3].task_id, "test_task_123",
+                "Fourth log should be test_task_123"
+            );
+            assert_eq!(
+                logs[3].state.to_string(),
+                "created",
+                "Fourth log should be created"
+            );
+            assert_eq!(
+                logs[3].fuel_consumed, 0,
+                "Fourth log fuel_consumed should be 0"
+            );
+            assert_eq!(
+                logs[3].created_at, 1000,
+                "Fourth log created_at should be 1000"
+            );
+
+            let test_task_logs: Vec<_> = logs
+                .iter()
+                .filter(|l| l.task_id == "test_task_123")
+                .collect();
+            assert_eq!(test_task_logs.len(), 3, "Expected 3 logs for test_task_123");
+
+            for log_entry in test_task_logs {
                 assert_eq!(
                     log_entry.agent_name, "test_agent",
-                    "All logs should have agent_name test_agent"
+                    "test_task_123 logs should have agent_name test_agent"
                 );
                 assert_eq!(
                     log_entry.task_name, "Test Task",
-                    "All logs should have task_name Test Task"
+                    "test_task_123 logs should have task_name Test Task"
                 );
             }
 
-            let empty_logs = log
-                .get_logs("non_existent_task")
-                .expect("Failed to get logs for non-existent task");
-            assert_eq!(empty_logs.len(), 0, "Expected 0 logs for non-existent task");
+            let other_task_logs: Vec<_> = logs
+                .iter()
+                .filter(|l| l.task_id == "other_task_456")
+                .collect();
+            assert_eq!(
+                other_task_logs.len(),
+                1,
+                "Expected 1 log for other_task_456"
+            );
+            assert_eq!(
+                other_task_logs[0].agent_name, "other_agent",
+                "other_task_456 log should have agent_name other_agent"
+            );
         }
 
         #[test]
-        fn test_delete_log() {
+        fn test_clear_logs() {
             let log = Log::new(None, "state.db-wal").unwrap();
 
             {
@@ -462,80 +606,148 @@ mod tests {
                     &Uuid::new_v4().to_string(),
                     "test_agent",
                     "1.0.0",
-                    "task_to_delete",
-                    "Task To Delete",
+                    "task_created",
+                    "Task Created",
                     "created",
                     "10000",
                     "0",
                     "1000",
                     "1000",
-                ]).expect("Failed to insert first test log");
+                ]).expect("Failed to insert created log");
 
                 conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &Uuid::new_v4().to_string(),
                     "test_agent",
                     "1.0.0",
-                    "task_to_delete",
-                    "Task To Delete",
+                    "task_running",
+                    "Task Running",
                     "running",
                     "10000",
                     "5000",
                     "2000",
                     "2000",
-                ]).expect("Failed to insert second test log");
+                ]).expect("Failed to insert running log");
 
                 conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &Uuid::new_v4().to_string(),
-                    "other_agent",
-                    "2.0.0",
-                    "task_to_keep",
-                    "Task To Keep",
+                    "test_agent",
+                    "1.0.0",
+                    "task_completed",
+                    "Task Completed",
                     "completed",
+                    "10000",
+                    "8500",
+                    "3000",
+                    "3000",
+                ]).expect("Failed to insert completed log");
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &Uuid::new_v4().to_string(),
+                    "test_agent",
+                    "1.0.0",
+                    "task_failed",
+                    "Task Failed",
+                    "failed",
                     "5000",
                     "2500",
                     "1500",
                     "1500",
-                ]).expect("Failed to insert task to keep");
+                ]).expect("Failed to insert failed log");
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &Uuid::new_v4().to_string(),
+                    "test_agent",
+                    "1.0.0",
+                    "task_interrupted",
+                    "Task Interrupted",
+                    "interrupted",
+                    "7000",
+                    "3000",
+                    "2500",
+                    "2500",
+                ]).expect("Failed to insert interrupted log");
             }
 
-            let logs_before = log
-                .get_logs("task_to_delete")
-                .expect("Failed to get logs before deletion");
+            let conn = log.db.conn.lock().unwrap();
+
+            let count_before: i64 = conn
+                .query_row("SELECT COUNT(*) FROM instance_log", [], |row| row.get(0))
+                .expect("Failed to count logs before clear");
+            assert_eq!(count_before, 5, "Expected 5 logs before clear");
+
+            drop(conn);
+
+            log.clear_logs().expect("Failed to clear logs");
+
+            let conn = log.db.conn.lock().unwrap();
+
+            let count_after: i64 = conn
+                .query_row("SELECT COUNT(*) FROM instance_log", [], |row| row.get(0))
+                .expect("Failed to count logs after clear");
             assert_eq!(
-                logs_before.len(),
-                2,
-                "Expected 2 logs for task_to_delete before deletion"
+                count_after, 2,
+                "Expected 2 logs after clear (running and completed)"
             );
 
-            log.delete_log("task_to_delete")
-                .expect("Failed to delete logs");
+            let running_exists: bool = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_running'",
+                    [],
+                    |row| {
+                        let count: i64 = row.get(0)?;
+                        Ok(count > 0)
+                    },
+                )
+                .expect("Failed to check running log");
+            assert!(running_exists, "Running log should still exist");
 
-            let logs_after = log
-                .get_logs("task_to_delete")
-                .expect("Failed to get logs after deletion");
-            assert_eq!(
-                logs_after.len(),
-                0,
-                "Expected 0 logs for task_to_delete after deletion"
-            );
+            let completed_exists: bool = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_completed'",
+                    [],
+                    |row| {
+                        let count: i64 = row.get(0)?;
+                        Ok(count > 0)
+                    },
+                )
+                .expect("Failed to check completed log");
+            assert!(completed_exists, "Completed log should still exist");
 
-            let kept_logs = log
-                .get_logs("task_to_keep")
-                .expect("Failed to get logs for task_to_keep");
-            assert_eq!(
-                kept_logs.len(),
-                1,
-                "Expected 1 log for task_to_keep to remain"
-            );
-            assert_eq!(
-                kept_logs[0].task_id, "task_to_keep",
-                "Kept log should have correct task_id"
-            );
-            assert_eq!(
-                kept_logs[0].state.to_string(),
-                "completed",
-                "Kept log should have correct state"
-            );
+            let created_exists: bool = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_created'",
+                    [],
+                    |row| {
+                        let count: i64 = row.get(0)?;
+                        Ok(count > 0)
+                    },
+                )
+                .expect("Failed to check created log");
+            assert!(!created_exists, "Created log should be deleted");
+
+            let failed_exists: bool = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_failed'",
+                    [],
+                    |row| {
+                        let count: i64 = row.get(0)?;
+                        Ok(count > 0)
+                    },
+                )
+                .expect("Failed to check failed log");
+            assert!(!failed_exists, "Failed log should be deleted");
+
+            let interrupted_exists: bool = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM instance_log WHERE task_id = 'task_interrupted'",
+                    [],
+                    |row| {
+                        let count: i64 = row.get(0)?;
+                        Ok(count > 0)
+                    },
+                )
+                .expect("Failed to check interrupted log");
+            assert!(!interrupted_exists, "Interrupted log should be deleted");
         }
     }
 }
