@@ -1,13 +1,13 @@
-use rusqlite::{Connection, Error as SqliteError, Result as SqliteResult, Row};
+use rusqlite::{Connection, Error as SqliteError, Row};
 use std::fmt;
 use std::sync::{Arc, Mutex};
-use std::path::Path;
 
 #[derive(Debug)]
 pub enum DatabaseError {
     SqliteError(String),
     FsError(String),
     InvalidQuery(String),
+    LockError(String),
 }
 
 impl fmt::Display for DatabaseError {
@@ -16,6 +16,7 @@ impl fmt::Display for DatabaseError {
             DatabaseError::SqliteError(msg) => write!(f, "SQLite error > {}", msg),
             DatabaseError::FsError(msg) => write!(f, "File system error > {}", msg),
             DatabaseError::InvalidQuery(msg) => write!(f, "Invalid query > {}", msg),
+            DatabaseError::LockError(msg) => write!(f, "Lock error > {}", msg),
         }
     }
 }
@@ -27,6 +28,13 @@ impl From<SqliteError> for DatabaseError {
         DatabaseError::SqliteError(err.to_string())
     }
 }
+
+impl From<std::sync::PoisonError<std::sync::MutexGuard<'_, Connection>>> for DatabaseError {
+    fn from(err: std::sync::PoisonError<std::sync::MutexGuard<'_, Connection>>) -> Self {
+        DatabaseError::LockError(err.to_string())
+    }
+}
+
 
 impl From<serde_json::Error> for DatabaseError {
     fn from(err: serde_json::Error) -> Self {
@@ -50,9 +58,8 @@ impl Database {
         let conn = match path {
             Some(path) => {
                 let database_path = &format!("{}/{}", path, database_name);
-                if !Path::new(&database_path).exists() {
-                    std::fs::create_dir_all(&path)?;
-                }
+
+                std::fs::create_dir_all(&path)?;
 
                 Connection::open(&database_path)?
             }
@@ -77,10 +84,10 @@ impl Database {
         Ok(db)
     }
 
-    pub fn create_table(&self, table: &str, columns: &[&str], constraints: &[&str]) -> SqliteResult<()> {
+    pub fn create_table(&self, table: &str, columns: &[&str], constraints: &[&str]) -> Result<(), DatabaseError> {
         self.validate_table_name(table)?;
 
-        let conn = self.conn.lock().map_err(|_| SqliteError::InvalidQuery)?;
+        let conn = self.conn.lock()?;
 
         let mut all_columns = vec!["id INTEGER PRIMARY KEY AUTOINCREMENT"];
 
@@ -103,11 +110,11 @@ impl Database {
         Ok(())
     }
 
-    pub fn execute<P>(&self, query: &str, params: P) -> SqliteResult<usize>
+    pub fn execute<P>(&self, query: &str, params: P) -> Result<usize, DatabaseError>
     where
         P: rusqlite::Params,
     {
-        let conn = self.conn.lock().map_err(|_| SqliteError::InvalidQuery)?;
+        let conn = self.conn.lock()?;
 
         let result = conn.execute(query, params)?;
 
@@ -121,26 +128,24 @@ impl Database {
     {
         let conn = self
             .conn
-            .lock()
-            .map_err(|_| DatabaseError::SqliteError("Failed to acquire mutex lock".to_string()))?;
+            .lock()?;
 
         let mut stmt = conn
-            .prepare(query)
-            .map_err(|e| DatabaseError::SqliteError(e.to_string()))?;
+            .prepare(query)?;
 
         let rows = stmt.query_map(params, |row| mapper(row).map_err(|_| SqliteError::InvalidQuery))?;
 
         let mut results = Vec::new();
         for row in rows {
-            let value = row.map_err(|e| DatabaseError::SqliteError(e.to_string()))?;
+            let value = row?;
             results.push(value);
         }
 
         Ok(results)
     }
 
-    pub fn table_exists(&self, table: &str) -> SqliteResult<bool> {
-        let conn = self.conn.lock().map_err(|_| SqliteError::InvalidQuery)?;
+    pub fn table_exists(&self, table: &str) -> Result<bool, DatabaseError> {
+        let conn = self.conn.lock()?;
 
         let count: i64 = conn.query_row(
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?",
@@ -151,22 +156,22 @@ impl Database {
         Ok(count > 0)
     }
 
-    pub fn validate_table_name(&self, table: &str) -> SqliteResult<()> {
+    pub fn validate_table_name(&self, table: &str) -> Result<(), DatabaseError> {
         if table.is_empty() || table.len() > 64 {
-            return Err(SqliteError::InvalidParameterName(
+            return Err(DatabaseError::InvalidQuery(
                 "Table name must be between 1-64 characters".to_string(),
             ));
         }
 
         if !table.chars().all(|c| c.is_alphanumeric() || c == '_') {
-            return Err(SqliteError::InvalidParameterName(format!(
+            return Err(DatabaseError::InvalidQuery(format!(
                 "Table name can only contain alphanumeric characters and underscores for {}",
                 table
             )));
         }
 
         if table.chars().next().unwrap().is_numeric() {
-            return Err(SqliteError::InvalidParameterName(
+            return Err(DatabaseError::InvalidQuery(
                 "Table name cannot start with a number".to_string(),
             ));
         }
@@ -344,7 +349,7 @@ mod tests {
         fn test_validate_table_name() {
             let db = Database::new(None, "state.db-wal").expect("Failed to create database");
 
-            let test_simple_name: Result<(), rusqlite::Error> = db.validate_table_name("test_table");
+            let test_simple_name = db.validate_table_name("test_table");
             assert!(test_simple_name.is_ok(), "Failed to validate table name");
 
             let test_start_by_number = db.validate_table_name("123test_table");
