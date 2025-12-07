@@ -219,12 +219,12 @@ name = "capsule-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "nanoid",
  "rusqlite",
  "rustfmt",
  "serde",
  "serde_json",
  "tokio",
- "uuid",
  "wasmtime",
  "wasmtime-wasi",
 ]
@@ -1206,6 +1206,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "nanoid"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ffa00dec017b5b1a8b7cf5e2c008bfda1aa7e0697ac1508b491fdf2622fb4d8"
+dependencies = [
+ "rand 0.8.5",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1576,7 +1585,6 @@ dependencies = [
  "hashlink",
  "libsqlite3-sys",
  "smallvec",
- "uuid",
 ]
 
 [[package]]
@@ -2177,9 +2185,7 @@ version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2e054861b4bd027cd373e18e8d8d8e6548085000e41290d95ce0c373a654b4a"
 dependencies = [
- "getrandom 0.3.4",
  "js-sys",
- "serde_core",
  "wasm-bindgen",
 ]
 

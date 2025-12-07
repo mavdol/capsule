@@ -1,20 +1,22 @@
-use wasmtime::component::{Component, Linker, ResourceTable};
+use nanoid::nanoid;
+
+use wasmtime::component::{Component, Linker, ResourceTable, Instance};
 use wasmtime::{Store, StoreLimitsBuilder};
 use wasmtime_wasi::WasiCtxBuilder;
 use wasmtime_wasi::p2::add_to_linker_async;
 
-use crate::config::log::{CreateInstanceLog, InstanceState};
+use crate::config::log::{CreateInstanceLog, InstanceState, UpdateInstanceLog};
 use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
 use crate::wasm::state::WasmState;
 
 pub struct CreateInstance {
-    policy: ExecutionPolicy,
-    args: Vec<String>,
-    task_id: String,
-    task_name: String,
-    agent_name: String,
-    agent_version: String,
+    pub policy: ExecutionPolicy,
+    pub args: Vec<String>,
+    pub task_id: String,
+    pub task_name: String,
+    pub agent_name: String,
+    pub agent_version: String,
 }
 
 impl CreateInstance {
@@ -22,16 +24,11 @@ impl CreateInstance {
         Self {
             policy,
             args,
-            task_id: "default_task".to_string(),
+            task_id: nanoid!(10),
             task_name: "default_task_name".to_string(),
             agent_name: "default_agent".to_string(),
             agent_version: "0.0.0".to_string(),
         }
-    }
-
-    pub fn task_id(mut self, task_id: impl Into<String>) -> Self {
-        self.task_id = task_id.into();
-        self
     }
 
     pub fn task_name(mut self, task_name: impl Into<String>) -> Self {
@@ -51,9 +48,9 @@ impl CreateInstance {
 }
 
 impl RuntimeCommand for CreateInstance {
-    type Output = bool;
+    type Output = (Store<WasmState>, Instance);
 
-    async fn execute(self, runtime: &Runtime) -> Result<bool, WasmRuntimeError> {
+    async fn execute(self, runtime: &Runtime) -> Result<(Store<WasmState>, Instance), WasmRuntimeError> {
         runtime
             .log
             .commit_log(CreateInstanceLog {
@@ -100,12 +97,21 @@ impl RuntimeCommand for CreateInstance {
 
         let component = Component::from_file(&runtime.engine, ".capsule/capsule.wasm")?;
 
-        let instance = linker.instantiate_async(&mut store, &component).await?;
+        let instance = match linker.instantiate_async(&mut store, &component).await {
+            Ok(instance) => instance,
+            Err(e) => {
+                runtime
+                    .log
+                    .update_log(UpdateInstanceLog {
+                        task_id: self.task_id,
+                        state: InstanceState::Failed,
+                        fuel_consumed: 0,
+                    })
+                    .await?;
+                return Err(WasmRuntimeError::WasmtimeError(e));
+            }
+        };
 
-        let run_func = instance.get_typed_func::<(), ()>(&mut store, "wasi:cli/run@0.2.9#run")?;
-
-        run_func.call_async(&mut store, ()).await?;
-
-        Ok(true)
+        Ok((store, instance))
     }
 }
