@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::sync::mpsc;
+use std::thread::{Builder, JoinHandle};
+use tokio::sync::oneshot;
 use uuid::Uuid;
 
 use crate::config::database::{Database, DatabaseError};
@@ -7,12 +10,16 @@ use crate::config::database::{Database, DatabaseError};
 #[derive(Debug)]
 pub enum LogError {
     DatabaseError(String),
+    WalLoggerDied(String),
+    LogResponseLost(String),
 }
 
 impl fmt::Display for LogError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LogError::DatabaseError(msg) => write!(f, "Log error > {}", msg),
+            LogError::WalLoggerDied(msg) => write!(f, "Log error > WAL logger died > {}", msg),
+            LogError::LogResponseLost(msg) => write!(f, "Log error > Log response lost > {}", msg),
         }
     }
 }
@@ -20,6 +27,17 @@ impl fmt::Display for LogError {
 impl From<DatabaseError> for LogError {
     fn from(err: DatabaseError) -> Self {
         LogError::DatabaseError(err.to_string())
+    }
+}
+impl From<mpsc::SendError<LogCommand>> for LogError {
+    fn from(err: mpsc::SendError<LogCommand>) -> Self {
+        LogError::WalLoggerDied(err.to_string())
+    }
+}
+
+impl From<oneshot::error::RecvError> for LogError {
+    fn from(err: oneshot::error::RecvError) -> Self {
+        LogError::LogResponseLost(err.to_string())
     }
 }
 
@@ -78,15 +96,41 @@ pub struct UpdateInstanceLog {
     pub fuel_consumed: u64,
 }
 
-#[derive(Clone)]
+enum LogCommand {
+    Create {
+        log: CreateInstanceLog,
+        response: tokio::sync::oneshot::Sender<Result<(), LogError>>,
+    },
+
+    Update {
+        log: UpdateInstanceLog,
+        response: tokio::sync::oneshot::Sender<Result<(), LogError>>,
+    },
+}
+
+#[derive()]
 pub struct Log {
     pub db: Database,
+    log_tx: mpsc::Sender<LogCommand>,
+    _log_handle: JoinHandle<()>,
 }
 
 impl Log {
     pub fn new(path: Option<&str>, database_name: &str) -> Result<Self, LogError> {
         let db = Database::new(path, database_name)?;
 
+        Self::ensure_schema(&db)?;
+
+        let (log_tx, log_handle) = Self::spawn_wal_worker(db.clone());
+
+        Ok(Self {
+            db,
+            log_tx,
+            _log_handle: log_handle,
+        })
+    }
+
+    fn ensure_schema(db: &Database) -> Result<(), LogError> {
         let table_exists = db.table_exists("instance_log")?;
 
         if !table_exists {
@@ -115,14 +159,39 @@ impl Log {
             )?;
         }
 
-        Ok(Self { db })
+        Ok(())
     }
 
-    pub fn commit_log<F>(&self, log: CreateInstanceLog, on_commit: F) -> Result<(), LogError>
-    where
-        F: FnOnce(Result<(), LogError>) + Send + 'static,
-    {
-        match self.db.execute(
+    fn spawn_wal_worker(db: Database) -> (mpsc::Sender<LogCommand>, JoinHandle<()>) {
+        let (tx, rx) = mpsc::channel();
+
+        let handle = Builder::new()
+            .name("wal-logger".to_string())
+            .spawn(move || {
+                Self::wal_worker_loop(db, rx);
+            })
+            .expect("Failed to spawn WAL logger thread");
+
+        (tx, handle)
+    }
+
+    fn wal_worker_loop(db: Database, rx: mpsc::Receiver<LogCommand>) {
+        while let Ok(cmd) = rx.recv() {
+            match cmd {
+                LogCommand::Create { log, response } => {
+                    let result = Self::execute_create(&db, log);
+                    let _ = response.send(result);
+                }
+                LogCommand::Update { log, response } => {
+                    let result = Self::execute_update(&db, log);
+                    let _ = response.send(result);
+                }
+            }
+        }
+    }
+
+    fn execute_create(db: &Database, log: CreateInstanceLog) -> Result<(), LogError> {
+        db.execute(
             "INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 &Uuid::new_v4().to_string(),
@@ -132,27 +201,40 @@ impl Log {
                 &log.task_name,
                 &log.state.to_string(),
                 &log.fuel_limit.to_string(),
-                &log.fuel_consumed.to_string()
-            ],
-        ) {
-            Ok(_) => on_commit(Ok(())),
-            Err(e) => on_commit(Err(LogError::DatabaseError(e.to_string()))),
-        }
-
-        Ok(())
-    }
-
-    pub fn update_log(&self, log: UpdateInstanceLog) -> Result<(), LogError> {
-        self.db.execute(
-            "UPDATE instance_log SET state = ?, fuel_consumed = ? WHERE task_id = ?",
-            [
-                &log.state.to_string(),
                 &log.fuel_consumed.to_string(),
-                &log.task_id.to_string(),
             ],
         )?;
 
         Ok(())
+    }
+
+    fn execute_update(db: &Database, log: UpdateInstanceLog) -> Result<(), LogError> {
+        db.execute(
+            "UPDATE instance_log SET state = ?, fuel_consumed = ? WHERE task_id = ?",
+            [
+                &log.state.to_string(),
+                &log.fuel_consumed.to_string(),
+                &log.task_id,
+            ],
+        )?;
+
+        Ok(())
+    }
+
+    pub async fn commit_log(&self, log: CreateInstanceLog) -> Result<(), LogError> {
+        let (tx, rx) = oneshot::channel();
+
+        self.log_tx.send(LogCommand::Create { log, response: tx })?;
+
+        rx.await?
+    }
+
+    pub async fn update_log(&self, log: UpdateInstanceLog) -> Result<(), LogError> {
+        let (tx, rx) = oneshot::channel();
+
+        self.log_tx.send(LogCommand::Update { log, response: tx })?;
+
+        rx.await?
     }
 
     pub fn get_logs(&self) -> Result<Vec<InstanceLog>, LogError> {
@@ -210,8 +292,18 @@ impl Log {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn run_async<F>(future: F) -> F::Output
+    where
+        F: std::future::Future,
+    {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("Failed to create runtime");
+        rt.block_on(future)
+    }
 
-    mod execution {
+    mod creation {
         use super::*;
 
         #[test]
@@ -245,16 +337,10 @@ mod tests {
 
         #[test]
         fn test_commit_log() {
-            use std::sync::Arc;
-            use std::sync::Mutex;
-
             let log = Log::new(None, "state.db-wal").unwrap();
 
-            let callback_invoked = Arc::new(Mutex::new(false));
-            let callback_invoked_clone = callback_invoked.clone();
-
-            let _ = log.commit_log(
-                CreateInstanceLog {
+            run_async(async {
+                log.commit_log(CreateInstanceLog {
                     agent_name: "agent_name".to_string(),
                     agent_version: "agent_version".to_string(),
                     task_id: "task_id".to_string(),
@@ -262,17 +348,10 @@ mod tests {
                     state: InstanceState::Created,
                     fuel_limit: 100,
                     fuel_consumed: 0,
-                },
-                move |result| {
-                    *callback_invoked_clone.lock().unwrap() = true;
-                    assert!(result.is_ok(), "Commit should succeed: {:?}", result);
-                },
-            );
-
-            assert!(
-                *callback_invoked.lock().unwrap(),
-                "Callback should have been invoked"
-            );
+                })
+                .await
+                .expect("Failed to commit log");
+            });
 
             let conn = log.db.conn.lock().unwrap();
 
@@ -284,6 +363,10 @@ mod tests {
 
             assert!(exists, "instance does not exist");
         }
+    }
+
+    mod update {
+        use super::*;
 
         #[test]
         fn test_update_log() {
@@ -304,10 +387,14 @@ mod tests {
                 ]).expect("Failed to insert test data");
             }
 
-            let _ = log.update_log(UpdateInstanceLog {
-                task_id: "test_task_123".to_string(),
-                state: InstanceState::Running,
-                fuel_consumed: 10,
+            run_async(async {
+                log.update_log(UpdateInstanceLog {
+                    task_id: "test_task_123".to_string(),
+                    state: InstanceState::Running,
+                    fuel_consumed: 10,
+                })
+                .await
+                .expect("Failed to update log");
             });
 
             let conn = log.db.conn.lock().unwrap();
@@ -331,6 +418,10 @@ mod tests {
             assert_eq!(state, "running", "State should be updated to running");
             assert_eq!(fuel_consumed, 10, "Fuel consumed should be updated to 10");
         }
+    }
+
+    mod deletion {
+        use super::*;
 
         #[test]
         fn test_delete_log() {
@@ -431,167 +522,6 @@ mod tests {
             assert_eq!(
                 kept_state, "completed",
                 "Kept log should have correct state"
-            );
-        }
-    }
-
-    mod queries {
-        use super::*;
-
-        #[test]
-        fn test_get_logs() {
-            let log = Log::new(None, "state.db-wal").unwrap();
-
-            {
-                let conn = log.db.conn.lock().unwrap();
-
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                    &Uuid::new_v4().to_string(),
-                    "test_agent",
-                    "1.0.0",
-                    "test_task_123",
-                    "Test Task",
-                    "created",
-                    "10000",
-                    "0",
-                    "1000",
-                    "1000",
-                ]).expect("Failed to insert first test log");
-
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                    &Uuid::new_v4().to_string(),
-                    "test_agent",
-                    "1.0.0",
-                    "test_task_123",
-                    "Test Task",
-                    "running",
-                    "10000",
-                    "5000",
-                    "2000",
-                    "2000",
-                ]).expect("Failed to insert second test log");
-
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                    &Uuid::new_v4().to_string(),
-                    "test_agent",
-                    "1.0.0",
-                    "test_task_123",
-                    "Test Task",
-                    "completed",
-                    "10000",
-                    "8500",
-                    "3000",
-                    "3000",
-                ]).expect("Failed to insert third test log");
-
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                    &Uuid::new_v4().to_string(),
-                    "other_agent",
-                    "2.0.0",
-                    "other_task_456",
-                    "Other Task",
-                    "failed",
-                    "5000",
-                    "2500",
-                    "1500",
-                    "1500",
-                ]).expect("Failed to insert other task log");
-            }
-
-            let logs = log.get_logs().expect("Failed to get logs");
-
-            // get_logs now returns ALL logs, so we expect 4 total (3 for test_task_123 + 1 for other_task_456)
-            assert_eq!(logs.len(), 4, "Expected 4 total logs");
-
-            assert_eq!(
-                logs[0].state.to_string(),
-                "completed",
-                "First log should be completed"
-            );
-            assert_eq!(
-                logs[0].fuel_consumed, 8500,
-                "First log fuel_consumed should be 8500"
-            );
-            assert_eq!(
-                logs[0].created_at, 3000,
-                "First log created_at should be 3000"
-            );
-
-            assert_eq!(
-                logs[1].state.to_string(),
-                "running",
-                "Second log should be running"
-            );
-            assert_eq!(
-                logs[1].fuel_consumed, 5000,
-                "Second log fuel_consumed should be 5000"
-            );
-            assert_eq!(
-                logs[1].created_at, 2000,
-                "Second log created_at should be 2000"
-            );
-
-            assert_eq!(
-                logs[2].task_id, "other_task_456",
-                "Third log should be other_task_456"
-            );
-            assert_eq!(
-                logs[2].state.to_string(),
-                "failed",
-                "Third log should be failed"
-            );
-            assert_eq!(
-                logs[2].created_at, 1500,
-                "Third log created_at should be 1500"
-            );
-
-            assert_eq!(
-                logs[3].task_id, "test_task_123",
-                "Fourth log should be test_task_123"
-            );
-            assert_eq!(
-                logs[3].state.to_string(),
-                "created",
-                "Fourth log should be created"
-            );
-            assert_eq!(
-                logs[3].fuel_consumed, 0,
-                "Fourth log fuel_consumed should be 0"
-            );
-            assert_eq!(
-                logs[3].created_at, 1000,
-                "Fourth log created_at should be 1000"
-            );
-
-            let test_task_logs: Vec<_> = logs
-                .iter()
-                .filter(|l| l.task_id == "test_task_123")
-                .collect();
-            assert_eq!(test_task_logs.len(), 3, "Expected 3 logs for test_task_123");
-
-            for log_entry in test_task_logs {
-                assert_eq!(
-                    log_entry.agent_name, "test_agent",
-                    "test_task_123 logs should have agent_name test_agent"
-                );
-                assert_eq!(
-                    log_entry.task_name, "Test Task",
-                    "test_task_123 logs should have task_name Test Task"
-                );
-            }
-
-            let other_task_logs: Vec<_> = logs
-                .iter()
-                .filter(|l| l.task_id == "other_task_456")
-                .collect();
-            assert_eq!(
-                other_task_logs.len(),
-                1,
-                "Expected 1 log for other_task_456"
-            );
-            assert_eq!(
-                other_task_logs[0].agent_name, "other_agent",
-                "other_task_456 log should have agent_name other_agent"
             );
         }
 
@@ -748,6 +678,167 @@ mod tests {
                 )
                 .expect("Failed to check interrupted log");
             assert!(!interrupted_exists, "Interrupted log should be deleted");
+        }
+    }
+
+    mod queries {
+        use super::*;
+
+        #[test]
+        fn test_get_logs() {
+            let log = Log::new(None, "state.db-wal").unwrap();
+
+            {
+                let conn = log.db.conn.lock().unwrap();
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                &Uuid::new_v4().to_string(),
+                "test_agent",
+                "1.0.0",
+                "test_task_123",
+                "Test Task",
+                "created",
+                "10000",
+                "0",
+                "1000",
+                "1000",
+            ]).expect("Failed to insert first test log");
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                &Uuid::new_v4().to_string(),
+                "test_agent",
+                "1.0.0",
+                "test_task_123",
+                "Test Task",
+                "running",
+                "10000",
+                "5000",
+                "2000",
+                "2000",
+            ]).expect("Failed to insert second test log");
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                &Uuid::new_v4().to_string(),
+                "test_agent",
+                "1.0.0",
+                "test_task_123",
+                "Test Task",
+                "completed",
+                "10000",
+                "8500",
+                "3000",
+                "3000",
+            ]).expect("Failed to insert third test log");
+
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                &Uuid::new_v4().to_string(),
+                "other_agent",
+                "2.0.0",
+                "other_task_456",
+                "Other Task",
+                "failed",
+                "5000",
+                "2500",
+                "1500",
+                "1500",
+            ]).expect("Failed to insert other task log");
+            }
+
+            let logs = log.get_logs().expect("Failed to get logs");
+
+            // get_logs now returns ALL logs, so we expect 4 total (3 for test_task_123 + 1 for other_task_456)
+            assert_eq!(logs.len(), 4, "Expected 4 total logs");
+
+            assert_eq!(
+                logs[0].state.to_string(),
+                "completed",
+                "First log should be completed"
+            );
+            assert_eq!(
+                logs[0].fuel_consumed, 8500,
+                "First log fuel_consumed should be 8500"
+            );
+            assert_eq!(
+                logs[0].created_at, 3000,
+                "First log created_at should be 3000"
+            );
+
+            assert_eq!(
+                logs[1].state.to_string(),
+                "running",
+                "Second log should be running"
+            );
+            assert_eq!(
+                logs[1].fuel_consumed, 5000,
+                "Second log fuel_consumed should be 5000"
+            );
+            assert_eq!(
+                logs[1].created_at, 2000,
+                "Second log created_at should be 2000"
+            );
+
+            assert_eq!(
+                logs[2].task_id, "other_task_456",
+                "Third log should be other_task_456"
+            );
+            assert_eq!(
+                logs[2].state.to_string(),
+                "failed",
+                "Third log should be failed"
+            );
+            assert_eq!(
+                logs[2].created_at, 1500,
+                "Third log created_at should be 1500"
+            );
+
+            assert_eq!(
+                logs[3].task_id, "test_task_123",
+                "Fourth log should be test_task_123"
+            );
+            assert_eq!(
+                logs[3].state.to_string(),
+                "created",
+                "Fourth log should be created"
+            );
+            assert_eq!(
+                logs[3].fuel_consumed, 0,
+                "Fourth log fuel_consumed should be 0"
+            );
+            assert_eq!(
+                logs[3].created_at, 1000,
+                "Fourth log created_at should be 1000"
+            );
+
+            let test_task_logs: Vec<_> = logs
+                .iter()
+                .filter(|l| l.task_id == "test_task_123")
+                .collect();
+            assert_eq!(test_task_logs.len(), 3, "Expected 3 logs for test_task_123");
+
+            for log_entry in test_task_logs {
+                assert_eq!(
+                    log_entry.agent_name, "test_agent",
+                    "test_task_123 logs should have agent_name test_agent"
+                );
+                assert_eq!(
+                    log_entry.task_name, "Test Task",
+                    "test_task_123 logs should have task_name Test Task"
+                );
+            }
+
+            let other_task_logs: Vec<_> = logs
+                .iter()
+                .filter(|l| l.task_id == "other_task_456")
+                .collect();
+            assert_eq!(
+                other_task_logs.len(),
+                1,
+                "Expected 1 log for other_task_456"
+            );
+            assert_eq!(
+                other_task_logs[0].agent_name, "other_agent",
+                "other_task_456 log should have agent_name other_agent"
+            );
         }
     }
 }
