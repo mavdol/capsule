@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -7,29 +6,32 @@ pub enum Compute {
     Low,
     Medium,
     High,
-    Custom(i64),
+    Custom(u64),
 }
 
-impl fmt::Display for Compute {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let state_str = match self {
+impl Compute {
+    pub fn as_fuel(&self) -> u64 {
+        match self {
             Compute::Low => 100_000_000,
             Compute::Medium => 2_000_000_000,
             Compute::High => 50_000_000_000,
             Compute::Custom(fuel) => *fuel,
-        };
-        write!(f, "{}", state_str)
+        }
+    }
+
+    pub fn to_u64(&self) -> u64 {
+        self.as_fuel()
     }
 }
 
 #[derive(Clone)]
 pub struct ExecutionPolicy {
-    name: String,
-    compute: Compute,
-    ram: Option<i64>,
-    timeout: Option<i64>,
-    max_retries: i64,
-    env_vars: Option<Vec<String>>,
+    pub name: String,
+    pub compute: Compute,
+    pub ram: Option<u64>,
+    pub timeout: Option<String>,
+    pub max_retries: u64,
+    pub env_vars: Option<Vec<(String, String)>>,
 }
 
 impl Default for ExecutionPolicy {
@@ -64,24 +66,24 @@ impl ExecutionPolicy {
         self
     }
 
-    pub fn ram(mut self, ram: Option<i64>) -> Self {
+    pub fn ram(mut self, ram: Option<u64>) -> Self {
         self.ram = ram;
         self
     }
 
-    pub fn timeout(mut self, timeout: Option<i64>) -> Self {
+    pub fn timeout(mut self, timeout: Option<String>) -> Self {
         self.timeout = timeout;
         self
     }
 
-    pub fn max_retries(mut self, max_retries: Option<i64>) -> Self {
+    pub fn max_retries(mut self, max_retries: Option<u64>) -> Self {
         if let Some(m) = max_retries {
             self.max_retries = m;
         }
         self
     }
 
-    pub fn env_vars(mut self, env_vars: Option<Vec<String>>) -> Self {
+    pub fn env_vars(mut self, env_vars: Option<Vec<(String, String)>>) -> Self {
         self.env_vars = env_vars;
         self
     }
@@ -97,14 +99,14 @@ mod tests {
             .name(Some("test".to_string()))
             .compute(None)
             .ram(Some(128))
-            .timeout(Some(60))
+            .timeout(Some("60s".to_string()))
             .max_retries(Some(3))
             .env_vars(None);
 
         assert_eq!(policy.name, "test");
         assert_eq!(policy.compute, Compute::Low);
         assert_eq!(policy.ram, Some(128));
-        assert_eq!(policy.timeout, Some(60));
+        assert_eq!(policy.timeout, Some("60s".to_string()));
         assert_eq!(policy.max_retries, 3);
         assert_eq!(policy.env_vars, None);
     }
