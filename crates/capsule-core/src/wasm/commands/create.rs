@@ -1,15 +1,16 @@
+use std::sync::Arc;
+
 use nanoid::nanoid;
 
-use wasmtime::component::{Component, Linker, ResourceTable, Instance};
+use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Store, StoreLimitsBuilder};
 use wasmtime_wasi::WasiCtxBuilder;
-use wasmtime_wasi::p2::add_to_linker_async;
+use wasmtime_wasi::add_to_linker_async;
 
 use crate::config::log::{CreateInstanceLog, InstanceState, UpdateInstanceLog};
 use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
-use crate::wasm::state::WasmState;
-
+use crate::wasm::state::{CapsuleAgent, State, capsule};
 
 pub struct CreateInstance {
     pub policy: ExecutionPolicy,
@@ -49,9 +50,12 @@ impl CreateInstance {
 }
 
 impl RuntimeCommand for CreateInstance {
-    type Output = (Store<WasmState>, Instance);
+    type Output = (Store<State>, CapsuleAgent, String);
 
-    async fn execute(self, runtime: &Runtime) -> Result<(Store<WasmState>, Instance), WasmRuntimeError> {
+    async fn execute(
+        self,
+        runtime: Arc<Runtime>,
+    ) -> Result<(Store<State>, CapsuleAgent, String), WasmRuntimeError> {
         runtime
             .log
             .commit_log(CreateInstanceLog {
@@ -65,9 +69,11 @@ impl RuntimeCommand for CreateInstance {
             })
             .await?;
 
-        let mut linker = Linker::<WasmState>::new(&runtime.engine);
+        let mut linker = Linker::<State>::new(&runtime.engine);
 
         add_to_linker_async(&mut linker)?;
+
+        capsule::host::api::add_to_linker(&mut linker, |state: &mut State| state)?;
 
         let wasi = WasiCtxBuilder::new()
             .inherit_stdout()
@@ -84,10 +90,11 @@ impl RuntimeCommand for CreateInstance {
 
         let limits = limits.build();
 
-        let state = WasmState {
+        let state = State {
             ctx: wasi,
             table: ResourceTable::new(),
             limits,
+            runtime: Some(Arc::clone(&runtime)),
         };
 
         let mut store = Store::new(&runtime.engine, state);
@@ -98,7 +105,8 @@ impl RuntimeCommand for CreateInstance {
 
         let component = Component::from_file(&runtime.engine, ".capsule/capsule.wasm")?;
 
-        let instance = match linker.instantiate_async(&mut store, &component).await {
+        let instance = match CapsuleAgent::instantiate_async(&mut store, &component, &linker).await
+        {
             Ok(instance) => instance,
             Err(e) => {
                 runtime
@@ -113,6 +121,6 @@ impl RuntimeCommand for CreateInstance {
             }
         };
 
-        Ok((store, instance))
+        Ok((store, instance, self.task_id))
     }
 }

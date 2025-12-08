@@ -1,11 +1,10 @@
-use std::fs;
 use std::fmt;
+use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-
 pub enum PythonWasmCompilerError {
-    CompileFailed(String)
+    CompileFailed(String),
 }
 
 impl fmt::Display for PythonWasmCompilerError {
@@ -28,9 +27,7 @@ pub struct PythonWasmCompiler {
 }
 
 impl PythonWasmCompiler {
-
     pub fn new() -> Result<Self, PythonWasmCompilerError> {
-
         let cache_dir = ".capsule".to_string();
         let output_wasm = format!("{}/capsule.wasm", &cache_dir);
 
@@ -45,7 +42,6 @@ impl PythonWasmCompiler {
     }
 
     pub fn compile_wasm(&self, source: &str) -> Result<(), PythonWasmCompilerError> {
-
         if !Path::new(&self.cache_dir).exists() {
             fs::create_dir_all(&self.cache_dir)?;
         }
@@ -61,7 +57,9 @@ impl PythonWasmCompiler {
                 .status()?;
 
             if !status.success() {
-                return Err(PythonWasmCompilerError::CompileFailed("Compilation failed".to_string()));
+                return Err(PythonWasmCompilerError::CompileFailed(
+                    "Compilation failed".to_string(),
+                ));
             }
         }
 
@@ -78,5 +76,4 @@ impl PythonWasmCompiler {
 
         false
     }
-
 }

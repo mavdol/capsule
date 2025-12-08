@@ -1,12 +1,13 @@
 use std::fmt;
-
-use wasmtime::{Config, Engine};
+use std::sync::Arc;
 
 use crate::config::log::{Log, LogError};
+use wasmtime::{Config, Engine};
 
 pub enum WasmRuntimeError {
     WasmtimeError(wasmtime::Error),
     LogError(LogError),
+    ConfigError(String),
 }
 
 impl fmt::Display for WasmRuntimeError {
@@ -16,6 +17,7 @@ impl fmt::Display for WasmRuntimeError {
                 write!(f, "Runtime error > Wasmtime error > {}", msg)
             }
             WasmRuntimeError::LogError(msg) => write!(f, "Runtime error > {}", msg),
+            WasmRuntimeError::ConfigError(msg) => write!(f, "Runtime error > Config > {}", msg),
         }
     }
 }
@@ -34,7 +36,10 @@ impl From<LogError> for WasmRuntimeError {
 
 pub trait RuntimeCommand {
     type Output;
-    fn execute(self, runtime: &Runtime) -> impl Future<Output = Result<Self::Output, WasmRuntimeError>> + Send;
+    fn execute(
+        self,
+        runtime: Arc<Runtime>,
+    ) -> impl Future<Output = Result<Self::Output, WasmRuntimeError>> + Send;
 }
 
 pub struct Runtime {
@@ -43,7 +48,7 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub fn new() -> Result<Self, WasmRuntimeError> {
+    pub fn new() -> Result<Arc<Self>, WasmRuntimeError> {
         let mut config = Config::new();
         let log = Log::new(Some(".capsule"), "state.db-wal")?;
 
@@ -51,16 +56,16 @@ impl Runtime {
         config.async_support(true);
         config.consume_fuel(true);
 
-        Ok(Self {
+        Ok(Arc::new(Self {
             engine: Engine::new(&config)?,
             log,
-        })
+        }))
     }
 
     pub async fn execute<C: RuntimeCommand>(
-        &self,
+        self: &Arc<Self>,
         command: C,
     ) -> Result<C::Output, WasmRuntimeError> {
-        command.execute(self).await
+        command.execute(Arc::clone(self)).await
     }
 }

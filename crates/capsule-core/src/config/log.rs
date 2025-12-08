@@ -2,9 +2,9 @@ use std::fmt;
 use std::sync::mpsc;
 use std::thread::{Builder, JoinHandle};
 
+use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use tokio::sync::oneshot;
-use nanoid::nanoid;
 
 use crate::config::database::{Database, DatabaseError};
 
