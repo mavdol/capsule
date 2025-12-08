@@ -6,14 +6,14 @@ use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
 use crate::wasm::state::WasmState;
 
-pub struct StartInstance {
+pub struct RunInstance {
     task_id: String,
     policy: ExecutionPolicy,
     store: Store<WasmState>,
     instance: Instance
 }
 
-impl StartInstance {
+impl RunInstance {
     pub fn new(task_id: String, policy: ExecutionPolicy, store: Store<WasmState>, instance: Instance) -> Self {
         Self {
             task_id,
@@ -24,7 +24,7 @@ impl StartInstance {
     }
 }
 
-impl RuntimeCommand for StartInstance {
+impl RuntimeCommand for RunInstance {
     type Output = Store<WasmState>;
 
     async fn execute(mut self, runtime: &Runtime) -> Result<Self::Output, WasmRuntimeError> {
