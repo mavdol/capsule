@@ -4,7 +4,6 @@ use wasmtime::{Config, Engine};
 
 use crate::config::log::{Log, LogError};
 
-#[derive(Debug)]
 pub enum WasmRuntimeError {
     WasmtimeError(wasmtime::Error),
     LogError(LogError),

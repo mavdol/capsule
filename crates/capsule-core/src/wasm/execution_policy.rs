@@ -24,7 +24,7 @@ impl Compute {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ExecutionPolicy {
     pub name: String,
     pub compute: Compute,
@@ -38,7 +38,7 @@ impl Default for ExecutionPolicy {
     fn default() -> Self {
         Self {
             name: "default".to_string(),
-            compute: Compute::Low,
+            compute: Compute::Medium,
             ram: None,
             timeout: None,
             max_retries: 1,
@@ -104,7 +104,7 @@ mod tests {
             .env_vars(None);
 
         assert_eq!(policy.name, "test");
-        assert_eq!(policy.compute, Compute::Low);
+        assert_eq!(policy.compute, Compute::Medium);
         assert_eq!(policy.ram, Some(128));
         assert_eq!(policy.timeout, Some("60s".to_string()));
         assert_eq!(policy.max_retries, 3);

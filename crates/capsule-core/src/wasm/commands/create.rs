@@ -10,6 +10,7 @@ use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
 use crate::wasm::state::WasmState;
 
+
 pub struct CreateInstance {
     pub policy: ExecutionPolicy,
     pub args: Vec<String>,
@@ -25,8 +26,8 @@ impl CreateInstance {
             policy,
             args,
             task_id: nanoid!(10),
-            task_name: "default_task_name".to_string(),
-            agent_name: "default_agent".to_string(),
+            task_name: "default".to_string(),
+            agent_name: "default".to_string(),
             agent_version: "0.0.0".to_string(),
         }
     }
