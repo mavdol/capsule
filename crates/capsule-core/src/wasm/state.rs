@@ -41,8 +41,6 @@ impl Host for State {
         args: String,
         config: String,
     ) -> Result<String, TaskError> {
-        println!("📞 [Host] schedule_task: {} (Config: {})", name, config);
-
         let runtime = match &self.runtime {
             Some(r) => Arc::clone(r),
             None => {
