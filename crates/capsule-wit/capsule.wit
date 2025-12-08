@@ -17,9 +17,7 @@ interface api {
     ) -> result<string, task-error>;
 }
 
-/// Export interface for running tasks - the Wasm component implements this
 interface task-runner {
-    /// Run a task with the given arguments, returns JSON result
     run: func(args-json: string) -> result<string, string>;
 }
 
