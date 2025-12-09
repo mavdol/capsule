@@ -1,0 +1,27 @@
+
+package capsule:host;
+
+interface api {
+
+    variant task-error {
+        invalid-name(string),
+        invalid-config(string),
+        invalid-args(string),
+        internal-error(string),
+    }
+
+    schedule-task: func(
+        task-name: string,
+        args-json: string,
+        config-json: string
+    ) -> result<string, task-error>;
+}
+
+interface task-runner {
+    run: func(args-json: string) -> result<string, string>;
+}
+
+world capsule-agent {
+    import api;
+    export task-runner;
+}

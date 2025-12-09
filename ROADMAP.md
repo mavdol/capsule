@@ -10,7 +10,7 @@ This document tracks the development status of Capsule. We follow a "Release Ear
 
 **Goal:** Validating the core Host/Guest technology and Python interoperability.
 
-- [ ] **Core:** Rust Host capable of loading Wasm Components.
+- [x] **Core:** Rust Host capable of loading Wasm Components.
 - [ ] **SDK (Python):** Basic `@task` decorator with JSON serialization.
 - [ ] **CLI:** `capsule run main.py` with JIT compilation.
 - [ ] **Limits:** Basic Fuel metering for CPU protection.
