@@ -9,8 +9,8 @@ on:
       - main
 
 jobs:
-  rust-tests:
-    name: Rust Tests
+  rust-core-tests:
+    name: Rust Core Tests
     runs-on: ubuntu-latest
 
     steps:
