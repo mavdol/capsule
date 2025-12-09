@@ -7,5 +7,8 @@ exclude *.pyc
 exclude __pycache__
 exclude .pytest_cache
 exclude *.egg-info
+exclude test_*.py
+exclude *_test.py
+exclude tests/
 
 # Do NOT include wit_world (it's auto-generated)
