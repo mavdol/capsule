@@ -1,5 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        "crates/capsule-core/Cargo.toml"
+        "crates/capsule-core/Cargo.toml",
+        "crates/capsule-cli/Cargo.toml"
     ]
 }

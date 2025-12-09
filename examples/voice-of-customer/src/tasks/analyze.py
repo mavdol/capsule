@@ -1,10 +1,8 @@
-import os
 from capsule import task
-from src.models.feedback import AnalysisResult
 
 @task(
     name="analyze_feedback",
-    compute="MEDIUM",
+    compute="HIGH",
     ram="512MB",
     timeout="30s"
 )
@@ -17,14 +15,14 @@ def analyze_feedback(message: dict) -> dict:
     urgency = _simulate_urgency_detection(content, category)
     summary = _simulate_summarization(content)
 
-    return AnalysisResult(
-        message_id=message["id"],
-        source=source,
-        sentiment=sentiment,
-        category=category,
-        urgency=urgency,
-        summary=summary
-    ).model_dump()
+    return {
+        "message_id": message["id"],
+        "source": source,
+        "sentiment": sentiment,
+        "category": category,
+        "urgency": urgency,
+        "summary": summary
+    }
 
 
 def _simulate_sentiment_analysis(content: str) -> str:

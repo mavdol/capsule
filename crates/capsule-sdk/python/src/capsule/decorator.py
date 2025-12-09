@@ -1,6 +1,6 @@
 import json
 import functools
-from .host_api import call_host, IS_WASM
+from .host_api import call_host, is_wasm_mode
 from . import app
 
 
@@ -43,7 +43,7 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, 
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            if not IS_WASM:
+            if not is_wasm_mode():
                 return func(*args, **kwargs)
 
             args_data = list(args)

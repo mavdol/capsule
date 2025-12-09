@@ -8,15 +8,29 @@ When running locally, it provides mock implementations for testing.
 
 import json
 
-IS_WASM = False
+_host = None
+_is_wasm_checked = False
+_is_wasm = False
 
-# capsule-core generates bindings in wit_world.imports.api
-try:
-    from wit_world.imports import api as host
-    IS_WASM = True
-except ImportError:
-    IS_WASM = False
-    host = None
+def _check_wasm():
+    """Lazily check if we're running in WASM mode."""
+    global _host, _is_wasm_checked, _is_wasm
+    if not _is_wasm_checked:
+        try:
+            from wit_world.imports import api as host_module
+            _host = host_module
+            _is_wasm = True
+        except ImportError:
+            _is_wasm = False
+        _is_wasm_checked = True
+    return _is_wasm
+
+@property
+def IS_WASM():
+    return _check_wasm()
+
+def is_wasm_mode():
+    return _check_wasm()
 
 def call_host(name: str, args: list, config: dict) -> str:
     """
@@ -43,9 +57,9 @@ def call_host(name: str, args: list, config: dict) -> str:
     In local mode:
         Returns mocked result
     """
-    if IS_WASM and host is not None:
+    if _check_wasm() and _host is not None:
         try:
-            result = host.schedule_task(name, json.dumps(args), json.dumps(config))
+            result = _host.schedule_task(name, json.dumps(args), json.dumps(config))
             return result
         except Exception as e:
             return json.dumps({"error": f"Host call failed: {str(e)}"})

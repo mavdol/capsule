@@ -7,6 +7,7 @@
 import json
 
 _TASKS = {}
+_main_module = None
 
 
 def register_task(name: str, func, config: dict = None):
@@ -71,13 +72,17 @@ class TaskRunner:
             if task_func is None and task_name != "main":
                 task_func = get_task("main")
 
+            if task_func is None and _main_module is not None:
+                if hasattr(_main_module, 'main') and callable(_main_module.main):
+                    task_func = _main_module.main
+
             if task_func is None and _TASKS:
                 first_task_name = next(iter(_TASKS.keys()))
                 task_func = get_task(first_task_name)
 
             if task_func is None:
                 return json.dumps({
-                    "error": f"No tasks found. Available: {list(_TASKS.keys())}"
+                    "error": f"No tasks or main() function found. Available tasks: {list(_TASKS.keys())}"
                 })
 
             result = task_func(*args, **kwargs)
