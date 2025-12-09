@@ -10,7 +10,6 @@ This tests:
 import sys
 import os
 
-# Add the SDK to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'crates', 'capsule-sdk', 'python'))
 
 from capsule import task
@@ -24,10 +23,8 @@ def test_task_registration():
     def my_test_task(x: int) -> int:
         return x * 2
 
-    # Check that task is registered
     assert "test_task" in app._TASKS, "Task should be registered"
 
-    # Check that config is stored
     config = app.get_task_config("test_task")
     assert config["name"] == "test_task"
     assert config["compute"] == "HIGH"
@@ -45,7 +42,6 @@ def test_task_execution_local():
     def add_task(a: int, b: int) -> int:
         return a + b
 
-    # Execute in local mode
     result = add_task(5, 3)
     assert result == 8, f"Expected 8, got {result}"
 
