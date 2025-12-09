@@ -1,7 +1,10 @@
 use std::fmt;
+use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use crate::config::log::{Log, LogError};
+use wasmtime::component::Component;
 use wasmtime::{Config, Engine};
 
 pub enum WasmRuntimeError {
@@ -42,23 +45,47 @@ pub trait RuntimeCommand {
     ) -> impl Future<Output = Result<Self::Output, WasmRuntimeError>> + Send;
 }
 
+pub struct RuntimeConfig {
+    pub cache_dir: PathBuf,
+}
+
+impl Default for RuntimeConfig {
+    fn default() -> Self {
+        Self {
+            cache_dir: PathBuf::from(".capsule"),
+        }
+    }
+}
+
 pub struct Runtime {
     pub(crate) engine: Engine,
     pub(crate) log: Log,
+
+    #[allow(dead_code)]
+    pub(crate) cache_dir: PathBuf,
+
+    component: RwLock<Option<Component>>,
 }
 
 impl Runtime {
     pub fn new() -> Result<Arc<Self>, WasmRuntimeError> {
-        let mut config = Config::new();
-        let log = Log::new(Some(".capsule"), "state.db-wal")?;
+        Self::with_config(RuntimeConfig::default())
+    }
 
-        config.wasm_component_model(true);
-        config.async_support(true);
-        config.consume_fuel(true);
+    pub fn with_config(config: RuntimeConfig) -> Result<Arc<Self>, WasmRuntimeError> {
+        let mut engine_config = Config::new();
+        let db_path = config.cache_dir.join("state.db");
+        let log = Log::new(Some(db_path.parent().unwrap().to_str().unwrap()), db_path.file_name().unwrap().to_str().unwrap())?;
+
+        engine_config.wasm_component_model(true);
+        engine_config.async_support(true);
+        engine_config.consume_fuel(true);
 
         Ok(Arc::new(Self {
-            engine: Engine::new(&config)?,
+            engine: Engine::new(&engine_config)?,
             log,
+            cache_dir: config.cache_dir,
+            component: RwLock::new(None),
         }))
     }
 
@@ -67,5 +94,13 @@ impl Runtime {
         command: C,
     ) -> Result<C::Output, WasmRuntimeError> {
         command.execute(Arc::clone(self)).await
+    }
+
+    pub async fn get_component(&self) -> Option<Component> {
+        self.component.read().await.clone()
+    }
+
+    pub async fn set_component(&self, component: Component) {
+        *self.component.write().await = Some(component);
     }
 }

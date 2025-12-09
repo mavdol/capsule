@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [dependencies]
 anyhow = "1"
@@ -15,7 +15,6 @@ serde_json = "1.0.145"
 tokio = "1.48.0"
 wasmtime = { version = "29.0.0", features = ["component-model", "async"] }
 wasmtime-wasi = "29.0.0"
-
 
 [dev-dependencies]
 rustfmt = "0.10.0"

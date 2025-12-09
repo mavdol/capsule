@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use nanoid::nanoid;
@@ -19,6 +20,7 @@ pub struct CreateInstance {
     pub task_name: String,
     pub agent_name: String,
     pub agent_version: String,
+    pub wasm_path: PathBuf,
 }
 
 impl CreateInstance {
@@ -30,6 +32,7 @@ impl CreateInstance {
             task_name: "default".to_string(),
             agent_name: "default".to_string(),
             agent_version: "0.0.0".to_string(),
+            wasm_path: PathBuf::from(".capsule/capsule.wasm"),
         }
     }
 
@@ -45,6 +48,11 @@ impl CreateInstance {
 
     pub fn agent_version(mut self, agent_version: impl Into<String>) -> Self {
         self.agent_version = agent_version.into();
+        self
+    }
+
+    pub fn wasm_path(mut self, wasm_path: PathBuf) -> Self {
+        self.wasm_path = wasm_path;
         self
     }
 }
@@ -103,7 +111,42 @@ impl RuntimeCommand for CreateInstance {
 
         store.limiter(|state| state);
 
-        let component = Component::from_file(&runtime.engine, ".capsule/capsule.wasm")?;
+        let component = match runtime.get_component().await {
+            Some(c) => c,
+            None => {
+                let cwasm_path = self.wasm_path.with_extension("cwasm");
+
+                let use_cached = if cwasm_path.exists() {
+                    let wasm_time = std::fs::metadata(&self.wasm_path)
+                        .and_then(|m| m.modified())
+                        .ok();
+                    let cwasm_time = std::fs::metadata(&cwasm_path)
+                        .and_then(|m| m.modified())
+                        .ok();
+
+                    match (wasm_time, cwasm_time) {
+                        (Some(w), Some(c)) => c > w,
+                        _ => false,
+                    }
+                } else {
+                    false
+                };
+
+                let c = if use_cached {
+                    unsafe { Component::deserialize_file(&runtime.engine, &cwasm_path)? }
+                } else {
+                    let c = Component::from_file(&runtime.engine, &self.wasm_path)?;
+
+                    if let Ok(bytes) = c.serialize() {
+                        let _ = std::fs::write(&cwasm_path, bytes);
+                    }
+                    c
+                };
+
+                runtime.set_component(c.clone()).await;
+                c
+            }
+        };
 
         let instance = match CapsuleAgent::instantiate_async(&mut store, &component, &linker).await
         {
