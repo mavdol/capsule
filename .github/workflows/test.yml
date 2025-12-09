@@ -1,12 +1,16 @@
-name: Rust Tests
+name: Unit Tests
 
 on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 jobs:
-  test:
+  rust-core-tests:
+    name: Rust Core Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -19,3 +23,33 @@ jobs:
       - name: Run cargo test in crates/capsule-core
         working-directory: crates/capsule-core
         run: cargo test --all --verbose
+
+  python-sdk-tests:
+    name: Python SDK Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install SDK dependencies
+        working-directory: crates/capsule-sdk/python
+        run: |
+          pip install -e .
+          pip install pytest
+
+      - name: Run SDK tests
+        working-directory: crates/capsule-sdk/python
+        run: python test_sdk.py
+
+      - name: Verify package builds
+        working-directory: crates/capsule-sdk/python
+        run: |
+          pip install build
+          python -m build
+          ls -lh dist/
