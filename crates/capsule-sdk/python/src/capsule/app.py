@@ -1,8 +1,8 @@
 # Python SDK Export Module for task-runner interface
 #
 # This module implements the `capsule:host/task-runner` export interface
-# that the Wasm component must provide. When compiled with componentize-py,
-# this will be the entry point that the Rust host calls.
+# that the Wasm component must provide. When compiled with Rust core,
+# this is the entry point host calls.
 
 import json
 
@@ -41,7 +41,7 @@ class TaskRunner:
     """
     Implementation of the capsule:host/task-runner interface.
 
-    This class is instantiated by componentize-py when the component is loaded.
+    This class is instantiated by capsule-core when the component is loaded.
     The Rust host calls `run(args_json)` to execute a task.
     """
     def run(self, args_json: str) -> str:
@@ -95,6 +95,4 @@ class TaskRunner:
             })
 
 
-# Export the TaskRunner class for componentize-py
-# The binding generator will look for this
 exports = TaskRunner()

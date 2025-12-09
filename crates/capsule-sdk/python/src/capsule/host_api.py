@@ -2,7 +2,7 @@
 Capsule SDK - Host API Interface
 
 This module provides the interface to call host functions from Python Wasm code.
-When running in WASM mode, it imports the auto-generated bindings from componentize-py.
+When running in WASM mode, it imports the auto-generated bindings from capsule-core.
 When running locally, it provides mock implementations for testing.
 """
 
@@ -10,8 +10,7 @@ import json
 
 IS_WASM = False
 
-# componentize-py generates bindings in wit_world.imports.api
-# The module name is based on the WIT world name "capsule-agent" → "wit_world"
+# capsule-core generates bindings in wit_world.imports.api
 try:
     from wit_world.imports import api as host
     IS_WASM = True
