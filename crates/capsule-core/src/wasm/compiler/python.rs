@@ -95,8 +95,11 @@ impl PythonWasmCompiler {
 # Import the user's module - this registers all @task decorated functions
 import {module_name}
 
+# Store reference to main module so SDK can find main() even without @task
+import capsule.app
+capsule.app._main_module = {module_name}
+
 # Re-export the TaskRunner and exports from the SDK
-# This is what componentize-py needs to find
 from capsule.app import TaskRunner, exports
 "#,
                 module_name = module_name
