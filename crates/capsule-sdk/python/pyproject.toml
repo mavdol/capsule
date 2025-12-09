@@ -27,7 +27,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "componentize-py>=0.9.2",
+    "componentize-py>=0.19.3",
 ]
 
 [project.optional-dependencies]
