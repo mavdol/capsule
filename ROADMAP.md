@@ -13,7 +13,7 @@ This document tracks the development status of Capsule. We follow a "Release Ear
 - [x] **Core:** Rust Host capable of loading Wasm Components.
 - [x] **SDK (Python):** Basic `@task` decorator with JSON serialization.
 - [x] **CLI:** `capsule run main.py` with JIT compilation.
-- [ ] **Limits:** Basic Fuel metering for CPU protection.
+- [x] **Limits:** Basic Fuel metering for CPU protection.
 
 ---
 
