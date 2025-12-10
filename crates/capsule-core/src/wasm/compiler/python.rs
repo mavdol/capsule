@@ -168,12 +168,35 @@ from capsule.app import TaskRunner, exports
             return Ok(true);
         }
 
-        if let Some(source_dir) = source.parent()
-            && let Ok(entries) = fs::read_dir(source_dir)
-        {
+        if let Some(source_dir) = source.parent() {
+            if self.check_dir_modified(source_dir, source, wasm_time)? {
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
+    }
+
+    fn check_dir_modified(
+        &self,
+        dir: &Path,
+        source: &Path,
+        wasm_time: std::time::SystemTime,
+    ) -> Result<bool, PythonWasmCompilerError> {
+        if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.extension().is_some_and(|ext| ext == "py")
+
+                if path.is_dir() {
+                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    if dir_name.starts_with('.') || dir_name == "__pycache__" {
+                        continue;
+                    }
+
+                    if self.check_dir_modified(&path, source, wasm_time)? {
+                        return Ok(true);
+                    }
+                } else if path.extension().is_some_and(|ext| ext == "py")
                     && path != source
                     && let Ok(metadata) = fs::metadata(&path)
                     && let Ok(modified) = metadata.modified()
