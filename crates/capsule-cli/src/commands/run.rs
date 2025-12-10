@@ -4,7 +4,7 @@ use std::path::Path;
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
 use capsule_core::wasm::compiler::python::{PythonWasmCompiler, PythonWasmCompilerError};
-use capsule_core::wasm::execution_policy::ExecutionPolicy;
+use capsule_core::wasm::execution_policy::{Compute, ExecutionPolicy};
 use capsule_core::wasm::runtime::Runtime;
 use capsule_core::wasm::runtime::WasmRuntimeError;
 
@@ -49,7 +49,7 @@ pub async fn execute(file_path: &Path, args: Vec<String>) -> Result<String, RunE
     };
     let runtime = Runtime::with_config(runtime_config)?;
 
-    let execution_policy = ExecutionPolicy::default();
+    let execution_policy = ExecutionPolicy::default().compute(Some(Compute::High));
     let create_instance_command =
         CreateInstance::new(execution_policy.clone(), args.clone()).wasm_path(wasm_path);
 
