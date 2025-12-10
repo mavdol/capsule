@@ -52,27 +52,42 @@ impl Host for State {
 
         let task_config: TaskConfig = serde_json::from_str(&config).unwrap_or_default();
         let policy = task_config.to_execution_policy();
+        let max_retries = policy.max_retries;
 
-        let create_cmd = CreateInstance::new(policy.clone(), vec![]).task_name(&name);
+        let mut last_error: Option<String> = None;
 
-        let (store, instance, task_id) = runtime
-            .execute(create_cmd)
-            .await
-            .map_err(|e| TaskError::InternalError(format!("Failed to create instance: {}", e)))?;
+        for attempt in 0..=max_retries {
+            let create_cmd = CreateInstance::new(policy.clone(), vec![]).task_name(&name);
 
-        let args_json = format!(
-            r#"{{"task_name": "{}", "args": {}, "kwargs": {{}}}}"#,
-            name, args
-        );
+            let (store, instance, task_id) = match runtime.execute(create_cmd).await {
+                Ok(result) => result,
+                Err(e) => {
+                    last_error = Some(format!("Failed to create instance: {}", e));
+                    continue;
+                }
+            };
 
-        let run_cmd = RunInstance::new(task_id, policy, store, instance, args_json);
+            let args_json = format!(
+                r#"{{"task_name": "{}", "args": {}, "kwargs": {{}}}}"#,
+                name, args
+            );
 
-        let result = runtime
-            .execute(run_cmd)
-            .await
-            .map_err(|e| TaskError::InternalError(format!("Failed to run instance: {}", e)))?;
+            let run_cmd = RunInstance::new(task_id, policy.clone(), store, instance, args_json);
 
-        Ok(result)
+            match runtime.execute(run_cmd).await {
+                Ok(result) => return Ok(result),
+                Err(e) => {
+                    last_error = Some(format!("Failed to run instance: {}", e));
+                    if attempt < max_retries {
+                        continue;
+                    }
+                }
+            }
+        }
+
+        Err(TaskError::InternalError(
+            last_error.unwrap_or_else(|| "Unknown error after retries".to_string()),
+        ))
     }
 }
 
