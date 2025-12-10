@@ -2,6 +2,7 @@ use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::process::Stdio;
 
 use super::CAPSULE_WIT;
 
@@ -137,6 +138,8 @@ from capsule.app import TaskRunner, exports
                 .arg(&sdk_path)
                 .arg("-o")
                 .arg(&self.output_wasm)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .status()?;
 
             if !status.success() {
