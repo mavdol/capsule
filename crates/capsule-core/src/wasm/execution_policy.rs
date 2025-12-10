@@ -42,7 +42,7 @@ impl Default for ExecutionPolicy {
             compute: Compute::Medium,
             ram: None,
             timeout: None,
-            max_retries: 1,
+            max_retries: 0,
             env_vars: None,
         }
     }
@@ -90,7 +90,8 @@ impl ExecutionPolicy {
     }
 
     pub fn timeout_duration(&self) -> Option<Duration> {
-        self.timeout.as_ref()
+        self.timeout
+            .as_ref()
             .and_then(|s| humantime::parse_duration(s).ok())
     }
 }
