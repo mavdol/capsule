@@ -1,16 +1,16 @@
 pub mod cli;
 pub mod commands;
 
+use clap::Parser;
 use std::fmt;
 use std::path::Path;
-use clap::Parser;
 
 use cli::{Cli, Commands};
-use commands::{run, RunError};
+use commands::{RunError, run};
 
 #[derive(Debug)]
 pub enum CliError {
-   RunError(String),
+    RunError(String),
 }
 
 impl fmt::Display for CliError {
@@ -26,8 +26,6 @@ impl From<RunError> for CliError {
         CliError::RunError(err.to_string())
     }
 }
-
-
 
 #[tokio::main]
 async fn main() -> Result<(), CliError> {

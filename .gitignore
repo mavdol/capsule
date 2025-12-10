@@ -11,4 +11,3 @@ capsule.egg-info
 **/*.rs.bk
 *.pdb
 **/mutants.out*/
-

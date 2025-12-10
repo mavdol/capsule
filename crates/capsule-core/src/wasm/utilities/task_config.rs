@@ -21,7 +21,10 @@ impl TaskConfig {
                 "LOW" => Compute::Low,
                 "MEDIUM" => Compute::Medium,
                 "HIGH" => Compute::High,
-                _ => Compute::Medium,
+                _ => c
+                    .parse::<u64>()
+                    .map(Compute::Custom)
+                    .unwrap_or(Compute::Medium),
             });
 
         let ram = self.ram.as_ref().and_then(|r| Self::parse_ram_string(r));
@@ -67,13 +70,31 @@ mod tests {
 
     #[test]
     fn test_parse_ram_string() {
-        assert_eq!(TaskConfig::parse_ram_string("2GB"), Some(2 * 1024 * 1024 * 1024));
-        assert_eq!(TaskConfig::parse_ram_string("1 GB"), Some(1024 * 1024 * 1024));
-        assert_eq!(TaskConfig::parse_ram_string("4gb"), Some(4 * 1024 * 1024 * 1024));
+        assert_eq!(
+            TaskConfig::parse_ram_string("2GB"),
+            Some(2 * 1024 * 1024 * 1024)
+        );
+        assert_eq!(
+            TaskConfig::parse_ram_string("1 GB"),
+            Some(1024 * 1024 * 1024)
+        );
+        assert_eq!(
+            TaskConfig::parse_ram_string("4gb"),
+            Some(4 * 1024 * 1024 * 1024)
+        );
 
-        assert_eq!(TaskConfig::parse_ram_string("512MB"), Some(512 * 1024 * 1024));
-        assert_eq!(TaskConfig::parse_ram_string("256 MB"), Some(256 * 1024 * 1024));
-        assert_eq!(TaskConfig::parse_ram_string("128mb"), Some(128 * 1024 * 1024));
+        assert_eq!(
+            TaskConfig::parse_ram_string("512MB"),
+            Some(512 * 1024 * 1024)
+        );
+        assert_eq!(
+            TaskConfig::parse_ram_string("256 MB"),
+            Some(256 * 1024 * 1024)
+        );
+        assert_eq!(
+            TaskConfig::parse_ram_string("128mb"),
+            Some(128 * 1024 * 1024)
+        );
 
         assert_eq!(TaskConfig::parse_ram_string("1024KB"), Some(1024 * 1024));
         assert_eq!(TaskConfig::parse_ram_string("512 KB"), Some(512 * 1024));
@@ -99,7 +120,7 @@ mod tests {
         assert_eq!(policy.compute, Compute::Medium);
         assert_eq!(policy.ram, None);
         assert_eq!(policy.timeout, None);
-        assert_eq!(policy.max_retries, 1);
+        assert_eq!(policy.max_retries, 0);
         assert_eq!(policy.env_vars, None);
     }
 
@@ -121,7 +142,10 @@ mod tests {
         assert_eq!(policy.ram, Some(2 * 1024 * 1024 * 1024));
         assert_eq!(policy.timeout, Some("30s".to_string()));
         assert_eq!(policy.max_retries, 3);
-        assert_eq!(policy.env_vars, Some(vec![("KEY".to_string(), "VALUE".to_string())]));
+        assert_eq!(
+            policy.env_vars,
+            Some(vec![("KEY".to_string(), "VALUE".to_string())])
+        );
     }
 
     #[test]

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -41,7 +42,7 @@ impl Default for ExecutionPolicy {
             compute: Compute::Medium,
             ram: None,
             timeout: None,
-            max_retries: 1,
+            max_retries: 0,
             env_vars: None,
         }
     }
@@ -86,6 +87,12 @@ impl ExecutionPolicy {
     pub fn env_vars(mut self, env_vars: Option<Vec<(String, String)>>) -> Self {
         self.env_vars = env_vars;
         self
+    }
+
+    pub fn timeout_duration(&self) -> Option<Duration> {
+        self.timeout
+            .as_ref()
+            .and_then(|s| humantime::parse_duration(s).ok())
     }
 }
 

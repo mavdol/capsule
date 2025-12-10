@@ -11,6 +11,7 @@ pub enum WasmRuntimeError {
     WasmtimeError(wasmtime::Error),
     LogError(LogError),
     ConfigError(String),
+    Timeout(String),
 }
 
 impl fmt::Display for WasmRuntimeError {
@@ -21,6 +22,7 @@ impl fmt::Display for WasmRuntimeError {
             }
             WasmRuntimeError::LogError(msg) => write!(f, "Runtime error > {}", msg),
             WasmRuntimeError::ConfigError(msg) => write!(f, "Runtime error > Config > {}", msg),
+            WasmRuntimeError::Timeout(task_id) => write!(f, "Task '{}' timed out", task_id),
         }
     }
 }
@@ -75,7 +77,10 @@ impl Runtime {
     pub fn with_config(config: RuntimeConfig) -> Result<Arc<Self>, WasmRuntimeError> {
         let mut engine_config = Config::new();
         let db_path = config.cache_dir.join("state.db");
-        let log = Log::new(Some(db_path.parent().unwrap().to_str().unwrap()), db_path.file_name().unwrap().to_str().unwrap())?;
+        let log = Log::new(
+            Some(db_path.parent().unwrap().to_str().unwrap()),
+            db_path.file_name().unwrap().to_str().unwrap(),
+        )?;
 
         engine_config.wasm_component_model(true);
         engine_config.async_support(true);

@@ -2,6 +2,7 @@ use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::process::Stdio;
 
 use super::CAPSULE_WIT;
 
@@ -13,7 +14,9 @@ pub enum PythonWasmCompilerError {
 impl fmt::Display for PythonWasmCompilerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PythonWasmCompilerError::CompileFailed(msg) => write!(f, "Compilation failed > {}", msg),
+            PythonWasmCompilerError::CompileFailed(msg) => {
+                write!(f, "Compilation failed > {}", msg)
+            }
             PythonWasmCompilerError::FsError(msg) => write!(f, "File system error > {}", msg),
         }
     }
@@ -39,11 +42,15 @@ pub struct PythonWasmCompiler {
 
 impl PythonWasmCompiler {
     pub fn new(source_path: &Path) -> Result<Self, PythonWasmCompilerError> {
-        let source_path = source_path.canonicalize()
-            .map_err(|e| PythonWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e)))?;
+        let source_path = source_path.canonicalize().map_err(|e| {
+            PythonWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e))
+        })?;
 
-        let source_dir = source_path.parent()
-            .ok_or(PythonWasmCompilerError::FsError("Cannot determine source directory".to_string()))?;
+        let source_dir = source_path
+            .parent()
+            .ok_or(PythonWasmCompilerError::FsError(
+                "Cannot determine source directory".to_string(),
+            ))?;
 
         let cache_dir = source_dir.join(".capsule");
         let output_wasm = cache_dir.join("capsule.wasm");
@@ -61,30 +68,40 @@ impl PythonWasmCompiler {
 
     pub fn compile_wasm(&self) -> Result<PathBuf, PythonWasmCompilerError> {
         if self.needs_rebuild(&self.source_path, &self.output_wasm)? {
-            let module_name = self.source_path
+            let module_name = self
+                .source_path
                 .file_stem()
-                .ok_or(PythonWasmCompilerError::FsError("Invalid source file name".to_string()))?
+                .ok_or(PythonWasmCompilerError::FsError(
+                    "Invalid source file name".to_string(),
+                ))?
                 .to_str()
-                .ok_or(PythonWasmCompilerError::FsError("Invalid UTF-8 in file name".to_string()))?;
+                .ok_or(PythonWasmCompilerError::FsError(
+                    "Invalid UTF-8 in file name".to_string(),
+                ))?;
 
-            let python_path = self.source_path
+            let python_path = self
+                .source_path
                 .parent()
-                .ok_or(PythonWasmCompilerError::FsError("Cannot determine parent directory".to_string()))?;
+                .ok_or(PythonWasmCompilerError::FsError(
+                    "Cannot determine parent directory".to_string(),
+                ))?;
 
             let wit_path = self.get_wit_path()?;
 
             let sdk_path = self.get_sdk_path()?;
 
             if !sdk_path.exists() {
-                return Err(PythonWasmCompilerError::FsError(
-                    format!("SDK directory not found: {}", sdk_path.display())
-                ));
+                return Err(PythonWasmCompilerError::FsError(format!(
+                    "SDK directory not found: {}",
+                    sdk_path.display()
+                )));
             }
 
             if !sdk_path.exists() {
-                return Err(PythonWasmCompilerError::FsError(
-                    format!("SDK directory not found: {}", sdk_path.display())
-                ));
+                return Err(PythonWasmCompilerError::FsError(format!(
+                    "SDK directory not found: {}",
+                    sdk_path.display()
+                )));
             }
 
             let bootloader_path = self.cache_dir.join("_capsule_boot.py");
@@ -121,6 +138,8 @@ from capsule.app import TaskRunner, exports
                 .arg(&sdk_path)
                 .arg("-o")
                 .arg(&self.output_wasm)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .status()?;
 
             if !status.success() {
@@ -133,7 +152,11 @@ from capsule.app import TaskRunner, exports
         Ok(self.output_wasm.clone())
     }
 
-    fn needs_rebuild(&self, source: &Path, wasm_path: &Path) -> Result<bool, PythonWasmCompilerError> {
+    fn needs_rebuild(
+        &self,
+        source: &Path,
+        wasm_path: &Path,
+    ) -> Result<bool, PythonWasmCompilerError> {
         if !wasm_path.exists() {
             return Ok(true);
         }
@@ -145,19 +168,18 @@ from capsule.app import TaskRunner, exports
             return Ok(true);
         }
 
-        if let Some(source_dir) = source.parent() {
-            if let Ok(entries) = fs::read_dir(source_dir) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.extension().map_or(false, |ext| ext == "py") && path != source {
-                        if let Ok(metadata) = fs::metadata(&path) {
-                            if let Ok(modified) = metadata.modified() {
-                                if modified > wasm_time {
-                                    return Ok(true);
-                                }
-                            }
-                        }
-                    }
+        if let Some(source_dir) = source.parent()
+            && let Ok(entries) = fs::read_dir(source_dir)
+        {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().is_some_and(|ext| ext == "py")
+                    && path != source
+                    && let Ok(metadata) = fs::metadata(&path)
+                    && let Ok(modified) = metadata.modified()
+                    && modified > wasm_time
+                {
+                    return Ok(true);
                 }
             }
         }
@@ -189,23 +211,22 @@ from capsule.app import TaskRunner, exports
             return Ok(PathBuf::from(path));
         }
 
-        if let Ok(exe_path) = std::env::current_exe() {
-            if let Some(project_root) = exe_path
+        if let Ok(exe_path) = std::env::current_exe()
+            && let Some(project_root) = exe_path
                 .parent()
                 .and_then(|p| p.parent())
                 .and_then(|p| p.parent())
                 .and_then(|p| p.parent())
                 .and_then(|p| p.parent())
-            {
-                let sdk_path = project_root.join("crates/capsule-sdk/python/src");
-                if sdk_path.exists() {
-                    return Ok(sdk_path);
-                }
+        {
+            let sdk_path = project_root.join("crates/capsule-sdk/python/src");
+            if sdk_path.exists() {
+                return Ok(sdk_path);
             }
         }
 
         Err(PythonWasmCompilerError::FsError(
-            "Cannot find SDK. Set CAPSULE_SDK_PATH environment variable.".to_string()
+            "Cannot find SDK. Set CAPSULE_SDK_PATH environment variable.".to_string(),
         ))
     }
 }
