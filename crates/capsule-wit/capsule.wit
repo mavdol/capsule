@@ -15,6 +15,25 @@ interface api {
         args-json: string,
         config-json: string
     ) -> result<string, task-error>;
+
+    record http-response {
+        status: u16,
+        headers: list<tuple<string, string>>,
+        body: string,
+    }
+
+    variant http-error {
+        network-error(string),
+        timeout(string),
+        invalid-url(string),
+    }
+
+    http-request: func(
+        method: string,
+        url: string,
+        headers: list<tuple<string, string>>,
+        body: option<string>
+    ) -> result<http-response, http-error>;
 }
 
 interface task-runner {

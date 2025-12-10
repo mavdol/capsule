@@ -11,7 +11,7 @@ use crate::wasm::runtime::Runtime;
 use crate::wasm::utilities::task_config::TaskConfig;
 use crate::wasm::utilities::task_reporter::TaskReporter;
 
-use capsule::host::api::{Host, TaskError};
+use capsule::host::api::{Host, HttpError, HttpResponse, TaskError};
 
 bindgen!({
     path: "../capsule-wit",
@@ -102,6 +102,57 @@ impl Host for State {
         Err(TaskError::InternalError(last_error.unwrap_or_else(|| {
             "Unknown error after retries".to_string()
         })))
+    }
+
+    async fn http_request(
+        &mut self,
+        method: String,
+        url: String,
+        headers: Vec<(String, String)>,
+        body: Option<String>,
+    ) -> Result<HttpResponse, HttpError> {
+        let client = reqwest::Client::new();
+
+        let mut request_builder = match method.to_uppercase().as_str() {
+            "GET" => client.get(&url),
+            "POST" => client.post(&url),
+            "PUT" => client.put(&url),
+            "DELETE" => client.delete(&url),
+            "PATCH" => client.patch(&url),
+            "HEAD" => client.head(&url),
+            _ => return Err(HttpError::InvalidUrl(format!("Unsupported method: {}", method))),
+        };
+
+        for (key, value) in headers {
+            request_builder = request_builder.header(key, value);
+        }
+
+        if let Some(body_content) = body {
+            request_builder = request_builder.body(body_content);
+        }
+
+        let response = request_builder
+            .send()
+            .await
+            .map_err(|e| HttpError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let response_headers: Vec<(String, String)> = response
+            .headers()
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+            .collect();
+
+        let body_text = response
+            .text()
+            .await
+            .map_err(|e| HttpError::NetworkError(e.to_string()))?;
+
+        Ok(HttpResponse {
+            status,
+            headers: response_headers,
+            body: body_text,
+        })
     }
 }
 
