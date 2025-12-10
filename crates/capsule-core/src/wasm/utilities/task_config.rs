@@ -120,7 +120,7 @@ mod tests {
         assert_eq!(policy.compute, Compute::Medium);
         assert_eq!(policy.ram, None);
         assert_eq!(policy.timeout, None);
-        assert_eq!(policy.max_retries, 1);
+        assert_eq!(policy.max_retries, 0);
         assert_eq!(policy.env_vars, None);
     }
 

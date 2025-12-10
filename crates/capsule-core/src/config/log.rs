@@ -380,11 +380,11 @@ mod tests {
 
                 conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
-                    &"test_agent".to_string(),
-                    &"1.0.0".to_string(),
-                    &"test_task_123".to_string(),
-                    &"Test Task".to_string(),
-                    &"created".to_string(),
+                    "test_agent",
+                    "1.0.0",
+                    "test_task_123",
+                    "Test Task",
+                    "created",
                     "15000000",
                     "0",
                 ]).expect("Failed to insert test data");

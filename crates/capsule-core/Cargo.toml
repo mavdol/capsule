@@ -19,6 +19,3 @@ wasmtime-wasi = "29.0.0"
 
 [dev-dependencies]
 rustfmt = "0.10.0"
-
-
-

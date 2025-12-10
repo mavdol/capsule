@@ -58,9 +58,9 @@ impl Database {
             Some(path) => {
                 let database_path = &format!("{}/{}", path, database_name);
 
-                std::fs::create_dir_all(&path)?;
+                std::fs::create_dir_all(path)?;
 
-                Connection::open(&database_path)?
+                Connection::open(database_path)?
             }
             None => Connection::open(":memory:")?,
         };
@@ -309,7 +309,7 @@ mod tests {
                 })
                 .expect("Failed to query test");
 
-            assert!(result.len() > 0, "Failed to execute test");
+            assert!(!result.is_empty(), "Failed to execute test");
         }
 
         #[test]

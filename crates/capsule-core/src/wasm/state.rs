@@ -85,9 +85,9 @@ impl Host for State {
             }
         }
 
-        Err(TaskError::InternalError(
-            last_error.unwrap_or_else(|| "Unknown error after retries".to_string()),
-        ))
+        Err(TaskError::InternalError(last_error.unwrap_or_else(|| {
+            "Unknown error after retries".to_string()
+        })))
     }
 }
 

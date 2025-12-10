@@ -52,23 +52,21 @@ impl RuntimeCommand for RunInstance {
             .call_run(&mut self.store, &self.args_json);
 
         let result = match self.policy.timeout_duration() {
-            Some(duration) => {
-                match tokio::time::timeout(duration, wasm_future).await {
-                    Ok(inner_result) => inner_result,
-                    Err(_elapsed) => {
-                        runtime
-                            .log
-                            .update_log(UpdateInstanceLog {
-                                task_id: self.task_id.clone(),
-                                state: InstanceState::TimedOut,
-                                fuel_consumed: self.policy.compute.as_fuel()
-                                    - self.store.get_fuel().unwrap_or(0),
-                            })
-                            .await?;
-                        return Err(WasmRuntimeError::Timeout(self.task_id));
-                    }
+            Some(duration) => match tokio::time::timeout(duration, wasm_future).await {
+                Ok(inner_result) => inner_result,
+                Err(_elapsed) => {
+                    runtime
+                        .log
+                        .update_log(UpdateInstanceLog {
+                            task_id: self.task_id.clone(),
+                            state: InstanceState::TimedOut,
+                            fuel_consumed: self.policy.compute.as_fuel()
+                                - self.store.get_fuel().unwrap_or(0),
+                        })
+                        .await?;
+                    return Err(WasmRuntimeError::Timeout(self.policy.name));
                 }
-            }
+            },
             None => wasm_future.await,
         };
 

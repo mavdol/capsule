@@ -3,14 +3,14 @@ use std::path::Path;
 
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
-use capsule_core::wasm::execution_policy::ExecutionPolicy;
 use capsule_core::wasm::compiler::python::{PythonWasmCompiler, PythonWasmCompilerError};
-use capsule_core::wasm::runtime::WasmRuntimeError;
+use capsule_core::wasm::execution_policy::ExecutionPolicy;
 use capsule_core::wasm::runtime::Runtime;
+use capsule_core::wasm::runtime::WasmRuntimeError;
 
 pub enum RunError {
-   IoError(String),
-   CompileFailed(String),
+    IoError(String),
+    CompileFailed(String),
 }
 
 impl fmt::Display for RunError {
@@ -50,8 +50,8 @@ pub async fn execute(file_path: &Path, args: Vec<String>) -> Result<String, RunE
     let runtime = Runtime::with_config(runtime_config)?;
 
     let execution_policy = ExecutionPolicy::default();
-    let create_instance_command = CreateInstance::new(execution_policy.clone(), args.clone())
-        .wasm_path(wasm_path);
+    let create_instance_command =
+        CreateInstance::new(execution_policy.clone(), args.clone()).wasm_path(wasm_path);
 
     let (store, instance, task_id) = runtime.execute(create_instance_command).await?;
 
@@ -59,9 +59,11 @@ pub async fn execute(file_path: &Path, args: Vec<String>) -> Result<String, RunE
         "task_name": "main",
         "args": args,
         "kwargs": {}
-    }).to_string();
+    })
+    .to_string();
 
-    let run_instance_command = RunInstance::new(task_id, execution_policy, store, instance, args_json);
+    let run_instance_command =
+        RunInstance::new(task_id, execution_policy, store, instance, args_json);
 
     let result = runtime.execute(run_instance_command).await?;
 
