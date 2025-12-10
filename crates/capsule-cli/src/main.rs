@@ -32,8 +32,12 @@ async fn main() -> Result<(), CliError> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Run { file, args } => {
-            run::execute(Path::new(&file), args).await?;
+        Commands::Run {
+            file,
+            verbose,
+            args,
+        } => {
+            run::execute(Path::new(&file), args, verbose).await?;
         }
     }
 

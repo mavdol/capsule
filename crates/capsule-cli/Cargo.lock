@@ -252,7 +252,6 @@ version = "0.1.0"
 dependencies = [
  "capsule-core",
  "clap",
- "indicatif",
  "serde_json",
  "tokio",
 ]
@@ -263,6 +262,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "humantime",
+ "indicatif",
  "nanoid",
  "rusqlite",
  "serde",

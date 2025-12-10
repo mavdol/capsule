@@ -2,14 +2,14 @@ use std::fmt;
 use std::path::Path;
 use std::time::Instant;
 
-use indicatif::{ProgressBar, ProgressStyle};
-
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
 use capsule_core::wasm::compiler::python::{PythonWasmCompiler, PythonWasmCompilerError};
 use capsule_core::wasm::execution_policy::{Compute, ExecutionPolicy};
 use capsule_core::wasm::runtime::Runtime;
+use capsule_core::wasm::runtime::RuntimeConfig;
 use capsule_core::wasm::runtime::WasmRuntimeError;
+use capsule_core::wasm::utilities::task_reporter::TaskReporter;
 
 pub enum RunError {
     IoError(String),
@@ -43,36 +43,23 @@ impl From<WasmRuntimeError> for RunError {
     }
 }
 
-pub async fn execute(file_path: &Path, args: Vec<String>) -> Result<String, RunError> {
+pub async fn execute(
+    file_path: &Path,
+    args: Vec<String>,
+    verbose: bool,
+) -> Result<String, RunError> {
+    let mut reporter = TaskReporter::new(true); // Default verbose for the v0.1
+
     let compiler = PythonWasmCompiler::new(file_path)?;
 
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
-            .template("{spinner:.cyan} {msg}")
-            .unwrap(),
-    );
-    spinner.enable_steady_tick(std::time::Duration::from_millis(80));
-
-    spinner.set_message("Preparing capsule environment");
-
+    reporter.start_progress("Preparing capsule environment");
     let wasm_path = compiler.compile_wasm()?;
+    reporter.finish_progress(Some("Environment prepared"));
 
-    spinner.finish_and_clear();
-
-    let spinner = ProgressBar::new_spinner();
-    spinner.set_style(
-        ProgressStyle::default_spinner()
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
-            .template("{spinner:.cyan} {msg}")
-            .unwrap(),
-    );
-    spinner.enable_steady_tick(std::time::Duration::from_millis(80));
-
-    spinner.set_message("Launching capsule runtime");
-    let runtime_config = capsule_core::wasm::runtime::RuntimeConfig {
+    reporter.start_progress("Launching capsule runtime");
+    let runtime_config = RuntimeConfig {
         cache_dir: compiler.cache_dir.clone(),
+        verbose,
     };
     let runtime = Runtime::with_config(runtime_config)?;
 
@@ -81,9 +68,9 @@ pub async fn execute(file_path: &Path, args: Vec<String>) -> Result<String, RunE
         CreateInstance::new(execution_policy.clone(), args.clone()).wasm_path(wasm_path);
 
     let (store, instance, task_id) = runtime.execute(create_instance_command).await?;
-    spinner.finish_and_clear();
+    reporter.finish_progress(Some("Runtime launched"));
 
-    println!("📡 Capsule in orbit. Systems nominal.");
+    reporter.success("📡 Capsule in orbit. Systems nominal.");
 
     let start_time = Instant::now();
 
@@ -100,26 +87,8 @@ pub async fn execute(file_path: &Path, args: Vec<String>) -> Result<String, RunE
     let result = runtime.execute(run_instance_command).await?;
 
     let elapsed = start_time.elapsed();
-    let time_str = format_duration(elapsed);
-    println!("✓ Complete ({})", time_str);
+    let time_str = reporter.format_duration(elapsed);
+    reporter.success(&format!("✓ Complete ({})", time_str));
 
     Ok(result)
-}
-
-fn format_duration(duration: std::time::Duration) -> String {
-    let total_secs = duration.as_secs_f64();
-
-    if total_secs < 60.0 {
-        format!("{:.2}s", total_secs)
-    } else if total_secs < 3600.0 {
-        let minutes = (total_secs / 60.0).floor() as u64;
-        let seconds = total_secs % 60.0;
-        format!("{}m {:.0}s", minutes, seconds)
-    } else {
-        let hours = (total_secs / 3600.0).floor() as u64;
-        let remaining_secs = total_secs % 3600.0;
-        let minutes = (remaining_secs / 60.0).floor() as u64;
-        let seconds = remaining_secs % 60.0;
-        format!("{}h {}m {:.0}s", hours, minutes, seconds)
-    }
 }

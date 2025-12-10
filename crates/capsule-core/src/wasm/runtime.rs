@@ -49,12 +49,14 @@ pub trait RuntimeCommand {
 
 pub struct RuntimeConfig {
     pub cache_dir: PathBuf,
+    pub verbose: bool,
 }
 
 impl Default for RuntimeConfig {
     fn default() -> Self {
         Self {
             cache_dir: PathBuf::from(".capsule"),
+            verbose: false,
         }
     }
 }
@@ -65,6 +67,8 @@ pub struct Runtime {
 
     #[allow(dead_code)]
     pub(crate) cache_dir: PathBuf,
+
+    pub verbose: bool,
 
     component: RwLock<Option<Component>>,
 }
@@ -90,6 +94,7 @@ impl Runtime {
             engine: Engine::new(&engine_config)?,
             log,
             cache_dir: config.cache_dir,
+            verbose: config.verbose,
             component: RwLock::new(None),
         }))
     }

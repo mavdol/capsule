@@ -7,7 +7,10 @@ use wasmtime_wasi::{WasiCtx, WasiView};
 
 use crate::wasm::commands::create::CreateInstance;
 use crate::wasm::commands::run::RunInstance;
+use crate::wasm::runtime::Runtime;
 use crate::wasm::utilities::task_config::TaskConfig;
+use crate::wasm::utilities::task_reporter::TaskReporter;
+
 use capsule::host::api::{Host, TaskError};
 
 bindgen!({
@@ -22,7 +25,7 @@ pub struct State {
     pub ctx: WasiCtx,
     pub table: ResourceTable,
     pub limits: StoreLimits,
-    pub runtime: Option<Arc<crate::wasm::runtime::Runtime>>,
+    pub runtime: Option<Arc<Runtime>>,
 }
 
 impl WasiView for State {
@@ -50,6 +53,8 @@ impl Host for State {
             }
         };
 
+        let mut task_reporter = TaskReporter::new(runtime.verbose);
+
         let task_config: TaskConfig = serde_json::from_str(&config).unwrap_or_default();
         let policy = task_config.to_execution_policy();
         let max_retries = policy.max_retries;
@@ -62,6 +67,7 @@ impl Host for State {
             let (store, instance, task_id) = match runtime.execute(create_cmd).await {
                 Ok(result) => result,
                 Err(e) => {
+                    task_reporter.task_failed(&name, &e.to_string());
                     last_error = Some(format!("Failed to create instance: {}", e));
                     continue;
                 }
@@ -72,11 +78,17 @@ impl Host for State {
                 name, args
             );
 
+            task_reporter.task_running(&name, &task_id);
+
             let run_cmd = RunInstance::new(task_id, policy.clone(), store, instance, args_json);
 
             match runtime.execute(run_cmd).await {
-                Ok(result) => return Ok(result),
+                Ok(result) => {
+                    task_reporter.task_completed(&name);
+                    return Ok(result);
+                }
                 Err(e) => {
+                    task_reporter.task_failed(&name, &e.to_string());
                     last_error = Some(format!("Failed to run instance: {}", e));
                     if attempt < max_retries {
                         continue;
@@ -84,6 +96,8 @@ impl Host for State {
                 }
             }
         }
+
+        task_reporter.task_failed(&name, "Unknown error after retries");
 
         Err(TaskError::InternalError(last_error.unwrap_or_else(|| {
             "Unknown error after retries".to_string()
