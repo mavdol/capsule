@@ -11,6 +11,7 @@ pub enum WasmRuntimeError {
     WasmtimeError(wasmtime::Error),
     LogError(LogError),
     ConfigError(String),
+    Timeout(String),
 }
 
 impl fmt::Display for WasmRuntimeError {
@@ -21,6 +22,7 @@ impl fmt::Display for WasmRuntimeError {
             }
             WasmRuntimeError::LogError(msg) => write!(f, "Runtime error > {}", msg),
             WasmRuntimeError::ConfigError(msg) => write!(f, "Runtime error > Config > {}", msg),
+            WasmRuntimeError::Timeout(task_id) => write!(f, "Task '{}' timed out", task_id),
         }
     }
 }

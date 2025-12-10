@@ -50,6 +50,7 @@ pub enum InstanceState {
     Completed,
     Failed,
     Interrupted,
+    TimedOut,
 }
 
 impl fmt::Display for InstanceState {
@@ -60,6 +61,7 @@ impl fmt::Display for InstanceState {
             InstanceState::Completed => "completed",
             InstanceState::Failed => "failed",
             InstanceState::Interrupted => "interrupted",
+            InstanceState::TimedOut => "timed_out",
         };
         write!(f, "{}", state_str)
     }
