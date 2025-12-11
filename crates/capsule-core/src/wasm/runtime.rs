@@ -1,9 +1,10 @@
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 use crate::config::log::{Log, LogError};
+use crate::wasm::utilities::task_reporter::TaskReporter;
 use wasmtime::component::Component;
 use wasmtime::{Config, Engine};
 
@@ -71,6 +72,7 @@ pub struct Runtime {
     pub verbose: bool,
 
     component: RwLock<Option<Component>>,
+    pub task_reporter: Arc<Mutex<TaskReporter>>,
 }
 
 impl Runtime {
@@ -90,12 +92,15 @@ impl Runtime {
         engine_config.async_support(true);
         engine_config.consume_fuel(true);
 
+        let task_reporter = Arc::new(Mutex::new(TaskReporter::new(config.verbose)));
+
         Ok(Arc::new(Self {
             engine: Engine::new(&engine_config)?,
             log,
             cache_dir: config.cache_dir,
             verbose: config.verbose,
             component: RwLock::new(None),
+            task_reporter,
         }))
     }
 

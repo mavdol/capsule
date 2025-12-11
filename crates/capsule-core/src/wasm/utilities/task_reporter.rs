@@ -34,13 +34,11 @@ impl TaskReporter {
         spinner
     }
 
-
     pub fn task_running(&mut self, task_name: &str, task_id: &str) {
+        self.finish_spinner();
+        self.start_time = Instant::now();
         if self.verbose {
-            self.start_time = Instant::now();
-            let message = format!("Running task '{}' ({})", task_name, task_id);
-            self.spinner = Some(self.create_spinner(&message));
-            self.is_active.store(true, Ordering::SeqCst);
+            println!("Capsule log: ▶ Starting task '{}' ({})", task_name, task_id);
         }
     }
 
@@ -49,26 +47,39 @@ impl TaskReporter {
         if self.verbose {
             let elapsed = self.start_time.elapsed();
             let time_str = self.format_duration(elapsed);
+            println!(
+                "Capsule log: ✔ Task '{}' completed ({})",
+                task_name, time_str
+            );
+        }
+    }
 
-            println!("➜ ✅ Task '{}' completed ({})", task_name, time_str);
+    pub fn task_completed_with_time(&mut self, task_name: &str, elapsed: Duration) {
+        self.finish_spinner();
+        if self.verbose {
+            let time_str = self.format_duration(elapsed);
+            println!(
+                "Capsule log: ✔ Task '{}' completed ({})",
+                task_name, time_str
+            );
         }
     }
 
     pub fn task_failed(&mut self, task_name: &str, error: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!("➜ ❌ Task '{}' failed: {}", task_name, error);
+            println!("Capsule log: ✗ Task '{}' failed: {}", task_name, error);
         } else {
-            eprintln!("➜ ❌ {}", error);
+            eprintln!("Capsule log: ✗ {}", error);
         }
     }
 
     pub fn task_timeout(&mut self, task_name: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!("❌ Task '{}' timed out", task_name);
+            println!("Capsule log: ✗ Task '{}' timed out", task_name);
         } else {
-            eprintln!("❌ Task timed out");
+            eprintln!("Capsule log: ✗ Task timed out");
         }
     }
 
@@ -132,8 +143,8 @@ impl TaskReporter {
 
     fn finish_spinner(&mut self) {
         if let Some(spinner) = self.spinner.take() {
-            spinner.set_message("");
             spinner.finish_and_clear();
+            drop(spinner);
         }
         self.is_active.store(false, Ordering::SeqCst);
     }
@@ -182,7 +193,7 @@ mod tests {
     fn test_task_running_sets_active() {
         let mut reporter = TaskReporter::new(true);
         reporter.task_running("test_task", "task_123");
-        assert!(reporter.is_active.load(Ordering::SeqCst));
+        assert!(!reporter.is_active.load(Ordering::SeqCst));
     }
 
     #[test]

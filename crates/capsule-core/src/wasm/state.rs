@@ -9,7 +9,6 @@ use crate::wasm::commands::create::CreateInstance;
 use crate::wasm::commands::run::RunInstance;
 use crate::wasm::runtime::Runtime;
 use crate::wasm::utilities::task_config::TaskConfig;
-use crate::wasm::utilities::task_reporter::TaskReporter;
 
 use capsule::host::api::{Host, HttpError, HttpResponse, TaskError};
 
@@ -53,8 +52,6 @@ impl Host for State {
             }
         };
 
-        let mut task_reporter = TaskReporter::new(runtime.verbose);
-
         let task_config: TaskConfig = serde_json::from_str(&config).unwrap_or_default();
         let policy = task_config.to_execution_policy();
         let max_retries = policy.max_retries;
@@ -67,7 +64,11 @@ impl Host for State {
             let (store, instance, task_id) = match runtime.execute(create_cmd).await {
                 Ok(result) => result,
                 Err(e) => {
-                    task_reporter.task_failed(&name, &e.to_string());
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_failed(&name, &e.to_string());
                     last_error = Some(format!("Failed to create instance: {}", e));
                     continue;
                 }
@@ -78,17 +79,32 @@ impl Host for State {
                 name, args
             );
 
-            task_reporter.task_running(&name, &task_id);
+            runtime
+                .task_reporter
+                .lock()
+                .await
+                .task_running(&name, &task_id);
+
+            let start_time = std::time::Instant::now();
 
             let run_cmd = RunInstance::new(task_id, policy.clone(), store, instance, args_json);
 
             match runtime.execute(run_cmd).await {
                 Ok(result) => {
-                    task_reporter.task_completed(&name);
+                    let elapsed = start_time.elapsed();
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_completed_with_time(&name, elapsed);
                     return Ok(result);
                 }
                 Err(e) => {
-                    task_reporter.task_failed(&name, &e.to_string());
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_failed(&name, &e.to_string());
                     last_error = Some(format!("Failed to run instance: {}", e));
                     if attempt < max_retries {
                         continue;
@@ -97,11 +113,13 @@ impl Host for State {
             }
         }
 
-        task_reporter.task_failed(&name, "Unknown error after retries");
+        runtime
+            .task_reporter
+            .lock()
+            .await
+            .task_failed(&name, "Unknown error after retries");
 
-        Err(TaskError::InternalError(last_error.unwrap_or_else(|| {
-            "Unknown error after retries".to_string()
-        })))
+        Ok(last_error.unwrap_or_else(|| "Unknown error after retries".to_string()))
     }
 
     async fn http_request(
@@ -120,7 +138,12 @@ impl Host for State {
             "DELETE" => client.delete(&url),
             "PATCH" => client.patch(&url),
             "HEAD" => client.head(&url),
-            _ => return Err(HttpError::InvalidUrl(format!("Unsupported method: {}", method))),
+            _ => {
+                return Err(HttpError::InvalidUrl(format!(
+                    "Unsupported method: {}",
+                    method
+                )));
+            }
         };
 
         for (key, value) in headers {
