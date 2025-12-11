@@ -170,9 +170,10 @@ from capsule.app import TaskRunner, exports
         }
 
         if let Some(source_dir) = source.parent()
-            && Self::check_dir_modified(source_dir, source, wasm_time)? {
-                return Ok(true);
-            }
+            && Self::check_dir_modified(source_dir, source, wasm_time)?
+        {
+            return Ok(true);
+        }
 
         Ok(false)
     }
@@ -247,12 +248,12 @@ from capsule.app import TaskRunner, exports
                 .and_then(|p| p.parent())
                 .and_then(|p| p.parent())
                 .and_then(|p| p.parent())
-            {
-                let sdk_path = project_root.join("crates/capsule-sdk/python/src");
-                if sdk_path.exists() {
-                    return Ok(sdk_path);
-                }
+        {
+            let sdk_path = project_root.join("crates/capsule-sdk/python/src");
+            if sdk_path.exists() {
+                return Ok(sdk_path);
             }
+        }
 
         Err(PythonWasmCompilerError::FsError(
             "Cannot find SDK. Set CAPSULE_SDK_PATH environment variable or install capsule package.".to_string(),
