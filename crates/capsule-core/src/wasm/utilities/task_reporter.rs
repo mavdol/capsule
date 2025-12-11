@@ -102,11 +102,10 @@ impl TaskReporter {
         let elapsed = self.start_time.elapsed();
         let time_str = self.format_duration(elapsed);
 
-        if let Some(msg) = completion_message {
-            if self.verbose {
+        if let Some(msg) = completion_message
+            && self.verbose {
                 println!("✓ {} ({})", msg, time_str);
             }
-        }
     }
 
     pub fn info(&self, message: &str) {

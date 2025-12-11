@@ -169,17 +169,15 @@ from capsule.app import TaskRunner, exports
             return Ok(true);
         }
 
-        if let Some(source_dir) = source.parent() {
-            if self.check_dir_modified(source_dir, source, wasm_time)? {
+        if let Some(source_dir) = source.parent()
+            && Self::check_dir_modified(source_dir, source, wasm_time)? {
                 return Ok(true);
             }
-        }
 
         Ok(false)
     }
 
     fn check_dir_modified(
-        &self,
         dir: &Path,
         source: &Path,
         wasm_time: std::time::SystemTime,
@@ -194,7 +192,7 @@ from capsule.app import TaskRunner, exports
                         continue;
                     }
 
-                    if self.check_dir_modified(&path, source, wasm_time)? {
+                    if Self::check_dir_modified(&path, source, wasm_time)? {
                         return Ok(true);
                     }
                 } else if path.extension().is_some_and(|ext| ext == "py")
@@ -242,8 +240,8 @@ from capsule.app import TaskRunner, exports
             return Ok(sdk_path);
         }
 
-        if let Ok(exe_path) = std::env::current_exe() {
-            if let Some(project_root) = exe_path
+        if let Ok(exe_path) = std::env::current_exe()
+            && let Some(project_root) = exe_path
                 .parent()
                 .and_then(|p| p.parent())
                 .and_then(|p| p.parent())
@@ -255,7 +253,6 @@ from capsule.app import TaskRunner, exports
                     return Ok(sdk_path);
                 }
             }
-        }
 
         Err(PythonWasmCompilerError::FsError(
             "Cannot find SDK. Set CAPSULE_SDK_PATH environment variable or install capsule package.".to_string(),
