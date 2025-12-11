@@ -1,12 +1,14 @@
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
+
 use tokio::sync::{Mutex, RwLock};
+use wasmtime::component::Component;
+use wasmtime::{Config, Engine};
 
 use crate::config::log::{Log, LogError};
 use crate::wasm::utilities::task_reporter::TaskReporter;
-use wasmtime::component::Component;
-use wasmtime::{Config, Engine};
+
 
 pub enum WasmRuntimeError {
     WasmtimeError(wasmtime::Error),
