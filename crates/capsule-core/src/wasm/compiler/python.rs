@@ -123,7 +123,7 @@ from capsule.app import TaskRunner, exports
 
             fs::write(&bootloader_path, bootloader_content)?;
 
-            let status = Command::new("componentize-py")
+            let output = Command::new("componentize-py")
                 .arg("-d")
                 .arg(&wit_path)
                 .arg("-w")
@@ -140,12 +140,13 @@ from capsule.app import TaskRunner, exports
                 .arg(&self.output_wasm)
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
-                .status()?;
+                .output()?;
 
-            if !status.success() {
-                return Err(PythonWasmCompilerError::CompileFailed(
-                    "Compilation failed".to_string(),
-                ));
+            if !output.status.success() {
+                return Err(PythonWasmCompilerError::CompileFailed(format!(
+                    "Compilation failed: {}",
+                    String::from_utf8_lossy(&output.stderr).trim()
+                )));
             }
         }
 
@@ -169,11 +170,33 @@ from capsule.app import TaskRunner, exports
         }
 
         if let Some(source_dir) = source.parent()
-            && let Ok(entries) = fs::read_dir(source_dir)
+            && Self::check_dir_modified(source_dir, source, wasm_time)?
         {
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    fn check_dir_modified(
+        dir: &Path,
+        source: &Path,
+        wasm_time: std::time::SystemTime,
+    ) -> Result<bool, PythonWasmCompilerError> {
+        if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.extension().is_some_and(|ext| ext == "py")
+
+                if path.is_dir() {
+                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    if dir_name.starts_with('.') || dir_name == "__pycache__" {
+                        continue;
+                    }
+
+                    if Self::check_dir_modified(&path, source, wasm_time)? {
+                        return Ok(true);
+                    }
+                } else if path.extension().is_some_and(|ext| ext == "py")
                     && path != source
                     && let Ok(metadata) = fs::metadata(&path)
                     && let Ok(modified) = metadata.modified()
@@ -208,7 +231,14 @@ from capsule.app import TaskRunner, exports
 
     fn get_sdk_path(&self) -> Result<PathBuf, PythonWasmCompilerError> {
         if let Ok(path) = std::env::var("CAPSULE_SDK_PATH") {
-            return Ok(PathBuf::from(path));
+            let sdk_path = PathBuf::from(path);
+            if sdk_path.exists() {
+                return Ok(sdk_path);
+            }
+        }
+
+        if let Ok(sdk_path) = self.find_sdk_via_python() {
+            return Ok(sdk_path);
         }
 
         if let Ok(exe_path) = std::env::current_exe()
@@ -226,7 +256,44 @@ from capsule.app import TaskRunner, exports
         }
 
         Err(PythonWasmCompilerError::FsError(
-            "Cannot find SDK. Set CAPSULE_SDK_PATH environment variable.".to_string(),
+            "Cannot find SDK. Set CAPSULE_SDK_PATH environment variable or install capsule package.".to_string(),
         ))
+    }
+
+    fn find_sdk_via_python(&self) -> Result<PathBuf, PythonWasmCompilerError> {
+        let output = Command::new("python3")
+            .arg("-c")
+            .arg("import capsule; import os; print(os.path.dirname(os.path.dirname(capsule.__file__)), end='')")
+            .output()
+            .map_err(|e| {
+                PythonWasmCompilerError::FsError(format!("Failed to execute python3: {}", e))
+            })?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(PythonWasmCompilerError::FsError(format!(
+                "Python command failed: {}",
+                stderr
+            )));
+        }
+
+        let path_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+        if path_str.is_empty() {
+            return Err(PythonWasmCompilerError::FsError(
+                "Python returned empty path for capsule package".to_string(),
+            ));
+        }
+
+        let sdk_path = PathBuf::from(&path_str);
+
+        if !sdk_path.exists() {
+            return Err(PythonWasmCompilerError::FsError(format!(
+                "SDK path from Python does not exist: {}",
+                sdk_path.display()
+            )));
+        }
+
+        Ok(sdk_path)
     }
 }

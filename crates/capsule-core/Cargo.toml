@@ -10,12 +10,14 @@ crate-type = ["rlib"]
 anyhow = "1"
 humantime = "2"
 nanoid = "0.4.0"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 rusqlite = "0.37.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 tokio = "1.48.0"
 wasmtime = { version = "29.0.0", features = ["component-model", "async"] }
 wasmtime-wasi = "29.0.0"
+indicatif = "0.17"
 
 [dev-dependencies]
 rustfmt = "0.10.0"

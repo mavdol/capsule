@@ -7,8 +7,10 @@ use wasmtime_wasi::{WasiCtx, WasiView};
 
 use crate::wasm::commands::create::CreateInstance;
 use crate::wasm::commands::run::RunInstance;
+use crate::wasm::runtime::Runtime;
 use crate::wasm::utilities::task_config::TaskConfig;
-use capsule::host::api::{Host, TaskError};
+
+use capsule::host::api::{Host, HttpError, HttpResponse, TaskError};
 
 bindgen!({
     path: "../capsule-wit",
@@ -22,7 +24,7 @@ pub struct State {
     pub ctx: WasiCtx,
     pub table: ResourceTable,
     pub limits: StoreLimits,
-    pub runtime: Option<Arc<crate::wasm::runtime::Runtime>>,
+    pub runtime: Option<Arc<Runtime>>,
 }
 
 impl WasiView for State {
@@ -62,6 +64,11 @@ impl Host for State {
             let (store, instance, task_id) = match runtime.execute(create_cmd).await {
                 Ok(result) => result,
                 Err(e) => {
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_failed(&name, &e.to_string());
                     last_error = Some(format!("Failed to create instance: {}", e));
                     continue;
                 }
@@ -72,11 +79,32 @@ impl Host for State {
                 name, args
             );
 
+            runtime
+                .task_reporter
+                .lock()
+                .await
+                .task_running(&name, &task_id);
+
+            let start_time = std::time::Instant::now();
+
             let run_cmd = RunInstance::new(task_id, policy.clone(), store, instance, args_json);
 
             match runtime.execute(run_cmd).await {
-                Ok(result) => return Ok(result),
+                Ok(result) => {
+                    let elapsed = start_time.elapsed();
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_completed_with_time(&name, elapsed);
+                    return Ok(result);
+                }
                 Err(e) => {
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_failed(&name, &e.to_string());
                     last_error = Some(format!("Failed to run instance: {}", e));
                     if attempt < max_retries {
                         continue;
@@ -85,9 +113,69 @@ impl Host for State {
             }
         }
 
-        Err(TaskError::InternalError(last_error.unwrap_or_else(|| {
-            "Unknown error after retries".to_string()
-        })))
+        runtime
+            .task_reporter
+            .lock()
+            .await
+            .task_failed(&name, "Unknown error after retries");
+
+        Ok(last_error.unwrap_or_else(|| "Unknown error after retries".to_string()))
+    }
+
+    async fn http_request(
+        &mut self,
+        method: String,
+        url: String,
+        headers: Vec<(String, String)>,
+        body: Option<String>,
+    ) -> Result<HttpResponse, HttpError> {
+        let client = reqwest::Client::new();
+
+        let mut request_builder = match method.to_uppercase().as_str() {
+            "GET" => client.get(&url),
+            "POST" => client.post(&url),
+            "PUT" => client.put(&url),
+            "DELETE" => client.delete(&url),
+            "PATCH" => client.patch(&url),
+            "HEAD" => client.head(&url),
+            _ => {
+                return Err(HttpError::InvalidUrl(format!(
+                    "Unsupported method: {}",
+                    method
+                )));
+            }
+        };
+
+        for (key, value) in headers {
+            request_builder = request_builder.header(key, value);
+        }
+
+        if let Some(body_content) = body {
+            request_builder = request_builder.body(body_content);
+        }
+
+        let response = request_builder
+            .send()
+            .await
+            .map_err(|e| HttpError::NetworkError(e.to_string()))?;
+
+        let status = response.status().as_u16();
+        let response_headers: Vec<(String, String)> = response
+            .headers()
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+            .collect();
+
+        let body_text = response
+            .text()
+            .await
+            .map_err(|e| HttpError::NetworkError(e.to_string()))?;
+
+        Ok(HttpResponse {
+            status,
+            headers: response_headers,
+            body: body_text,
+        })
     }
 }
 

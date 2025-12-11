@@ -26,7 +26,7 @@ This document tracks the development status of Capsule. We follow a "Release Ear
 - [ ] **Daemon Mode:** Implement the client-server architecture and IPC communication.
 - [ ] **Basic Config:** Support `capsule.toml` to identify projects (Namespacing).
 - [ ] **Management:** `list` (Tree View), `restart`, and `stop` commands.
-- [ ] **Resilience:** Retry logic and real Timeout handling (Wall clock).
+- [x] **Resilience:** Retry logic and real Timeout handling (Wall clock).
 
 ---
 
