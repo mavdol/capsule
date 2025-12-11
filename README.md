@@ -7,7 +7,10 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
 
-***Demo video coming soon***
+<video width="100%" controls>
+  <source src="./assets/demo.mp4" type="video/mp4">
+  Your browser does not support the video tag. <a href="./assets/demo.mp4">Download the demo video</a>.
+</video>
 
 [Getting Started](#-quick-start) • [Examples](#-examples) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
