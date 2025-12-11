@@ -143,9 +143,10 @@ from capsule.app import TaskRunner, exports
                 .output()?;
 
             if !output.status.success() {
-                return Err(PythonWasmCompilerError::CompileFailed(
-                    format!("Compilation failed: {}", String::from_utf8_lossy(&output.stderr).trim())
-                ));
+                return Err(PythonWasmCompilerError::CompileFailed(format!(
+                    "Compilation failed: {}",
+                    String::from_utf8_lossy(&output.stderr).trim()
+                )));
             }
         }
 

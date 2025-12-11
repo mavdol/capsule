@@ -9,7 +9,6 @@ use wasmtime::{Config, Engine};
 use crate::config::log::{Log, LogError};
 use crate::wasm::utilities::task_reporter::TaskReporter;
 
-
 pub enum WasmRuntimeError {
     WasmtimeError(wasmtime::Error),
     LogError(LogError),
