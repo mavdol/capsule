@@ -2,13 +2,13 @@
 
 # 📦 Capsule
 
-**Fine-grained isolation and orchestration for agent systems**
+**A durable runtime for agentic workflows**
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
 
-https://github.com/user-attachments/assets/0dd8c7aa-88b2-4a95-bb39-41af12c48058
 
+https://github.com/user-attachments/assets/dc0043d5-da42-4ead-b66e-0b7025046aa1
 
 [Getting Started](#-quick-start) • [Examples](#-examples) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
@@ -240,6 +240,13 @@ Packages with C extensions like `numpy` and `pandas` are not yet supported in th
 - [x] **Resilience:** Retry logic and real Timeout handling (Wall clock).
 
 Check out the [roadmap](./ROADMAP.md) for more details.
+
+## 📝 Engineering Logs
+
+Want to follow along with Capsule's development journey? I share detailed engineering logs, technical deep-dives, and behind-the-scenes insights on Substack:
+
+**[📖 Read the Engineering Logs](https://capsuleruntime.substack.com/)**
+
 
 ## 🤝 Contributing
 
