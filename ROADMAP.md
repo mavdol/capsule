@@ -2,11 +2,13 @@
 
 This document tracks the development status of Capsule. We follow a "Release Early, Release Often" philosophy.
 
+> Note: Features marked as Planned are subject to change based on community feedback and real-world usage patterns. We prioritize what users actually need.
+
 ---
 
 ## v0.1.0: The Python Runner (MVP)
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Done
 
 **Goal:** Validating the core Host/Guest technology and Python interoperability.
 

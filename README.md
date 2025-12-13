@@ -230,6 +230,8 @@ Packages with C extensions like `numpy` and `pandas` are not yet supported in th
 
 #### v0.2.0: The Orchestrator
 
+> 💡 Community Driven: The path from v0.2 onwards is flexible. While we have a vision for a Daemon mode your feedback defines the priority.
+
 **Status:** Planned
 
 **Goal:** Turning the runner into a stable, persistent system.
