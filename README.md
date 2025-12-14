@@ -18,7 +18,7 @@ https://github.com/user-attachments/assets/dc0043d5-da42-4ead-b66e-0b7025046aa1
 
 ## 🎯 What is Capsule?
 
-Modern AI agents are evolving from simple, single-threaded scripts into **distributed multi-agent architectures** that coordinate dozens of sub-agents in parallel. These systems handle long-running workflows, large-scale data processing, and complex decision-making tasks that require:
+Modern AI agents are evolving from simple, single-threaded scripts into **distributed multi-agent architectures** that coordinate sub-agents in parallel. These systems handle long-running workflows, large-scale data processing, and complex decision-making tasks that require:
 
 - 🔒 **Robust isolation** between untrusted code and your host system
 - 📊 **Fine-grained resource control** (CPU, RAM, timeout limits)
@@ -30,25 +30,27 @@ Modern AI agents are evolving from simple, single-threaded scripts into **distri
 
 ## 🚀 How It Works
 
-Capsule leverages **WebAssembly (Wasm)** to create secure, isolated execution environments for each task. Here's what makes it powerful:
-
-1. **Decorator-Based**: Simply annotate your Python functions with `@task`
-2. **Automatic Compilation**: Python code is compiled to Wasm on-the-fly
-3. **Isolated Execution**: Each task runs in its own sandboxed Wasm instance
-4. **Resource Limits**: Enforce CPU, RAM, and time constraints per task
-5. **Fault Recovery**: Automatic retries on failure without affecting other tasks
+Capsule leverages **WebAssembly (Wasm)** to create secure, isolated execution environments for each task. Simply annotate your Python functions with `@task` decorator :
 
 ```python
 from capsule import task
 
-@task(name="analyze_data", compute="MEDIUM", ram="512MB", timeout="30s")
+@task(name="analyze_data", compute="MEDIUM", ram="512MB", timeout="30s", max_retries=1)
 def analyze_data(dataset: list) -> dict:
     """Process data in an isolated, resource-controlled environment."""
     # Your code runs safely in a Wasm sandbox
     return {"processed": len(dataset), "status": "complete"}
 ```
 
-This diagram illustrates the complete journey of a task from your command line invocation to execution within the Rust core:
+The task is then executed by the Capsule runtime, which handles:
+
+1. **Automatic Compilation**: Python code is compiled to Wasm on-the-fly
+2. **Isolated Execution**: Each task runs in its own sandboxed Wasm instance
+3. **Resource Limits**: Enforce CPU, RAM, and time constraints per task
+4. **Fault Recovery**: Automatic retries on failure without affecting other tasks
+
+
+This diagram illustrates the complete journey of a task from your command line invocation to execution within the Rust core
 
 ![Process Flow](./assets/task-execution-flow.png)
 
@@ -259,7 +261,7 @@ We welcome contributions from the community! Here's how you can help:
 3. **Add tests** if applicable: `cargo test`
 4. **Open** a Pull Request
 
-Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/issues) !
+Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/issues)
 
 
 ## 📄 License
