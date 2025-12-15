@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
+use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 
 pub struct TaskReporter {
@@ -38,7 +39,10 @@ impl TaskReporter {
         self.finish_spinner();
         self.start_time = Instant::now();
         if self.verbose {
-            println!("Capsule log: ▶ Starting task '{}' ({})", task_name, task_id);
+            println!("Capsule log: {} Starting task {} ({})",
+                "▶".cyan(),
+                format!("'{}'", task_name).cyan(),
+                task_id);
         }
     }
 
@@ -48,8 +52,11 @@ impl TaskReporter {
             let elapsed = self.start_time.elapsed();
             let time_str = self.format_duration(elapsed);
             println!(
-                "Capsule log: ✔ Task '{}' completed ({})",
-                task_name, time_str
+                "Capsule log: {} Task {} {} ({})",
+                "✔".green(),
+                format!("'{}'", task_name).cyan(),
+                "completed".green(),
+                time_str
             );
         }
     }
@@ -59,8 +66,11 @@ impl TaskReporter {
         if self.verbose {
             let time_str = self.format_duration(elapsed);
             println!(
-                "Capsule log: ✔ Task '{}' completed ({})",
-                task_name, time_str
+                "Capsule log: {} Task {} {} ({})",
+                "✔".green(),
+                format!("'{}'", task_name).cyan(),
+                "completed".green(),
+                time_str
             );
         }
     }
@@ -68,18 +78,24 @@ impl TaskReporter {
     pub fn task_failed(&mut self, task_name: &str, error: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!("Capsule log: ✗ Task '{}' failed: {}", task_name, error);
+            println!("Capsule log: {} Task {} failed: {}",
+                "✗".red(),
+                format!("'{}'", task_name).cyan(),
+                error.red());
         } else {
-            eprintln!("Capsule log: ✗ {}", error);
+            eprintln!("Capsule log: {} {}", "✗".red(), error.red());
         }
     }
 
     pub fn task_timeout(&mut self, task_name: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!("Capsule log: ✗ Task '{}' timed out", task_name);
+            println!("Capsule log: {} Task {} {}",
+                "✗".red(),
+                format!("'{}'", task_name).cyan(),
+                "timed out".red());
         } else {
-            eprintln!("Capsule log: ✗ Task timed out");
+            eprintln!("Capsule log: {} {}", "✗".red(), "Task timed out".red());
         }
     }
 
@@ -105,7 +121,7 @@ impl TaskReporter {
         if let Some(msg) = completion_message
             && self.verbose
         {
-            println!("✓ {} ({})", msg, time_str);
+            println!("{} {} ({})", "✓".green(), msg.green(), time_str);
         }
     }
 
@@ -120,7 +136,7 @@ impl TaskReporter {
     }
 
     pub fn error(&self, message: &str) {
-        eprintln!("{}", message);
+        eprintln!("{}", message.red());
     }
 
     pub fn format_duration(&self, duration: std::time::Duration) -> String {
