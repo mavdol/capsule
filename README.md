@@ -226,13 +226,13 @@ response.text()         # Get response as text
 
 ### Important Limitations
 
-Packages with C extensions like `numpy` and `pandas` are not yet supported in the current version. Support for compiled extensions is planned for future releases as we expand WebAssembly compatibility.
+Packages with C extensions like `numpy` and `pandas` are not yet supported in the current version. Support for compiled extensions is planned for future releases as Capsule expands WebAssembly compatibility.
 
 ## 📅 What's Next
 
 #### v0.2.0: The Orchestrator
 
-> 💡 Community Driven: The path from v0.2 onwards is flexible. While we have a vision for a Daemon mode your feedback defines the priority.
+> 💡 Community Driven: The path from v0.2 onwards is flexible. While the initial vision is for a Daemon mode your feedback defines the priority.
 
 **Status:** Planned
 
@@ -254,7 +254,7 @@ Want to follow along with Capsule's development journey? I share detailed engine
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Here's how you can help:
+Contributions are welcome! Here's how you can help:
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`

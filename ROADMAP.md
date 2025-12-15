@@ -1,8 +1,8 @@
 # 📌 Roadmap
 
-This document tracks the development status of Capsule. We follow a "Release Early, Release Often" philosophy.
+This document tracks the development status of Capsule.
 
-> Note: Features marked as Planned are subject to change based on community feedback and real-world usage patterns. We prioritize what users actually need.
+> Note: Features marked as Planned are subject to change based on community feedback and real-world usage patterns.
 
 ---
 
