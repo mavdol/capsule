@@ -41,6 +41,35 @@ pub struct PythonWasmCompiler {
 }
 
 impl PythonWasmCompiler {
+    fn get_python_command() -> String {
+        let candidates = vec!["python3", "python"];
+
+        for cmd in candidates {
+            if Command::new(cmd)
+                .arg("--version")
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .is_ok()
+            {
+                return cmd.to_string();
+            }
+        }
+
+        "python3".to_string()
+    }
+
+    fn normalize_path_for_command(path: &Path) -> PathBuf {
+        #[cfg(windows)]
+        {
+            let path_str = path.to_string_lossy();
+            if path_str.starts_with(r"\\?\") {
+                return PathBuf::from(&path_str[4..]);
+            }
+        }
+        path.to_path_buf()
+    }
+
     pub fn new(source_path: &Path) -> Result<Self, PythonWasmCompilerError> {
         let source_path = source_path.canonicalize().map_err(|e| {
             PythonWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e))
@@ -123,21 +152,27 @@ from capsule.app import TaskRunner, exports
 
             fs::write(&bootloader_path, bootloader_content)?;
 
+            let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
+            let cache_dir_normalized = Self::normalize_path_for_command(&self.cache_dir);
+            let python_path_normalized = Self::normalize_path_for_command(python_path);
+            let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
+            let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
+
             let output = Command::new("componentize-py")
                 .arg("-d")
-                .arg(&wit_path)
+                .arg(&wit_path_normalized)
                 .arg("-w")
                 .arg("capsule-agent")
                 .arg("componentize")
                 .arg("_capsule_boot")
                 .arg("-p")
-                .arg(&self.cache_dir)
+                .arg(&cache_dir_normalized)
                 .arg("-p")
-                .arg(python_path)
+                .arg(&python_path_normalized)
                 .arg("-p")
-                .arg(&sdk_path)
+                .arg(&sdk_path_normalized)
                 .arg("-o")
-                .arg(&self.output_wasm)
+                .arg(&output_wasm_normalized)
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .output()?;
@@ -261,12 +296,13 @@ from capsule.app import TaskRunner, exports
     }
 
     fn find_sdk_via_python(&self) -> Result<PathBuf, PythonWasmCompilerError> {
-        let output = Command::new("python3")
+        let python_cmd = Self::get_python_command();
+        let output = Command::new(&python_cmd)
             .arg("-c")
             .arg("import capsule; import os; print(os.path.dirname(os.path.dirname(capsule.__file__)), end='')")
             .output()
             .map_err(|e| {
-                PythonWasmCompilerError::FsError(format!("Failed to execute python3: {}", e))
+                PythonWasmCompilerError::FsError(format!("Failed to execute {}: {}", python_cmd, e))
             })?;
 
         if !output.status.success() {

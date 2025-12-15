@@ -39,10 +39,12 @@ impl TaskReporter {
         self.finish_spinner();
         self.start_time = Instant::now();
         if self.verbose {
-            println!("Capsule log: {} Starting task {} ({})",
+            println!(
+                "Capsule log: {} Starting task {} ({})",
                 "▶".cyan(),
                 format!("'{}'", task_name).cyan(),
-                task_id);
+                task_id
+            );
         }
     }
 
@@ -78,10 +80,12 @@ impl TaskReporter {
     pub fn task_failed(&mut self, task_name: &str, error: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!("Capsule log: {} Task {} failed: {}",
+            println!(
+                "Capsule log: {} Task {} failed: {}",
                 "✗".red(),
                 format!("'{}'", task_name).cyan(),
-                error.red());
+                error.red()
+            );
         } else {
             eprintln!("Capsule log: {} {}", "✗".red(), error.red());
         }
@@ -90,10 +94,12 @@ impl TaskReporter {
     pub fn task_timeout(&mut self, task_name: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!("Capsule log: {} Task {} {}",
+            println!(
+                "Capsule log: {} Task {} {}",
                 "✗".red(),
                 format!("'{}'", task_name).cyan(),
-                "timed out".red());
+                "timed out".red()
+            );
         } else {
             eprintln!("Capsule log: {} {}", "✗".red(), "Task timed out".red());
         }
