@@ -98,77 +98,6 @@ capsule run hello.py
 
 That's it! Your Python function just ran in a secure WebAssembly sandbox. 🎉
 
-## 📖 Examples
-
-### Basic Task with Resource Limits
-
-```python
-from capsule import task
-
-@task(
-    name="process_batch",
-    compute="MEDIUM",
-    ram="256MB",
-    timeout="60s",
-    max_retries=3
-)
-def process_batch(items: list) -> dict:
-    """Process a batch of items with resource constraints."""
-    results = []
-    for item in items:
-        # Process each item
-        results.append(process_item(item))
-
-    return {"processed": len(results), "results": results}
-```
-
-### Making HTTP Requests
-
-Standard libraries like `requests` are disabled for security. Use Capsule's built-in HTTP client:
-
-```python
-from capsule import task
-from capsule.http import get, post
-
-@task(name="fetch_data", compute="MEDIUM", timeout="30s")
-def fetch_data(api_url: str) -> dict:
-    """Fetch data from an external API."""
-    response = get(api_url)
-
-    if response.ok():
-        data = response.json()
-        print(f"✅ Fetched {len(data)} items")
-        return data
-    else:
-        print(f"❌ Request failed: {response.status_code}")
-        return {"error": response.status_code}
-
-@task(name="post_results", compute="LOW", timeout="15s")
-def post_results(api_url: str, payload: dict) -> bool:
-    """Post results to an API endpoint."""
-    response = post(api_url, json=payload)
-    return response.ok()
-```
-
-### Task with Environment Variables
-
-```python
-from capsule import task
-
-@task(
-    name="authenticated_task",
-    compute="LOW",
-    env_vars={"API_KEY": "your-api-key", "ENVIRONMENT": "production"}
-)
-def authenticated_task() -> str:
-    """Access environment variables within the task."""
-    import os
-    api_key = os.getenv("API_KEY")
-    env = os.getenv("ENVIRONMENT")
-
-    return f"Running in {env} with key: {api_key[:4]}..."
-```
-
 ## 📚 Documentation
 
 ### Task Configuration Options
@@ -197,19 +126,26 @@ Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meter
 Standard Python networking relies on sockets, which aren't natively compatible with WebAssembly's sandbox model. For security and portability, Capsule provides its own HTTP client that works seamlessly within the Wasm environment while maintaining strict isolation boundaries:
 
 ```python
+from capsule import task
 from capsule.http import get, post, put, delete
 
-# GET request
-response = get("https://api.example.com/data")
+@task(name="http_example", compute="MEDIUM", timeout="30s")
+def main() -> dict:
+    """Example demonstrating HTTP client usage within a task."""
 
-# POST with JSON body
-response = post("https://api.example.com/submit", json={"key": "value"})
+    # GET request
+    response = get("https://api.example.com/data")
 
-# Response methods
-response.ok()           # Returns True if status code is 2xx
-response.status_code    # Get the HTTP status code
-response.json()         # Parse response as JSON
-response.text()         # Get response as text
+    # POST with JSON body
+    response = post("https://api.example.com/submit", json={"key": "value"})
+
+    # Response methods
+    is_ok = response.ok()           # Returns True if status code is 2xx
+    status = response.status_code    # Get the HTTP status code
+    data = response.json()           # Parse response as JSON
+    text = response.text()           # Get response as text
+
+    return {"status": status, "success": is_ok}
 ```
 
 ## 🔧 Compatibility
