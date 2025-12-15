@@ -42,12 +42,7 @@ def analyze_data(dataset: list) -> dict:
     return {"processed": len(dataset), "status": "complete"}
 ```
 
-The task is then executed by the Capsule runtime, which handles:
-
-1. **Automatic Compilation**: Python code is compiled to Wasm on-the-fly
-2. **Isolated Execution**: Each task runs in its own sandboxed Wasm instance
-3. **Resource Limits**: Enforce CPU, RAM, and time constraints per task
-4. **Fault Recovery**: Automatic retries on failure without affecting other tasks
+When you run your task, Capsule compiles your Python code to WebAssembly on-the-fly and executes it in a dedicated sandbox. The runtime enforces the constraints you've defined (CPU allocation, memory limits, and timeouts) while automatically handling retries if something goes wrong.
 
 
 This diagram illustrates the complete journey of a task from your command line invocation to execution within the Rust core
