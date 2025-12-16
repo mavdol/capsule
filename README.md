@@ -1,5 +1,3 @@
-<div align="left">
-    
 # 📦 Capsule
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
@@ -7,11 +5,7 @@
 
 **A durable runtime for agentic workflows**
 
-
 https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
-
-
-</div>
 
 ---
 
