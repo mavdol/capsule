@@ -5,7 +5,7 @@
 
 **A durable runtime for agentic workflows**
 
-<!-- https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7 -->
+https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
 
 ---
 
