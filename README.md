@@ -7,10 +7,9 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
 
+https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
 
-https://github.com/user-attachments/assets/dc0043d5-da42-4ead-b66e-0b7025046aa1
-
-[Getting Started](#-quick-start) • [Examples](#-examples) • [Documentation](#-documentation) • [Contributing](#-contributing)
+[Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
 </div>
 
@@ -42,9 +41,6 @@ def analyze_data(dataset: list) -> dict:
     return {"processed": len(dataset), "status": "complete"}
 ```
 
-When you run your task, Capsule compiles your Python code to WebAssembly on-the-fly and executes it in a dedicated sandbox. The runtime enforces the constraints you've defined (CPU allocation, memory limits, and timeouts) while automatically handling retries if something goes wrong.
-
-
 This diagram illustrates the complete journey of a task from your command line invocation to execution within the Rust core
 
 ![Process Flow](./assets/task-execution-flow.png)
@@ -56,7 +52,7 @@ When you run `capsule run main.py`, your Python code is compiled into a WebAssem
 ### Prerequisites
 
 - **Rust** (latest stable) - [Install Rust](https://rustup.rs/)
-- **Python 3.11+** - [Install Python](https://www.python.org/downloads/) (Only for the V0.1)
+- **Python 3.13+** - [Install Python](https://www.python.org/downloads/)
 
 ### Installation
 
@@ -161,9 +157,9 @@ Packages with C extensions like `numpy` and `pandas` are not yet supported in th
 
 ## 📅 What's Next
 
-#### v0.2.0: The Orchestrator
-
 > 💡 Community Driven: The path from v0.2 onwards is flexible. While the initial vision is for a Daemon mode your feedback defines the priority.
+
+#### v0.2.0: The Orchestrator
 
 **Status:** Planned
 
