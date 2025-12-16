@@ -1,13 +1,11 @@
-<div align="center">
-
+<div align="left">
+    
 # 📦 Capsule
-
-**A durable runtime for agentic workflows**
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
 
-[Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
+**A durable runtime for agentic workflows**
 
 
 https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
