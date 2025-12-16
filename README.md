@@ -7,10 +7,9 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
 
+https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
 
-https://github.com/user-attachments/assets/dc0043d5-da42-4ead-b66e-0b7025046aa1
-
-[Getting Started](#-quick-start) • [Examples](#-examples) • [Documentation](#-documentation) • [Contributing](#-contributing)
+[Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
 </div>
 
@@ -18,7 +17,7 @@ https://github.com/user-attachments/assets/dc0043d5-da42-4ead-b66e-0b7025046aa1
 
 ## 🎯 What is Capsule?
 
-Modern AI agents are evolving from simple, single-threaded scripts into **distributed multi-agent architectures** that coordinate dozens of sub-agents in parallel. These systems handle long-running workflows, large-scale data processing, and complex decision-making tasks that require:
+Modern AI agents are evolving from simple, single-threaded scripts into **distributed multi-agent architectures** that coordinate sub-agents in parallel. These systems handle long-running workflows, large-scale data processing, and complex decision-making tasks that require:
 
 - 🔒 **Robust isolation** between untrusted code and your host system
 - 📊 **Fine-grained resource control** (CPU, RAM, timeout limits)
@@ -30,25 +29,19 @@ Modern AI agents are evolving from simple, single-threaded scripts into **distri
 
 ## 🚀 How It Works
 
-Capsule leverages **WebAssembly (Wasm)** to create secure, isolated execution environments for each task. Here's what makes it powerful:
-
-1. **Decorator-Based**: Simply annotate your Python functions with `@task`
-2. **Automatic Compilation**: Python code is compiled to Wasm on-the-fly
-3. **Isolated Execution**: Each task runs in its own sandboxed Wasm instance
-4. **Resource Limits**: Enforce CPU, RAM, and time constraints per task
-5. **Fault Recovery**: Automatic retries on failure without affecting other tasks
+Capsule leverages **WebAssembly (Wasm)** to create secure, isolated execution environments for each task. Simply annotate your Python functions with `@task` decorator :
 
 ```python
 from capsule import task
 
-@task(name="analyze_data", compute="MEDIUM", ram="512MB", timeout="30s")
+@task(name="analyze_data", compute="MEDIUM", ram="512MB", timeout="30s", max_retries=1)
 def analyze_data(dataset: list) -> dict:
     """Process data in an isolated, resource-controlled environment."""
     # Your code runs safely in a Wasm sandbox
     return {"processed": len(dataset), "status": "complete"}
 ```
 
-This diagram illustrates the complete journey of a task from your command line invocation to execution within the Rust core:
+This diagram illustrates the complete journey of a task from your command line invocation to execution within the Rust core
 
 ![Process Flow](./assets/task-execution-flow.png)
 
@@ -59,7 +52,7 @@ When you run `capsule run main.py`, your Python code is compiled into a WebAssem
 ### Prerequisites
 
 - **Rust** (latest stable) - [Install Rust](https://rustup.rs/)
-- **Python 3.11+** - [Install Python](https://www.python.org/downloads/) (Only for the V0.1)
+- **Python 3.13+** - [Install Python](https://www.python.org/downloads/)
 
 ### Installation
 
@@ -96,77 +89,6 @@ capsule run hello.py
 
 That's it! Your Python function just ran in a secure WebAssembly sandbox. 🎉
 
-## 📖 Examples
-
-### Basic Task with Resource Limits
-
-```python
-from capsule import task
-
-@task(
-    name="process_batch",
-    compute="MEDIUM",
-    ram="256MB",
-    timeout="60s",
-    max_retries=3
-)
-def process_batch(items: list) -> dict:
-    """Process a batch of items with resource constraints."""
-    results = []
-    for item in items:
-        # Process each item
-        results.append(process_item(item))
-
-    return {"processed": len(results), "results": results}
-```
-
-### Making HTTP Requests
-
-Standard libraries like `requests` are disabled for security. Use Capsule's built-in HTTP client:
-
-```python
-from capsule import task
-from capsule.http import get, post
-
-@task(name="fetch_data", compute="MEDIUM", timeout="30s")
-def fetch_data(api_url: str) -> dict:
-    """Fetch data from an external API."""
-    response = get(api_url)
-
-    if response.ok():
-        data = response.json()
-        print(f"✅ Fetched {len(data)} items")
-        return data
-    else:
-        print(f"❌ Request failed: {response.status_code}")
-        return {"error": response.status_code}
-
-@task(name="post_results", compute="LOW", timeout="15s")
-def post_results(api_url: str, payload: dict) -> bool:
-    """Post results to an API endpoint."""
-    response = post(api_url, json=payload)
-    return response.ok()
-```
-
-### Task with Environment Variables
-
-```python
-from capsule import task
-
-@task(
-    name="authenticated_task",
-    compute="LOW",
-    env_vars={"API_KEY": "your-api-key", "ENVIRONMENT": "production"}
-)
-def authenticated_task() -> str:
-    """Access environment variables within the task."""
-    import os
-    api_key = os.getenv("API_KEY")
-    env = os.getenv("ENVIRONMENT")
-
-    return f"Running in {env} with key: {api_key[:4]}..."
-```
-
 ## 📚 Documentation
 
 ### Task Configuration Options
@@ -195,19 +117,26 @@ Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meter
 Standard Python networking relies on sockets, which aren't natively compatible with WebAssembly's sandbox model. For security and portability, Capsule provides its own HTTP client that works seamlessly within the Wasm environment while maintaining strict isolation boundaries:
 
 ```python
+from capsule import task
 from capsule.http import get, post, put, delete
 
-# GET request
-response = get("https://api.example.com/data")
+@task(name="http_example", compute="MEDIUM", timeout="30s")
+def main() -> dict:
+    """Example demonstrating HTTP client usage within a task."""
 
-# POST with JSON body
-response = post("https://api.example.com/submit", json={"key": "value"})
+    # GET request
+    response = get("https://api.example.com/data")
 
-# Response methods
-response.ok()           # Returns True if status code is 2xx
-response.status_code    # Get the HTTP status code
-response.json()         # Parse response as JSON
-response.text()         # Get response as text
+    # POST with JSON body
+    response = post("https://api.example.com/submit", json={"key": "value"})
+
+    # Response methods
+    is_ok = response.ok()           # Returns True if status code is 2xx
+    status = response.status_code    # Get the HTTP status code
+    data = response.json()           # Parse response as JSON
+    text = response.text()           # Get response as text
+
+    return {"status": status, "success": is_ok}
 ```
 
 ## 🔧 Compatibility
@@ -224,9 +153,11 @@ response.text()         # Get response as text
 
 ### Important Limitations
 
-Packages with C extensions like `numpy` and `pandas` are not yet supported in the current version. Support for compiled extensions is planned for future releases as we expand WebAssembly compatibility.
+Packages with C extensions like `numpy` and `pandas` are not yet supported in the current version. Support for compiled extensions is planned for future releases as Capsule expands WebAssembly compatibility.
 
 ## 📅 What's Next
+
+> 💡 Community Driven: The path from v0.2 onwards is flexible. While the initial vision is for a Daemon mode your feedback defines the priority.
 
 #### v0.2.0: The Orchestrator
 
@@ -250,14 +181,14 @@ Want to follow along with Capsule's development journey? I share detailed engine
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Here's how you can help:
+Contributions are welcome! Here's how you can help:
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
 3. **Add tests** if applicable: `cargo test`
 4. **Open** a Pull Request
 
-Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/issues) !
+Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/issues)
 
 
 ## 📄 License

@@ -1,12 +1,14 @@
 # 📌 Roadmap
 
-This document tracks the development status of Capsule. We follow a "Release Early, Release Often" philosophy.
+This document tracks the development status of Capsule.
+
+> Note: Features marked as Planned are subject to change based on community feedback and real-world usage patterns.
 
 ---
 
 ## v0.1.0: The Python Runner (MVP)
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Done
 
 **Goal:** Validating the core Host/Guest technology and Python interoperability.
 
