@@ -181,7 +181,12 @@ impl Database {
             )));
         }
 
-        if table.chars().next().unwrap().is_numeric() {
+        if table
+            .chars()
+            .next()
+            .expect("Table name is empty")
+            .is_numeric()
+        {
             return Err(DatabaseError::InvalidQuery(
                 "Table name cannot start with a number".to_string(),
             ));

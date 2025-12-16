@@ -85,8 +85,18 @@ impl Runtime {
         let mut engine_config = Config::new();
         let db_path = config.cache_dir.join("state.db");
         let log = Log::new(
-            Some(db_path.parent().unwrap().to_str().unwrap()),
-            db_path.file_name().unwrap().to_str().unwrap(),
+            Some(
+                db_path
+                    .parent()
+                    .expect("Cache dir is empty")
+                    .to_str()
+                    .expect("failed to get cache dir"),
+            ),
+            db_path
+                .file_name()
+                .expect("Cache dir is empty")
+                .to_str()
+                .expect("failed to get cache dir"),
         )?;
 
         engine_config.wasm_component_model(true);
