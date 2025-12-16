@@ -5,13 +5,13 @@
 
 **A durable runtime for agentic workflows**
 
-https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
+<!-- https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7 -->
 
 ---
 
 ## 🎯 What is Capsule?
 
-Modern AI agents are evolving from simple, single-threaded scripts into **distributed multi-agent architectures** that coordinate sub-agents in parallel. These systems handle long-running workflows, large-scale data processing, and complex decision-making tasks that require:
+AI agents are evolving from simple, single-threaded scripts into **distributed multi-agent architectures** that coordinate sub-agents in parallel. These systems handle long-running workflows, large-scale data processing, and complex decision-making tasks that require:
 
 - 🔒 **Robust isolation** between untrusted code and your host system
 - 📊 **Fine-grained resource control** (CPU, RAM, timeout limits)
@@ -39,7 +39,7 @@ This diagram illustrates the complete journey of a task from your command line i
 
 ![Process Flow](./assets/task-execution-flow.png)
 
-When you run `capsule run main.py`, your Python code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime. 
+When you run `capsule run main.py`, your Python code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
 

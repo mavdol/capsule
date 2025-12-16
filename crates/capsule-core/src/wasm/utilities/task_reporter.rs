@@ -28,7 +28,7 @@ impl TaskReporter {
             ProgressStyle::default_spinner()
                 .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
                 .template("{spinner:.cyan} {msg}")
-                .unwrap(),
+                .expect("Failed to create progress bar template"),
         );
         spinner.enable_steady_tick(Duration::from_millis(80));
         spinner.set_message(message.to_string());
