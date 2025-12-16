@@ -7,9 +7,11 @@
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
 
+[Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
+
+
 https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
 
-[Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
 </div>
 
@@ -45,7 +47,9 @@ This diagram illustrates the complete journey of a task from your command line i
 
 ![Process Flow](./assets/task-execution-flow.png)
 
-When you run `capsule run main.py`, your Python code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime. Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
+When you run `capsule run main.py`, your Python code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime. 
+
+Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
 
 ## 🏁 Quick Start
 
@@ -80,6 +84,9 @@ def main() -> str:
     """Your first isolated task!"""
     return "Hello from Capsule! 📦✨"
 ```
+
+> [!NOTE]
+> When running Python tasks, the first execution may take a few seconds. Capsule needs to compile the full Python interpreter to Wasm (Cold Start). Subsequent runs are **instant** thanks to the built-in caching.
 
 Run it:
 
@@ -157,7 +164,8 @@ Packages with C extensions like `numpy` and `pandas` are not yet supported in th
 
 ## 📅 What's Next
 
-> 💡 Community Driven: The path from v0.2 onwards is flexible. While the initial vision is for a Daemon mode your feedback defines the priority.
+> [!IMPORTANT]
+> The path from v0.2 onwards is flexible. While the initial vision is for a Daemon mode your feedback defines the priority.
 
 #### v0.2.0: The Orchestrator
 
