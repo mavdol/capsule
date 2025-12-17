@@ -5,8 +5,6 @@
 
 **A durable runtime for agentic workflows**
 
-https://github.com/user-attachments/assets/539f7c72-6847-4a25-9a76-d55028267cd7
-
 ---
 
 ## 🎯 What is Capsule?
@@ -19,7 +17,6 @@ AI agents are evolving from simple, single-threaded scripts into **distributed m
 - 📈 **Observable task execution** with comprehensive monitoring
 
 **Capsule** is a durable runtime for agentic workflows that gives you complete control over task execution through WebAssembly sandboxing. Build reliable, scalable agent systems with confidence.
-
 
 ## 🚀 How It Works
 
@@ -34,10 +31,6 @@ def analyze_data(dataset: list) -> dict:
     # Your code runs safely in a Wasm sandbox
     return {"processed": len(dataset), "status": "complete"}
 ```
-
-This diagram illustrates the complete journey of a task from your command line invocation to execution within the Rust core
-
-![Process Flow](./assets/task-execution-flow.png)
 
 When you run `capsule run main.py`, your Python code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
 
