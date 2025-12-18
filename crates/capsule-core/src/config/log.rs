@@ -311,7 +311,7 @@ mod tests {
 
         #[test]
         fn test_new_log() {
-            let log = Log::new(None, "state.db-wal").unwrap();
+            let log = Log::new(None, "trace.db-wal").unwrap();
 
             let conn = log.db.conn.lock().unwrap();
 
@@ -340,7 +340,7 @@ mod tests {
 
         #[test]
         fn test_commit_log() {
-            let log = Log::new(None, "state.db-wal").unwrap();
+            let log = Log::new(None, "trace.db-wal").unwrap();
 
             run_async(async {
                 log.commit_log(CreateInstanceLog {
@@ -373,7 +373,7 @@ mod tests {
 
         #[test]
         fn test_update_log() {
-            let log = Log::new(None, "state.db-wal").unwrap();
+            let log = Log::new(None, "trace.db-wal").unwrap();
 
             {
                 let conn = log.db.conn.lock().unwrap();
@@ -428,7 +428,7 @@ mod tests {
 
         #[test]
         fn test_delete_log() {
-            let log = Log::new(None, "state.db-wal").unwrap();
+            let log = Log::new(None, "trace.db-wal").unwrap();
 
             {
                 let conn = log.db.conn.lock().unwrap();
@@ -530,7 +530,7 @@ mod tests {
 
         #[test]
         fn test_clear_logs() {
-            let log = Log::new(None, "state.db-wal").unwrap();
+            let log = Log::new(None, "trace.db-wal").unwrap();
 
             {
                 let conn = log.db.conn.lock().unwrap();
@@ -689,7 +689,7 @@ mod tests {
 
         #[test]
         fn test_get_logs() {
-            let log = Log::new(None, "state.db-wal").unwrap();
+            let log = Log::new(None, "trace.db-wal").unwrap();
 
             {
                 let conn = log.db.conn.lock().unwrap();

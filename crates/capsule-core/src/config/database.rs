@@ -205,13 +205,13 @@ mod tests {
 
         #[test]
         fn test_new_database_creates_in_memory_database() {
-            let db = Database::new(None, "state.db-wal");
+            let db = Database::new(None, "trace.db-wal");
             assert!(db.is_ok(), "Failed to create in-memory database");
         }
 
         #[test]
         fn test_create_table() {
-            let db = Database::new(None, "state.db-wal").expect("Failed to create database");
+            let db = Database::new(None, "trace.db-wal").expect("Failed to create database");
             db.create_table(
                 "test_table",
                 &["name TEXT NOT NULL", "path TEXT NOT NULL"],
@@ -234,7 +234,7 @@ mod tests {
 
         #[test]
         fn test_create_table_with_constraints() {
-            let db = Database::new(None, "state.db-wal").expect("Failed to create database");
+            let db = Database::new(None, "trace.db-wal").expect("Failed to create database");
             db.create_table(
                 "test_table",
                 &["name TEXT NOT NULL", "path TEXT NOT NULL"],
@@ -265,7 +265,7 @@ mod tests {
 
         #[test]
         fn test_execute() {
-            let db = Database::new(None, "state.db-wal").expect("Failed to create database");
+            let db = Database::new(None, "trace.db-wal").expect("Failed to create database");
 
             {
                 let conn = db.conn.lock().unwrap();
@@ -291,7 +291,7 @@ mod tests {
 
         #[test]
         fn test_query() {
-            let db = Database::new(None, "state.db-wal").expect("Failed to create database");
+            let db = Database::new(None, "trace.db-wal").expect("Failed to create database");
 
             {
                 let conn = db.conn.lock().unwrap();
@@ -319,7 +319,7 @@ mod tests {
 
         #[test]
         fn test_query_multiple_rows() {
-            let db = Database::new(None, "state.db-wal").expect("Failed to create database");
+            let db = Database::new(None, "trace.db-wal").expect("Failed to create database");
 
             {
                 let conn = db.conn.lock().unwrap();
@@ -361,7 +361,7 @@ mod tests {
 
         #[test]
         fn test_table_exists() {
-            let db = Database::new(None, "state.db-wal").expect("Failed to create database");
+            let db = Database::new(None, "trace.db-wal").expect("Failed to create database");
 
             {
                 let conn = db.conn.lock().unwrap();
@@ -381,7 +381,7 @@ mod tests {
 
         #[test]
         fn test_validate_table_name() {
-            let db = Database::new(None, "state.db-wal").expect("Failed to create database");
+            let db = Database::new(None, "trace.db-wal").expect("Failed to create database");
 
             let test_simple_name = db.validate_table_name("test_table");
             assert!(test_simple_name.is_ok(), "Failed to validate table name");
