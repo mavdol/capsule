@@ -111,7 +111,7 @@ Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meter
 - **HIGH** grants maximum fuel for compute-intensive operations
 - **CUSTOM** to specify an exact fuel value (e.g., `compute="1000000"`) for precise control over execution limits.
 
-### HTTP Client API
+### Python HTTP Client API
 
 Standard Python networking relies on sockets, which aren't natively compatible with WebAssembly's sandbox model. For security and portability, Capsule provides its own HTTP client that works seamlessly within the Wasm environment while maintaining strict isolation boundaries:
 
