@@ -1,9 +1,16 @@
+<div align="center">
+
 # 📦 Capsule
+
+**A durable runtime for agentic workflows**
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
 
-**A durable runtime for agentic workflows**
+[Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
+
+</div>
+
 
 ---
 
@@ -147,31 +154,6 @@ def main() -> dict:
 
 Packages with C extensions like `numpy` and `pandas` are not yet supported in the current version. Support for compiled extensions is planned for future releases as Capsule expands WebAssembly compatibility.
 
-## 📅 What's Next
-
-> [!IMPORTANT]
-> The path from v0.2 onwards is flexible. While the initial vision is for a Daemon mode your feedback defines the priority.
-
-#### v0.2.0: The Orchestrator
-
-**Status:** Planned
-
-**Goal:** Turning the runner into a stable, persistent system.
-
-- [ ] **Daemon Mode:** Implement the client-server architecture and IPC communication.
-- [ ] **Basic Config:** Support `capsule.toml` to identify projects (Namespacing).
-- [ ] **Management:** `list` (Tree View), `restart`, and `stop` commands.
-- [x] **Resilience:** Retry logic and real Timeout handling (Wall clock).
-
-Check out the [roadmap](./ROADMAP.md) for more details.
-
-## 📝 Engineering Logs
-
-Want to follow along with Capsule's development journey? I share detailed engineering logs, technical deep-dives, and behind-the-scenes insights on Substack:
-
-**[📖 Read the Engineering Logs](https://capsuleruntime.substack.com/)**
-
-
 ## 🤝 Contributing
 
 Contributions are welcome! Here's how you can help:
@@ -188,8 +170,3 @@ Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/i
 
 This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
 
----
-
-<div align="center">
-[⭐ Star us on GitHub](https://github.com/mavdol/capsule)
-</div>
