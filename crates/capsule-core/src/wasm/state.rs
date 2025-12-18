@@ -4,6 +4,7 @@ use anyhow::Result;
 use wasmtime::component::{ResourceTable, bindgen};
 use wasmtime::{ResourceLimiter, StoreLimits};
 use wasmtime_wasi::{WasiCtx, WasiView};
+use wasmtime_wasi_http::{WasiHttpCtx, WasiHttpView};
 
 use crate::wasm::commands::create::CreateInstance;
 use crate::wasm::commands::run::RunInstance;
@@ -22,6 +23,7 @@ pub use capsule::host::api as host_api;
 
 pub struct State {
     pub ctx: WasiCtx,
+    pub http_ctx: WasiHttpCtx,
     pub table: ResourceTable,
     pub limits: StoreLimits,
     pub runtime: Option<Arc<Runtime>>,
@@ -30,6 +32,15 @@ pub struct State {
 impl WasiView for State {
     fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.ctx
+    }
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.table
+    }
+}
+
+impl WasiHttpView for State {
+    fn ctx(&mut self) -> &mut WasiHttpCtx {
+        &mut self.http_ctx
     }
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
