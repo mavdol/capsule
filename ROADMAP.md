@@ -6,7 +6,7 @@ This document tracks the development status of Capsule.
 
 ---
 
-## v0.1.0: The Python Runner (MVP)
+## v0.1.0: The Python Runner
 
 **Status:** ✅ Done
 
@@ -16,19 +16,18 @@ This document tracks the development status of Capsule.
 - [x] **SDK (Python):** Basic `@task` decorator with JSON serialization.
 - [x] **CLI:** `capsule run main.py` with JIT compilation.
 - [x] **Limits:** Basic Fuel metering for CPU protection.
+- [x] **Resilience:** Retry logic and real Timeout handling (Wall clock).
 
 ---
 
-## v0.2.0: The Orchestrator
+## v0.2.0: Production & Polyglot
 
-**Status:** 📅 Planned
+**Status:** 🛠️ In progress
 
-**Goal:** Turning the runner into a stable, persistent system.
+**Goal:** Stability, security, and expanding the ecosystem.
 
-- [ ] **Daemon Mode:** Implement the client-server architecture and IPC communication.
-- [ ] **Basic Config:** Support `capsule.toml` to identify projects (Namespacing).
-- [ ] **Management:** `list` (Tree View), `restart`, and `stop` commands.
-- [x] **Resilience:** Retry logic and real Timeout handling (Wall clock).
+- [ ] **TypeScript SDK:** Functional wrapper support (`const t = task(...)`).
+- [ ] **Distribution:** CI/CD for binaries and Package Registries (PyPI, npm, crates.io).
 
 ---
 
@@ -40,18 +39,6 @@ This document tracks the development status of Capsule.
 
 - [ ] **Hardware:** Experimental **GPU** support via WASI-NN (Local Inference).
 - [ ] **Data:** Local file mounting (`fs_access`) for passing images/CSVs.
-- [ ] **Observability:** Structured telemetry output (`traces.jsonl`).
 
 ---
 
-## v0.4.0: Production & Polyglot
-
-**Status:** 📅 Planned
-
-**Goal:** Stability, security, and expanding the ecosystem.
-
-- [ ] **TypeScript SDK:** Functional wrapper support (`const t = task(...)`).
-- [ ] **Rust SDK:** Native support via `#[task]` macros.
-- [ ] **Go SDK:** Registered function support.
-- [ ] **Security:** Full `capsule.toml` support (Network Whitelisting).
-- [ ] **Distribution:** CI/CD for binaries and Package Registries (PyPI, npm, crates.io).
