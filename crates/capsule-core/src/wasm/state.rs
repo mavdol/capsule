@@ -124,13 +124,7 @@ impl Host for State {
             }
         }
 
-        runtime
-            .task_reporter
-            .lock()
-            .await
-            .task_failed(&name, "Unknown error after retries");
-
-        Ok(last_error.unwrap_or_else(|| "Unknown error after retries".to_string()))
+        Ok(last_error.unwrap_or_else(|| "Unknown error".to_string()))
     }
 
     async fn http_request(
