@@ -79,7 +79,7 @@ impl Host for State {
                         .task_reporter
                         .lock()
                         .await
-                        .task_failed(&name, &e.to_string());
+                        .task_failed(&name, &format!("Task '{}' failed : {}", &name, &e.to_string()));
                     last_error = Some(format!("Failed to create instance: {}", e));
                     continue;
                 }
@@ -115,7 +115,7 @@ impl Host for State {
                         .task_reporter
                         .lock()
                         .await
-                        .task_failed(&name, &e.to_string());
+                        .task_failed(&name, &format!("Task '{}' failed : {}", &name, &e.to_string()));
                     last_error = Some(format!("Failed to run instance: {}", e));
                     if attempt < max_retries {
                         continue;

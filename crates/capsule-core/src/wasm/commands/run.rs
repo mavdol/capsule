@@ -64,7 +64,14 @@ impl RuntimeCommand for RunInstance {
                                 - self.store.get_fuel().unwrap_or(0),
                         })
                         .await?;
-                    return Err(WasmRuntimeError::Timeout(self.policy.name));
+
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_failed(&self.policy.name, &format!("Task '{}' timed out", self.policy.name));
+
+                    return Ok(String::new());
                 }
             },
             None => wasm_future.await,
@@ -93,7 +100,14 @@ impl RuntimeCommand for RunInstance {
                             - self.store.get_fuel().unwrap_or(0),
                     })
                     .await?;
-                Ok(format!(r#"{{"error": "{}"}}"#, error_msg))
+
+                runtime
+                    .task_reporter
+                    .lock()
+                    .await
+                    .task_failed(&self.policy.name, &format!("Task '{}' failed : {}", self.policy.name, error_msg));
+
+                Ok(String::new())
             }
             Err(e) => {
                 runtime
@@ -106,7 +120,13 @@ impl RuntimeCommand for RunInstance {
                     })
                     .await?;
 
-                Err(WasmRuntimeError::WasmtimeError(e))
+                runtime
+                    .task_reporter
+                    .lock()
+                    .await
+                    .task_failed(&self.policy.name, &format!("Task '{}' failed : {}", self.policy.name, e.to_string()));
+
+                Ok(String::new())
             }
         }
     }

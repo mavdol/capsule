@@ -1,30 +1,33 @@
-use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::process::Stdio;
+use std::process::{Command, Stdio};
 
 use super::CAPSULE_WIT;
 
+#[derive(Debug)]
 pub enum JavascriptWasmCompilerError {
-    CompileFailed(String),
     FsError(String),
+    CommandFailed(String),
+    CompileFailed(String),
 }
 
-impl fmt::Display for JavascriptWasmCompilerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for JavascriptWasmCompilerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            JavascriptWasmCompilerError::FsError(msg) => write!(f, "Filesystem error > {}", msg),
+            JavascriptWasmCompilerError::CommandFailed(msg) => {
+                write!(f, "Command failed > {}", msg)
+            }
             JavascriptWasmCompilerError::CompileFailed(msg) => {
                 write!(f, "Compilation failed > {}", msg)
             }
-            JavascriptWasmCompilerError::FsError(msg) => write!(f, "File system error > {}", msg),
         }
     }
 }
 
 impl From<std::io::Error> for JavascriptWasmCompilerError {
     fn from(err: std::io::Error) -> Self {
-        JavascriptWasmCompilerError::CompileFailed(err.to_string())
+        JavascriptWasmCompilerError::FsError(err.to_string())
     }
 }
 
@@ -57,18 +60,14 @@ impl JavascriptWasmCompiler {
             JavascriptWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e))
         })?;
 
-        let source_dir = source_path
+        let cache_dir = source_path
             .parent()
-            .ok_or(JavascriptWasmCompilerError::FsError(
-                "Cannot determine source directory".to_string(),
-            ))?;
+            .ok_or_else(|| JavascriptWasmCompilerError::FsError("Invalid source path".to_string()))?
+            .join(".capsule");
 
-        let cache_dir = source_dir.join(".capsule");
-        let output_wasm = cache_dir.join("capsule.wasm");
+        fs::create_dir_all(&cache_dir)?;
 
-        if !cache_dir.exists() {
-            fs::create_dir_all(&cache_dir)?;
-        }
+        let output_wasm = cache_dir.join("agent.wasm");
 
         Ok(Self {
             source_path,
@@ -90,124 +89,81 @@ impl JavascriptWasmCompiler {
             };
 
             let wrapper_path = self.cache_dir.join("_capsule_boot.js");
-            let source_dir = self
-                .source_path
-                .parent()
-                .ok_or(JavascriptWasmCompilerError::FsError(
-                    "Cannot determine parent directory".to_string(),
-                ))?;
+            let bundled_path = self.cache_dir.join("_capsule_bundled.js");
 
-            let module_name = source_for_import
-                .file_stem()
-                .ok_or(JavascriptWasmCompilerError::FsError(
-                    "Invalid source file name".to_string(),
-                ))?
-                .to_str()
-                .ok_or(JavascriptWasmCompilerError::FsError(
-                    "Invalid UTF-8 in file name".to_string(),
-                ))?;
+            let import_path = source_for_import
+                .canonicalize()
+                .unwrap_or_else(|_| source_for_import.to_path_buf())
+                .display()
+                .to_string();
 
+            let sdk_path_str = sdk_path.to_str().ok_or_else(|| {
+                JavascriptWasmCompilerError::FsError("Invalid SDK path".to_string())
+            })?;
 
             let wrapper_content = format!(
                 r#"// Auto-generated bootloader for Capsule
-
-// Import user module and SDK
-import './{module_name}.js';
-import {{ exports }} from '{sdk_path}/capsule/app.js';
-
-// Re-export the TaskRunner interface
-export {{ exports }};
-"#,
-                module_name = module_name,
-                sdk_path = sdk_path.display()
+                    import * as hostApi from 'capsule:host/api';
+                    globalThis['capsule:host/api'] = hostApi;
+                    import '{}';
+                    import {{ exports }} from '{}/dist/app.js';
+                    export const taskRunner = exports;
+                "#,
+                import_path, sdk_path_str
             );
 
             fs::write(&wrapper_path, wrapper_content)?;
 
-            let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
             let wrapper_path_normalized = Self::normalize_path_for_command(&wrapper_path);
+            let bundled_path_normalized = Self::normalize_path_for_command(&bundled_path);
+            let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
+            let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
             let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
-            let output = Command::new("jco")
-                .arg("componentize")
+            let esbuild_output = Command::new("npx")
+                .arg("esbuild")
                 .arg(&wrapper_path_normalized)
-                .arg("--wit")
-                .arg(&wit_path_normalized)
-                .arg("-n")
-                .arg("capsule-agent")
-                .arg("-o")
-                .arg(&output_wasm_normalized)
-                .current_dir(source_dir)
+                .arg("--bundle")
+                .arg("--format=esm")
+                .arg("--platform=neutral")
+                .arg("--external:capsule:host/api")
+                .arg(format!("--outfile={}", bundled_path_normalized.display()))
+                .current_dir(&sdk_path_normalized)
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .output()?;
 
-            if !output.status.success() {
+            if !esbuild_output.status.success() {
                 return Err(JavascriptWasmCompilerError::CompileFailed(format!(
-                    "Compilation failed: {}",
-                    String::from_utf8_lossy(&output.stderr).trim()
+                    "Bundling failed: {}",
+                    String::from_utf8_lossy(&esbuild_output.stderr).trim()
+                )));
+            }
+
+            let jco_output = Command::new("npx")
+                .arg("jco")
+                .arg("componentize")
+                .arg(&bundled_path_normalized)
+                .arg("--wit")
+                .arg(&wit_path_normalized)
+                .arg("--world-name")
+                .arg("capsule-agent")
+                .arg("-o")
+                .arg(&output_wasm_normalized)
+                .current_dir(&sdk_path_normalized)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .output()?;
+
+            if !jco_output.status.success() {
+                return Err(JavascriptWasmCompilerError::CompileFailed(format!(
+                    "Component creation failed: {}",
+                    String::from_utf8_lossy(&jco_output.stderr).trim()
                 )));
             }
         }
 
         Ok(self.output_wasm.clone())
-    }
-
-    fn needs_rebuild(
-        &self,
-        source: &Path,
-        wasm_path: &Path,
-    ) -> Result<bool, JavascriptWasmCompilerError> {
-        if !wasm_path.exists() {
-            return Ok(true);
-        }
-
-        let wasm_time = fs::metadata(wasm_path).and_then(|m| m.modified())?;
-
-        let source_time = fs::metadata(source).and_then(|m| m.modified())?;
-        if source_time > wasm_time {
-            return Ok(true);
-        }
-
-        if let Some(source_dir) = source.parent()
-            && Self::check_dir_modified(source_dir, source, wasm_time)?
-        {
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-
-    fn check_dir_modified(
-        dir: &Path,
-        source: &Path,
-        wasm_time: std::time::SystemTime,
-    ) -> Result<bool, JavascriptWasmCompilerError> {
-        if let Ok(entries) = fs::read_dir(dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-
-                if path.is_dir() {
-                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-                    if dir_name.starts_with('.') || dir_name == "node_modules" {
-                        continue;
-                    }
-
-                    if Self::check_dir_modified(&path, source, wasm_time)? {
-                        return Ok(true);
-                    }
-                } else if path.extension().is_some_and(|ext| ext == "js" || ext == "mjs" || ext == "ts")
-                    && path != source
-                    && let Ok(metadata) = fs::metadata(&path)
-                    && let Ok(modified) = metadata.modified()
-                    && modified > wasm_time
-                {
-                    return Ok(true);
-                }
-            }
-        }
-
-        Ok(false)
     }
 
     fn get_wit_path(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
@@ -237,8 +193,11 @@ export {{ exports }};
             }
         }
 
-        if let Ok(sdk_path) = self.find_sdk_via_npm() {
-            return Ok(sdk_path);
+        if let Some(source_dir) = self.source_path.parent() {
+            let node_modules_sdk = source_dir.join("node_modules/@capsule-run/sdk");
+            if node_modules_sdk.exists() {
+                return Ok(node_modules_sdk);
+            }
         }
 
         if let Ok(exe_path) = std::env::current_exe()
@@ -249,66 +208,88 @@ export {{ exports }};
                 .and_then(|p| p.parent())
                 .and_then(|p| p.parent())
         {
-            let sdk_path = project_root.join("crates/capsule-sdk/javascript/src");
+            let sdk_path = project_root.join("crates/capsule-sdk/javascript");
             if sdk_path.exists() {
                 return Ok(sdk_path);
             }
         }
 
         Err(JavascriptWasmCompilerError::FsError(
-            "Cannot find Javascript SDK. Set CAPSULE_JS_SDK_PATH environment variable or install @capsule/sdk package.".to_string(),
+            "Could not find JavaScript SDK. Set CAPSULE_JS_SDK_PATH environment variable or run 'npm link @capsule-run/sdk' in your project directory.".to_string()
         ))
     }
 
-    fn find_sdk_via_npm(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
-        let output = Command::new("npm")
-            .arg("root")
-            .output()
-            .map_err(|e| {
-                JavascriptWasmCompilerError::FsError(format!("Failed to execute npm: {}", e))
-            })?;
-
-        if !output.status.success() {
-            return Err(JavascriptWasmCompilerError::FsError(
-                "npm root command failed".to_string(),
-            ));
+    fn needs_rebuild(
+        &self,
+        source: &Path,
+        output: &Path,
+    ) -> Result<bool, JavascriptWasmCompilerError> {
+        if !output.exists() {
+            return Ok(true);
         }
 
-        let node_modules = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let output_time = fs::metadata(output).and_then(|m| m.modified())?;
 
-        if node_modules.is_empty() {
-            return Err(JavascriptWasmCompilerError::FsError(
-                "npm returned empty path".to_string(),
-            ));
+        let source_time = fs::metadata(source).and_then(|m| m.modified())?;
+        if source_time > output_time {
+            return Ok(true);
         }
 
-        let sdk_path = PathBuf::from(&node_modules).join("@capsule/sdk/src");
-
-        if !sdk_path.exists() {
-            return Err(JavascriptWasmCompilerError::FsError(format!(
-                "SDK path from npm does not exist: {}",
-                sdk_path.display()
-            )));
+        if let Some(source_dir) = source.parent()
+            && Self::check_dir_modified(source_dir, source, output_time)?
+        {
+            return Ok(true);
         }
 
-        Ok(sdk_path)
+        Ok(false)
+    }
+
+    fn check_dir_modified(
+        dir: &Path,
+        source: &Path,
+        wasm_time: std::time::SystemTime,
+    ) -> Result<bool, JavascriptWasmCompilerError> {
+        if let Ok(entries) = fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+
+                if path.is_dir() {
+                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    if dir_name.starts_with('.') || dir_name == "node_modules" {
+                        continue;
+                    }
+
+                    if Self::check_dir_modified(&path, source, wasm_time)? {
+                        return Ok(true);
+                    }
+                } else if let Some(ext) = path.extension()
+                    && (ext == "js" || ext == "ts")
+                    && path != source
+                    && let Ok(metadata) = fs::metadata(&path)
+                    && let Ok(modified) = metadata.modified()
+                    && modified > wasm_time
+                {
+                    return Ok(true);
+                }
+            }
+        }
+
+        Ok(false)
     }
 
     fn transpile_typescript(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
-        let module_name = self
-            .source_path
-            .file_stem()
-            .ok_or(JavascriptWasmCompilerError::FsError(
-                "Invalid source file name".to_string(),
-            ))?
-            .to_str()
-            .ok_or(JavascriptWasmCompilerError::FsError(
-                "Invalid UTF-8 in file name".to_string(),
-            ))?;
+        let output_path = self.cache_dir.join(
+            self.source_path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .map(|s| format!("{}.js", s))
+                .ok_or_else(|| {
+                    JavascriptWasmCompilerError::FsError("Invalid source filename".to_string())
+                })?,
+        );
 
-        let output_path = self.cache_dir.join(format!("{}.js", module_name));
-
-        let output = Command::new("tsc")
+        let output = Command::new("npx")
+            .arg("tsc")
             .arg(&self.source_path)
             .arg("--outDir")
             .arg(&self.cache_dir)
@@ -324,9 +305,19 @@ export {{ exports }};
             .output()?;
 
         if !output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            eprintln!("TypeScript compilation failed!");
+            eprintln!("stdout: {}", stdout);
+            eprintln!("stderr: {}", stderr);
             return Err(JavascriptWasmCompilerError::CompileFailed(format!(
-                "TypeScript compilation failed: {}",
-                String::from_utf8_lossy(&output.stderr).trim()
+                "TypeScript compilation failed: {}{}",
+                stderr.trim(),
+                if !stdout.is_empty() {
+                    format!("\nstdout: {}", stdout.trim())
+                } else {
+                    String::new()
+                }
             )));
         }
 
@@ -339,5 +330,4 @@ export {{ exports }};
 
         Ok(output_path)
     }
-
 }
