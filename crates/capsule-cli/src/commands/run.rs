@@ -4,7 +4,9 @@ use std::time::Instant;
 
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
-use capsule_core::wasm::compiler::javascript::{JavascriptWasmCompiler, JavascriptWasmCompilerError};
+use capsule_core::wasm::compiler::javascript::{
+    JavascriptWasmCompiler, JavascriptWasmCompilerError,
+};
 use capsule_core::wasm::compiler::python::{PythonWasmCompiler, PythonWasmCompilerError};
 use capsule_core::wasm::execution_policy::{Compute, ExecutionPolicy};
 use capsule_core::wasm::runtime::Runtime;
@@ -104,8 +106,8 @@ pub async fn execute(
     let runtime = Runtime::with_config(runtime_config)?;
 
     let execution_policy = ExecutionPolicy::default().compute(Some(Compute::Custom(u64::MAX)));
-    let create_instance_command =
-        CreateInstance::new(execution_policy.clone(), args.clone()).wasm_path(compile_result.wasm_path);
+    let create_instance_command = CreateInstance::new(execution_policy.clone(), args.clone())
+        .wasm_path(compile_result.wasm_path);
 
     let (store, instance, task_id) = runtime.execute(create_instance_command).await?;
     reporter.finish_progress(Some("Runtime launched"));
