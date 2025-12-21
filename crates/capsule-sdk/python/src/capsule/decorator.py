@@ -1,3 +1,9 @@
+"""
+Capsule SDK Decorator for task-runner interface
+
+This module export a decorator to mark a function as a Capsule task.
+"""
+
 import json
 import functools
 from .host_api import call_host, is_wasm_mode

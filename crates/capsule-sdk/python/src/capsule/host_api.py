@@ -2,7 +2,7 @@
 Capsule SDK - Host API Interface
 
 This module provides the interface to call host functions from Python Wasm code.
-When running in WASM mode, it imports the auto-generated bindings from capsule-core.
+When running in WASM mode, it imports the auto-generated bindings from core.
 When running locally, it provides mock implementations for testing.
 """
 
