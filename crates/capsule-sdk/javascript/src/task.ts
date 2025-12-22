@@ -23,8 +23,6 @@ export interface TaskOptions {
   timeout?: string | number;
   /** Maximum number of retries */
   maxRetries?: number;
-  /** Environment variables */
-  envVars?: Record<string, string>;
 }
 
 interface TaskResult {
@@ -92,7 +90,6 @@ export function task<TArgs extends any[], TReturn>(
     ram: options.ram,
     timeout: normalizeTimeout(options.timeout),
     maxRetries: options.maxRetries,
-    envVars: options.envVars,
   };
 
   const wrapper = (...args: TArgs): TReturn => {

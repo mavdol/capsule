@@ -46,7 +46,6 @@ def call_host(name: str, args: list, config: dict) -> str:
             - ram: e.g., "512MB", "2GB"
             - timeout: e.g., "30s", "5m"
             - max_retries: int
-            - env_vars: list of (key, value) tuples
 
     Returns:
         JSON string with the task result

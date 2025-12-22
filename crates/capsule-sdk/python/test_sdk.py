@@ -61,28 +61,11 @@ def test_task_config_defaults():
     print("✓ Config defaults test passed")
 
 
-def test_task_config_env_vars():
-    """Test that env_vars are properly formatted."""
-
-    @task(name="env_task", env_vars={"KEY1": "value1", "KEY2": "value2"})
-    def env_task():
-        pass
-
-    config = app.get_task_config("env_task")
-    assert "env_vars" in config
-    assert isinstance(config["env_vars"], list)
-    assert ("KEY1", "value1") in config["env_vars"]
-    assert ("KEY2", "value2") in config["env_vars"]
-
-    print("✓ Env vars test passed")
-
-
 if __name__ == "__main__":
     print("Testing Capsule SDK...\n")
 
     test_task_registration()
     test_task_execution_local()
     test_task_config_defaults()
-    test_task_config_env_vars()
 
     print("\n✨ All tests passed!")

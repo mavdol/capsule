@@ -13,7 +13,6 @@ export interface TaskConfig {
   ram?: string;
   timeout?: string;
   maxRetries?: number;
-  envVars?: Record<string, string>;
 }
 
 const TASKS: Map<string, TaskInfo<any>> = new Map();
