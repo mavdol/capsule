@@ -101,7 +101,6 @@ Configure your tasks with these parameters:
 | `ram` | `str` | Memory limit for the task | `"512MB"`, `"2GB"` |
 | `timeout` | `str` | Maximum execution time | `"30s"`, `"5m"`, `"1h"` |
 | `max_retries` | `int` | Number of retry attempts on failure (default: 1) | `3` |
-| `env_vars` | `dict` | Environment variables accessible within the task | `{"KEY": "value"}` |
 
 ### Compute Levels
 
