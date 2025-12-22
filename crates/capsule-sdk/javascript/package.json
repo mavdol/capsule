@@ -1,0 +1,40 @@
+{
+  "name": "@capsule-run/sdk",
+  "version": "0.1.0",
+  "description": "Capsule SDK for JavaScript/TypeScript",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./capsule/app.js": {
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "capsule",
+    "wasm",
+    "agent",
+    "ai"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@bytecodealliance/jco": "^1.0.0",
+    "esbuild": "^0.27.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

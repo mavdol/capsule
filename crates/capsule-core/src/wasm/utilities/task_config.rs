@@ -8,8 +8,9 @@ pub struct TaskConfig {
     compute: Option<String>,
     ram: Option<String>,
     timeout: Option<String>,
+
+    #[serde(alias = "maxRetries")]
     max_retries: Option<u64>,
-    env_vars: Option<Vec<(String, String)>>,
 }
 
 impl TaskConfig {
@@ -35,7 +36,6 @@ impl TaskConfig {
             .ram(ram)
             .timeout(self.timeout.clone())
             .max_retries(self.max_retries)
-            .env_vars(self.env_vars.clone())
     }
 
     pub fn parse_ram_string(s: &str) -> Option<u64> {
@@ -121,7 +121,6 @@ mod tests {
         assert_eq!(policy.ram, None);
         assert_eq!(policy.timeout, None);
         assert_eq!(policy.max_retries, 0);
-        assert_eq!(policy.env_vars, None);
     }
 
     #[test]
@@ -132,7 +131,6 @@ mod tests {
             ram: Some("2GB".to_string()),
             timeout: Some("30s".to_string()),
             max_retries: Some(3),
-            env_vars: Some(vec![("KEY".to_string(), "VALUE".to_string())]),
         };
 
         let policy = config.to_execution_policy();
@@ -142,10 +140,6 @@ mod tests {
         assert_eq!(policy.ram, Some(2 * 1024 * 1024 * 1024));
         assert_eq!(policy.timeout, Some("30s".to_string()));
         assert_eq!(policy.max_retries, 3);
-        assert_eq!(
-            policy.env_vars,
-            Some(vec![("KEY".to_string(), "VALUE".to_string())])
-        );
     }
 
     #[test]

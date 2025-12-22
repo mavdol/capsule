@@ -4,6 +4,7 @@ use anyhow::Result;
 use wasmtime::component::{ResourceTable, bindgen};
 use wasmtime::{ResourceLimiter, StoreLimits};
 use wasmtime_wasi::{WasiCtx, WasiView};
+use wasmtime_wasi_http::{WasiHttpCtx, WasiHttpView};
 
 use crate::wasm::commands::create::CreateInstance;
 use crate::wasm::commands::run::RunInstance;
@@ -22,6 +23,7 @@ pub use capsule::host::api as host_api;
 
 pub struct State {
     pub ctx: WasiCtx,
+    pub http_ctx: WasiHttpCtx,
     pub table: ResourceTable,
     pub limits: StoreLimits,
     pub runtime: Option<Arc<Runtime>>,
@@ -30,6 +32,15 @@ pub struct State {
 impl WasiView for State {
     fn ctx(&mut self) -> &mut WasiCtx {
         &mut self.ctx
+    }
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.table
+    }
+}
+
+impl WasiHttpView for State {
+    fn ctx(&mut self) -> &mut WasiHttpCtx {
+        &mut self.http_ctx
     }
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
@@ -64,11 +75,10 @@ impl Host for State {
             let (store, instance, task_id) = match runtime.execute(create_cmd).await {
                 Ok(result) => result,
                 Err(e) => {
-                    runtime
-                        .task_reporter
-                        .lock()
-                        .await
-                        .task_failed(&name, &e.to_string());
+                    runtime.task_reporter.lock().await.task_failed(
+                        &name,
+                        &format!("Task '{}' failed : {}", &name, &e.to_string()),
+                    );
                     last_error = Some(format!("Failed to create instance: {}", e));
                     continue;
                 }
@@ -91,20 +101,26 @@ impl Host for State {
 
             match runtime.execute(run_cmd).await {
                 Ok(result) => {
-                    let elapsed = start_time.elapsed();
-                    runtime
-                        .task_reporter
-                        .lock()
-                        .await
-                        .task_completed_with_time(&name, elapsed);
-                    return Ok(result);
+                    if result.is_empty() {
+                        last_error = Some("Task failed".to_string());
+                        if attempt < max_retries {
+                            continue;
+                        }
+                    } else {
+                        let elapsed = start_time.elapsed();
+                        runtime
+                            .task_reporter
+                            .lock()
+                            .await
+                            .task_completed_with_time(&name, elapsed);
+                        return Ok(result);
+                    }
                 }
                 Err(e) => {
-                    runtime
-                        .task_reporter
-                        .lock()
-                        .await
-                        .task_failed(&name, &e.to_string());
+                    runtime.task_reporter.lock().await.task_failed(
+                        &name,
+                        &format!("Task '{}' failed : {}", &name, &e.to_string()),
+                    );
                     last_error = Some(format!("Failed to run instance: {}", e));
                     if attempt < max_retries {
                         continue;
@@ -113,13 +129,7 @@ impl Host for State {
             }
         }
 
-        runtime
-            .task_reporter
-            .lock()
-            .await
-            .task_failed(&name, "Unknown error after retries");
-
-        Ok(last_error.unwrap_or_else(|| "Unknown error after retries".to_string()))
+        Ok(last_error.unwrap_or_else(|| "Unknown error".to_string()))
     }
 
     async fn http_request(

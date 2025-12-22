@@ -83,7 +83,7 @@ impl Runtime {
 
     pub fn with_config(config: RuntimeConfig) -> Result<Arc<Self>, WasmRuntimeError> {
         let mut engine_config = Config::new();
-        let db_path = config.cache_dir.join("state.db");
+        let db_path = config.cache_dir.join("trace.db");
         let log = Log::new(
             Some(
                 db_path

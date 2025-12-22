@@ -7,6 +7,7 @@ use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Store, StoreLimitsBuilder};
 use wasmtime_wasi::WasiCtxBuilder;
 use wasmtime_wasi::add_to_linker_async;
+use wasmtime_wasi_http::WasiHttpCtx;
 
 use crate::config::log::{CreateInstanceLog, InstanceState, UpdateInstanceLog};
 use crate::wasm::execution_policy::ExecutionPolicy;
@@ -80,6 +81,7 @@ impl RuntimeCommand for CreateInstance {
         let mut linker = Linker::<State>::new(&runtime.engine);
 
         add_to_linker_async(&mut linker)?;
+        wasmtime_wasi_http::add_only_http_to_linker_async(&mut linker)?;
 
         capsule::host::api::add_to_linker(&mut linker, |state: &mut State| state)?;
 
@@ -87,7 +89,6 @@ impl RuntimeCommand for CreateInstance {
             .inherit_stdout()
             .inherit_stderr()
             .args(&self.args)
-            .envs(&self.policy.env_vars.unwrap_or_default())
             .build();
 
         let mut limits = StoreLimitsBuilder::new();
@@ -100,6 +101,7 @@ impl RuntimeCommand for CreateInstance {
 
         let state = State {
             ctx: wasi,
+            http_ctx: WasiHttpCtx::new(),
             table: ResourceTable::new(),
             limits,
             runtime: Some(Arc::clone(&runtime)),

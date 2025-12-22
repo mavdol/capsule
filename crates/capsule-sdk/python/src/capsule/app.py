@@ -1,8 +1,9 @@
-# Python SDK Export Module for task-runner interface
-#
-# This module implements the `capsule:host/task-runner` export interface
-# that the Wasm component must provide. When compiled with Rust core,
-# this is the entry point host calls.
+"""
+Capsule SDK Export Module for task-runner interface
+
+This module implements the `capsule:host/task-runner` export interface
+that the Wasm component provide.
+"""
 
 import json
 

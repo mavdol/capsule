@@ -1,10 +1,16 @@
+"""
+Capsule SDK Decorator for task-runner interface
+
+This module export a decorator to mark a function as a Capsule task.
+"""
+
 import json
 import functools
 from .host_api import call_host, is_wasm_mode
 from . import app
 
 
-def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, env_vars=None):
+def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None):
     """
     Decorator to mark a function as a Capsule task.
 
@@ -14,7 +20,6 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, 
         ram: RAM limit - e.g., "512MB", "2GB"
         timeout: Timeout duration - e.g., "30s", "5m"
         max_retries: Maximum number of retries (default: 1)
-        env_vars: Environment variables as dict
 
     In WASM mode:
     - The function is registered in the task registry with its config
@@ -38,8 +43,6 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, 
             task_config["timeout"] = timeout
         if max_retries is not None:
             task_config["max_retries"] = max_retries
-        if env_vars is not None:
-            task_config["env_vars"] = list(env_vars.items()) if isinstance(env_vars, dict) else env_vars
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

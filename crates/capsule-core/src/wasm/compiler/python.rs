@@ -136,15 +136,9 @@ impl PythonWasmCompiler {
             let bootloader_path = self.cache_dir.join("_capsule_boot.py");
             let bootloader_content = format!(
                 r#"# Auto-generated bootloader for Capsule
-
-# Import the module and registers all @task decorated functions
 import {module_name}
-
-# Store reference to main module so SDK can find main() even without @task
 import capsule.app
 capsule.app._main_module = {module_name}
-
-# Re-export the TaskRunner and exports from the SDK
 from capsule.app import TaskRunner, exports
 "#,
                 module_name = module_name

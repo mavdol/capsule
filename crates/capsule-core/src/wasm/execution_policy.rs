@@ -32,7 +32,6 @@ pub struct ExecutionPolicy {
     pub ram: Option<u64>,
     pub timeout: Option<String>,
     pub max_retries: u64,
-    pub env_vars: Option<Vec<(String, String)>>,
 }
 
 impl Default for ExecutionPolicy {
@@ -43,7 +42,6 @@ impl Default for ExecutionPolicy {
             ram: None,
             timeout: None,
             max_retries: 0,
-            env_vars: None,
         }
     }
 }
@@ -84,11 +82,6 @@ impl ExecutionPolicy {
         self
     }
 
-    pub fn env_vars(mut self, env_vars: Option<Vec<(String, String)>>) -> Self {
-        self.env_vars = env_vars;
-        self
-    }
-
     pub fn timeout_duration(&self) -> Option<Duration> {
         self.timeout
             .as_ref()
@@ -107,14 +100,12 @@ mod tests {
             .compute(None)
             .ram(Some(128))
             .timeout(Some("60s".to_string()))
-            .max_retries(Some(3))
-            .env_vars(None);
+            .max_retries(Some(3));
 
         assert_eq!(policy.name, "test");
         assert_eq!(policy.compute, Compute::Medium);
         assert_eq!(policy.ram, Some(128));
         assert_eq!(policy.timeout, Some("60s".to_string()));
         assert_eq!(policy.max_retries, 3);
-        assert_eq!(policy.env_vars, None);
     }
 }
