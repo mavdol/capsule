@@ -136,11 +136,11 @@ impl PythonWasmCompiler {
             let bootloader_path = self.cache_dir.join("_capsule_boot.py");
             let bootloader_content = format!(
                 r#"# Auto-generated bootloader for Capsule
-                    import {module_name}
-                    import capsule.app
-                    capsule.app._main_module = {module_name}
-                    from capsule.app import TaskRunner, exports
-                "#,
+import {module_name}
+import capsule.app
+capsule.app._main_module = {module_name}
+from capsule.app import TaskRunner, exports
+"#,
                 module_name = module_name
             );
 
