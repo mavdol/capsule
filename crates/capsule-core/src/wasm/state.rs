@@ -101,13 +101,20 @@ impl Host for State {
 
             match runtime.execute(run_cmd).await {
                 Ok(result) => {
-                    let elapsed = start_time.elapsed();
-                    runtime
-                        .task_reporter
-                        .lock()
-                        .await
-                        .task_completed_with_time(&name, elapsed);
-                    return Ok(result);
+                    if result.is_empty() {
+                        last_error = Some("Task failed".to_string());
+                        if attempt < max_retries {
+                            continue;
+                        }
+                    } else {
+                        let elapsed = start_time.elapsed();
+                        runtime
+                            .task_reporter
+                            .lock()
+                            .await
+                            .task_completed_with_time(&name, elapsed);
+                        return Ok(result);
+                    }
                 }
                 Err(e) => {
                     runtime.task_reporter.lock().await.task_failed(

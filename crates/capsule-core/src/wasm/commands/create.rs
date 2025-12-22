@@ -89,7 +89,6 @@ impl RuntimeCommand for CreateInstance {
             .inherit_stdout()
             .inherit_stderr()
             .args(&self.args)
-            .envs(&self.policy.env_vars.unwrap_or_default())
             .build();
 
         let mut limits = StoreLimitsBuilder::new();
