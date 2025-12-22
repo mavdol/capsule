@@ -130,7 +130,7 @@ mod tests {
             compute: Some("HIGH".to_string()),
             ram: Some("2GB".to_string()),
             timeout: Some("30s".to_string()),
-            max_retries: Some(3)
+            max_retries: Some(3),
         };
 
         let policy = config.to_execution_policy();
