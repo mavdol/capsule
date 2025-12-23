@@ -41,6 +41,8 @@ def analyze_data(dataset: list) -> dict:
 
 When you run `capsule run main.py`, your Python code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
 
+<img width="2596" height="1536" alt="task-orchestrator" src="https://github.com/user-attachments/assets/eddcb24f-bcd9-415d-9886-e3090d8eeb02" />
+
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
 
 ## 🏁 Quick Start
