@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
+use chrono::Utc;
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
 
@@ -35,15 +36,15 @@ impl TaskReporter {
         spinner
     }
 
-    pub fn task_running(&mut self, task_name: &str, task_id: &str) {
+    pub fn task_running(&mut self, task_name: &str, _task_id: &str) {
         self.finish_spinner();
         self.start_time = Instant::now();
         if self.verbose {
             println!(
-                "Capsule log: {} Starting task {} ({})",
-                "▶".cyan(),
-                format!("'{}'", task_name).cyan(),
-                task_id
+                "{} {} [{}] Starting task...",
+                Self::timestamp(),
+                "INFO".cyan(),
+                task_name.magenta()
             );
         }
     }
@@ -54,10 +55,10 @@ impl TaskReporter {
             let elapsed = self.start_time.elapsed();
             let time_str = self.format_duration(elapsed);
             println!(
-                "Capsule log: {} Task {} {} ({})",
-                "✔".green(),
-                format!("'{}'", task_name).cyan(),
-                "completed".green(),
+                "{} {} [{}] Completed in {}",
+                Self::timestamp(),
+                "SUCCESS".green(),
+                task_name.magenta(),
                 time_str
             );
         }
@@ -68,10 +69,10 @@ impl TaskReporter {
         if self.verbose {
             let time_str = self.format_duration(elapsed);
             println!(
-                "Capsule log: {} Task {} {} ({})",
-                "✔".green(),
-                format!("'{}'", task_name).cyan(),
-                "completed".green(),
+                "{} {} [{}] Completed in {}",
+                Self::timestamp(),
+                "SUCCESS".green(),
+                task_name.magenta(),
                 time_str
             );
         }
@@ -81,13 +82,19 @@ impl TaskReporter {
         self.finish_spinner();
         if self.verbose {
             println!(
-                "Capsule log: {} Task {} failed: {}",
-                "✗".red(),
-                format!("'{}'", task_name).cyan(),
-                error.red()
+                "{} {} [{}] {}",
+                Self::timestamp(),
+                "ERROR".red(),
+                task_name.magenta(),
+                error
             );
         } else {
-            eprintln!("Capsule log: {} {}", "✗".red(), error.red());
+            eprintln!(
+                "{} {} {}",
+                Self::timestamp(),
+                "ERROR".red(),
+                error
+            );
         }
     }
 
@@ -95,13 +102,17 @@ impl TaskReporter {
         self.finish_spinner();
         if self.verbose {
             println!(
-                "Capsule log: {} Task {} {}",
-                "✗".red(),
-                format!("'{}'", task_name).cyan(),
-                "timed out".red()
+                "{} {} [{}] Task timed out",
+                Self::timestamp(),
+                "ERROR".red(),
+                task_name.magenta()
             );
         } else {
-            eprintln!("Capsule log: {} {}", "✗".red(), "Task timed out".red());
+            eprintln!(
+                "{} {} Task timed out",
+                Self::timestamp(),
+                "ERROR".red()
+            );
         }
     }
 
@@ -169,6 +180,10 @@ impl TaskReporter {
             drop(spinner);
         }
         self.is_active.store(false, Ordering::SeqCst);
+    }
+
+    fn timestamp() -> colored::ColoredString {
+        Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string().dimmed()
     }
 }
 

@@ -67,7 +67,7 @@ impl RuntimeCommand for RunInstance {
 
                     runtime.task_reporter.lock().await.task_failed(
                         &self.policy.name,
-                        &format!("Task '{}' timed out", self.policy.name),
+                        &format!("Timed out"),
                     );
 
                     return Ok(String::new());
@@ -102,7 +102,7 @@ impl RuntimeCommand for RunInstance {
 
                 runtime.task_reporter.lock().await.task_failed(
                     &self.policy.name,
-                    &format!("Task '{}' failed : {}", self.policy.name, error_msg),
+                    &format!("{}", error_msg),
                 );
 
                 Ok(String::new())
@@ -120,7 +120,7 @@ impl RuntimeCommand for RunInstance {
 
                 runtime.task_reporter.lock().await.task_failed(
                     &self.policy.name,
-                    &format!("Task '{}' failed : {}", self.policy.name, e),
+                    &format!("{}", e),
                 );
 
                 Ok(String::new())

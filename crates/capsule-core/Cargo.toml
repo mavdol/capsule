@@ -19,6 +19,7 @@ wasmtime = { version = "29.0.0", features = ["component-model", "async"] }
 wasmtime-wasi = "29.0.0"
 wasmtime-wasi-http = "29.0.0"
 indicatif = "0.17"
+chrono = "0.4"
 colored = "2.1"
 
 [dev-dependencies]
