@@ -83,7 +83,7 @@ def main() -> str:
 Run it:
 
 ```bash
-capsule run hello.py
+capsule run hello.py --verbose
 ```
 
 That's it! Your Python function just ran in a secure WebAssembly sandbox. 🎉
