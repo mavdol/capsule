@@ -89,12 +89,7 @@ impl TaskReporter {
                 error
             );
         } else {
-            eprintln!(
-                "{} {} {}",
-                Self::timestamp(),
-                "ERROR".red(),
-                error
-            );
+            eprintln!("{} {} {}", Self::timestamp(), "ERROR".red(), error);
         }
     }
 
@@ -102,17 +97,13 @@ impl TaskReporter {
         self.finish_spinner();
         if self.verbose {
             println!(
-                "{} {} [{}] Task timed out",
+                "{} {} [{}] Timed out",
                 Self::timestamp(),
                 "ERROR".red(),
                 task_name.magenta()
             );
         } else {
-            eprintln!(
-                "{} {} Task timed out",
-                Self::timestamp(),
-                "ERROR".red()
-            );
+            eprintln!("{} {} Task timed out", Self::timestamp(), "ERROR".red());
         }
     }
 
@@ -183,7 +174,10 @@ impl TaskReporter {
     }
 
     fn timestamp() -> colored::ColoredString {
-        Utc::now().format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string().dimmed()
+        Utc::now()
+            .format("%Y-%m-%dT%H:%M:%S%.3fZ")
+            .to_string()
+            .dimmed()
     }
 }
 
