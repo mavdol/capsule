@@ -65,10 +65,11 @@ impl RuntimeCommand for RunInstance {
                         })
                         .await?;
 
-                    runtime.task_reporter.lock().await.task_failed(
-                        &self.policy.name,
-                        &format!("Task '{}' timed out", self.policy.name),
-                    );
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_failed(&self.policy.name, "Timed out");
 
                     return Ok(String::new());
                 }
@@ -100,10 +101,11 @@ impl RuntimeCommand for RunInstance {
                     })
                     .await?;
 
-                runtime.task_reporter.lock().await.task_failed(
-                    &self.policy.name,
-                    &format!("Task '{}' failed : {}", self.policy.name, error_msg),
-                );
+                runtime
+                    .task_reporter
+                    .lock()
+                    .await
+                    .task_failed(&self.policy.name, &error_msg);
 
                 Ok(String::new())
             }
@@ -118,10 +120,11 @@ impl RuntimeCommand for RunInstance {
                     })
                     .await?;
 
-                runtime.task_reporter.lock().await.task_failed(
-                    &self.policy.name,
-                    &format!("Task '{}' failed : {}", self.policy.name, e),
-                );
+                runtime
+                    .task_reporter
+                    .lock()
+                    .await
+                    .task_failed(&self.policy.name, &e.to_string());
 
                 Ok(String::new())
             }

@@ -27,6 +27,7 @@ This document tracks the development status of Capsule.
 **Goal:** Stability, security, and expanding the ecosystem.
 
 - [x] **TypeScript SDK:** Functional wrapper support (`const t = task(...)`).
+- [x] **Better Logs:** Better logging for debugging and monitoring.
 - [ ] **Distribution:** CI/CD for binaries and Package Registries (PyPI, npm, crates.io).
 
 ---
