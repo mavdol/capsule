@@ -12,6 +12,10 @@
 </div>
 
 
+
+https://github.com/user-attachments/assets/a47d8232-7741-4cf4-aa01-cec9b2491631
+
+
 ---
 
 ## 🎯 What is Capsule?
