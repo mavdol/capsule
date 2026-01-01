@@ -12,28 +12,26 @@
 </div>
 
 
+
+https://github.com/user-attachments/assets/a47d8232-7741-4cf4-aa01-cec9b2491631
+
+
 ---
 
 ## 🎯 What is Capsule?
 
-AI agents are becoming more complex, handling long-running workflows, large-scale processing, or even autonomous decision-making. This requires safely coordinating many agent tasks in a secure environment.
+AI agents are evolving from simple, single-threaded scripts into **distributed multi-agent architectures** that coordinate sub-agents in parallel. These systems handle long-running workflows, large-scale data processing, and complex decision-making tasks that require:
 
-Capsule isolates each task using WebAssembly for agentic workflows:
+- 🔒 **Robust isolation** between untrusted code and your host system
+- 📊 **Fine-grained resource control** (CPU, RAM, timeout limits)
+- 🔄 **Automatic retry mechanisms** for resilient execution
+- 📈 **Observable task execution** with comprehensive monitoring
 
-- 🔒 **Isolated execution** – each task runs isolated from your host system
-- 📊 **Resource control** – set CPU, memory, and timeout limits per task
-- 🔄 **Automatic retries** – handle failures without manual intervention
-- 📈 **Lifecycle tracking** – monitor which tasks are running, completed, or failed
-
-A runtime that gives you control over untrusted code execution in AI agents.
+**Capsule** is a durable runtime for agentic workflows that gives you complete control over task execution through WebAssembly sandboxing. Build reliable, scalable agent systems with confidence.
 
 ## 🚀 How It Works
 
-Capsule leverages Wasm to create secure, isolated execution environments.
-
-### With Python
-
-Simply annotate your Python functions with the `@task` decorator:
+Capsule leverages **WebAssembly (Wasm)** to create secure, isolated execution environments for each task. Simply annotate your Python functions with `@task` decorator :
 
 ```python
 from capsule import task
@@ -45,39 +43,7 @@ def analyze_data(dataset: list) -> dict:
     return {"processed": len(dataset), "status": "complete"}
 ```
 
-### With TypeScript / JavaScript
-
-Capsule now supports TypeScript and JavaScript with the `task()` wrapper function. This offers compatibility with the entire JavaScript ecosystem.
-
-```typescript
-import { task } from "@capsule-run/sdk";
-
-export const analyzeData = task({
-  name: "analyze_data",
-  compute: "MEDIUM",
-  ram: "512MB",
-  timeout: "30s",
-  maxRetries: 1
-}, (dataset: number[]): object => {
-  // Your code runs safely in a Wasm sandbox
-  return { processed: dataset.length, status: "complete" };
-});
-
-// The "main" task is required as the entrypoint
-export const main = task({
-    name: "main",
-    compute: "HIGH"
-}, () => {
-  return analyzeData([1, 2, 3, 4, 5]);
-});
-
-```
-> [!NOTE]
-> TypeScript/JavaScript projects require a task named `"main"` as the entrypoint.
-
----
-
-When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
+When you run `capsule run main.py`, your Python code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
 
@@ -85,9 +51,8 @@ Each task operates within its own sandbox with configurable resource limits, ens
 
 ### Prerequisites
 
-- **Rust** (latest stable) – [Install Rust](https://rustup.rs/)
-- **Python 3.13+** – [Install Python](https://www.python.org/downloads/) *(for Python)*
-- **Node.js 22+** – [Install Node.js](https://nodejs.org/) *(for TypeScript/JavaScript)*
+- **Rust** (latest stable) - [Install Rust](https://rustup.rs/)
+- **Python 3.13+** - [Install Python](https://www.python.org/downloads/)
 
 ### Installation
 
@@ -98,26 +63,26 @@ cd capsule
 
 # Install the Capsule CLI
 cargo install --path crates/capsule-cli
-```
 
-Then, install the SDK for your language:
-
-<details>
-<summary><strong>🐍 Python</strong></summary>
-
-```bash
+# Install the Python SDK in your workspace
 pip install -e crates/capsule-sdk/python
 ```
 
-**Your First Task**:
+### Your First Capsule Task
+
+Create a file called `hello.py`:
 
 ```python
 from capsule import task
 
-@task(name="main", compute="LOW", ram="64MB")
+@task(name="hello_capsule", compute="LOW", ram="64MB")
 def main() -> str:
-    return "Hello from Capsule!"
+    """Your first isolated task!"""
+    return "Hello from Capsule! 📦✨"
 ```
+
+> [!NOTE]
+> When running Python tasks, the first execution may take a few seconds. Capsule needs to compile the full Python interpreter to Wasm (Cold Start). Subsequent runs are **instant** thanks to the built-in caching.
 
 Run it:
 
@@ -125,45 +90,7 @@ Run it:
 capsule run hello.py --verbose
 ```
 
-</details>
-
-<details>
-<summary><strong>🟦 TypeScript / JavaScript</strong></summary>
-
-```bash
-cd crates/capsule-sdk/javascript
-npm install
-npm run build
-npm link
-```
-
-Then, in your project folder:
-
-```bash
-npm link @capsule-run/sdk
-```
-
-**Your First Task**:
-
-```typescript
-import { task } from "@capsule-run/sdk";
-
-export const main = task({
-  name: "main",
-  compute: "LOW",
-  ram: "64MB"
-}, (): string => {
-  return "Hello from Capsule!";
-});
-```
-
-Run it:
-
-```bash
-capsule run hello.ts --verbose
-```
-
-</details>
+That's it! Your Python function just ran in a secure WebAssembly sandbox. 🎉
 
 ## 📚 Documentation
 
@@ -187,11 +114,9 @@ Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meter
 - **HIGH** grants maximum fuel for compute-intensive operations
 - **CUSTOM** to specify an exact fuel value (e.g., `compute="1000000"`) for precise control over execution limits.
 
-### HTTP Client API
+### Python HTTP Client API
 
-#### Python
-
-Standard Python networking relies on sockets, which aren't natively compatible with WebAssembly's sandbox model. Capsule provides its own HTTP client that works within the Wasm environment:
+Standard Python networking relies on sockets, which aren't natively compatible with WebAssembly's sandbox model. For security and portability, Capsule provides its own HTTP client that works seamlessly within the Wasm environment while maintaining strict isolation boundaries:
 
 ```python
 from capsule import task
@@ -216,15 +141,11 @@ def main() -> dict:
     return {"status": status, "success": is_ok}
 ```
 
-#### TypeScript / JavaScript
-
-Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run/sdk`. However, standard libraries like `fetch` already compatible, so you can use whichever approach you prefer.
-
 ## 🔧 Compatibility
 
-**Current Version**: v0.2 (Python + TypeScript/JavaScript)
+**Current Version**: v0.1 (Python support only)
 
-### Python
+### What Works
 
 ✅ **Supported:**
 - CPython 3.11 inside WebAssembly
@@ -232,17 +153,9 @@ Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run
 - Pure Python packages and libraries
 - Basic I/O operations
 
-⚠️ **Limitations:**
-- Packages with C extensions like `numpy` and `pandas` are not yet supported. Support for compiled extensions is planned for future releases.
+### Important Limitations
 
-### TypeScript / JavaScript
-
-✅ **Supported:**
-- TypeScript and JavaScript via `@capsule-run/sdk`
-- npm packages and libraries
-- ES modules and modern JavaScript features
-
-> 💡 TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
+Packages with C extensions like `numpy` and `pandas` are not yet supported in the current version. Support for compiled extensions is planned for future releases as Capsule expands WebAssembly compatibility.
 
 ## 🤝 Contributing
 
