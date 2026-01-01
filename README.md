@@ -16,20 +16,20 @@
 
 ## 🎯 What is Capsule?
 
-AI agents are becoming more complex, handling long-running workflows, large-scale processing, and autonomous decision-making. This requires safely coordinating many tasks in untrusted contexts.
+AI agents are becoming more complex, handling long-running workflows, large-scale processing, or even autonomous decision-making. This requires safely coordinating many agent tasks in a secure environment.
 
-Capsule provides **WebAssembly-based task isolation** for agentic workflows:
+Capsule isolates each task using WebAssembly for agentic workflows:
 
-- 🔒 **Sandboxed execution** – each task runs isolated from your host system
+- 🔒 **Isolated execution** – each task runs isolated from your host system
 - 📊 **Resource control** – set CPU, memory, and timeout limits per task
 - 🔄 **Automatic retries** – handle failures without manual intervention
 - 📈 **Lifecycle tracking** – monitor which tasks are running, completed, or failed
 
-A task-level runtime that gives you control over untrusted code execution in AI agents.
+A runtime that gives you control over untrusted code execution in AI agents.
 
 ## 🚀 How It Works
 
-Capsule leverages **WebAssembly (Wasm)** to create secure, isolated execution environments for each task.
+Capsule leverages Wasm to create secure, isolated execution environments.
 
 ### With Python
 
