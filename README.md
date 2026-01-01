@@ -2,7 +2,7 @@
 
 # 📦 Capsule
 
-**A durable runtime for agentic workflows**
+**A secure, durable runtime for agentic workflows**
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
 [![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
@@ -16,16 +16,16 @@
 
 ## 🎯 What is Capsule?
 
-AI agents are becoming more complex, handling long-running workflows, large-scale processing, or even autonomous decision-making. This requires safely coordinating many agent tasks in a secure environment.
+Capsule is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle long-running workflows, large-scale processing, or even autonomous decision-making securely.
 
-Capsule isolates each task using WebAssembly for agentic workflows:
+Each task runs inside its own WebAssembly sandbox, providing:
 
-- 🔒 **Isolated execution** – each task runs isolated from your host system
-- 📊 **Resource control** – set CPU, memory, and timeout limits per task
-- 🔄 **Automatic retries** – handle failures without manual intervention
-- 📈 **Lifecycle tracking** – monitor which tasks are running, completed, or failed
+- 🔒 **Isolated execution**: Each task runs isolated from your host system
+- 📊 **Resource limits**: Set CPU, memory, and timeout limits per task
+- 🔄 **Automatic retries**: Handle failures without manual intervention
+- 📈 **Lifecycle tracking**: Monitor which tasks are running, completed, or failed
 
-A runtime that gives you control over untrusted code execution in AI agents.
+This enables safe task-level execution of untrusted code within AI agent systems.
 
 ## 🚀 How It Works
 
@@ -75,7 +75,6 @@ export const main = task({
 > [!NOTE]
 > TypeScript/JavaScript projects require a task named `"main"` as the entrypoint.
 
----
 
 When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
 
@@ -86,8 +85,8 @@ Each task operates within its own sandbox with configurable resource limits, ens
 ### Prerequisites
 
 - **Rust** (latest stable) – [Install Rust](https://rustup.rs/)
-- **Python 3.13+** – [Install Python](https://www.python.org/downloads/) *(for Python)*
-- **Node.js 22+** – [Install Node.js](https://nodejs.org/) *(for TypeScript/JavaScript)*
+- **Python 3.13+** – [Install Python](https://www.python.org/downloads/) *(required for Python support)*
+- **Node.js 22+** – [Install Node.js](https://nodejs.org/) *(required for TypeScript/JavaScript support)*
 
 ### Installation
 
@@ -134,7 +133,7 @@ capsule run hello.py --verbose
 cd crates/capsule-sdk/javascript
 npm install
 npm run build
-npm link
+npm link # makes the SDK available globally for local development
 ```
 
 Then, in your project folder:
@@ -191,7 +190,7 @@ Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meter
 
 #### Python
 
-Standard Python networking relies on sockets, which aren't natively compatible with WebAssembly's sandbox model. Capsule provides its own HTTP client that works within the Wasm environment:
+The standard Python `requests` library and socket-based networking aren't natively compatible with WebAssembly's sandboxed I/O model. Capsule provides its own HTTP client that works within the Wasm environment:
 
 ```python
 from capsule import task
