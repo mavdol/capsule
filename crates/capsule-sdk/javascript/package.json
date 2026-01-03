@@ -1,7 +1,7 @@
 {
   "name": "@capsule-run/sdk",
   "version": "0.1.0",
-  "description": "Capsule SDK for JavaScript/TypeScript",
+  "description": "Capsule JavaScript SDK - run AI agent tasks in secure WASM sandboxes",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,12 +24,13 @@
     "clean": "rm -rf dist"
   },
   "keywords": [
-    "capsule",
-    "wasm",
-    "agent",
+    "webassembly",
+    "agents",
+    "isolation",
+    "llm",
     "ai"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@bytecodealliance/jco": "^1.0.0",
     "esbuild": "^0.27.2"

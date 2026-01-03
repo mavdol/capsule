@@ -5,14 +5,21 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "capsule"
 version = "0.1.0"
-description = "Python SDK for building Capsule agent tasks with WebAssembly isolation"
+description = "Capsule Python SDK - run AI agent tasks in secure WASM sandboxes"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "Capsule Contributors"}
 ]
-keywords = ["wasm", "webassembly", "agents", "isolation", "runtime"]
+keywords = [
+    "webassembly",
+    "sandbox",
+    "agents",
+    "isolation",
+    "llm",
+    "ai"
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -40,7 +47,7 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/mavdol/capsule"
 Repository = "https://github.com/mavdol/capsule"
-Documentation = "https://github.com/mavdol/capsule/tree/main/crates/capsule-sdk"
+Documentation = "https://github.com/mavdol/capsule"
 
 [tool.setuptools.packages.find]
 where = ["src"]
