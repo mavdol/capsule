@@ -13,7 +13,7 @@
 
 ---
 
-## What is Capsule?
+## Overview
 
 Capsule is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle, long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
 
