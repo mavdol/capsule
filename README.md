@@ -102,7 +102,7 @@ cargo install --path crates/capsule-cli
 Then, install the SDK for your language:
 
 <details>
-<summary><strong>🐍 Python</strong></summary>
+<summary><strong>Python</strong></summary>
 
 ```bash
 pip install -e crates/capsule-sdk/python
@@ -127,7 +127,7 @@ capsule run hello.py --verbose
 </details>
 
 <details>
-<summary><strong>🟦 TypeScript / JavaScript</strong></summary>
+<summary><strong>TypeScript / JavaScript</strong></summary>
 
 ```bash
 cd crates/capsule-sdk/javascript
