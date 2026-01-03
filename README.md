@@ -186,29 +186,11 @@ def main() -> dict:
 
 Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run/sdk`. However, standard libraries like `fetch` already compatible, so you can use whichever approach you prefer.
 
-## 🔧 Compatibility
+## Compatibility
 
-**Current Version**: v0.2 (Python + TypeScript/JavaScript)
+**Python:** Pure Python packages and standard library modules work. Packages with C extensions (`numpy`, `pandas`) are not yet supported.
 
-### Python
-
-✅ **Supported:**
-- CPython 3.11 inside WebAssembly
-- Standard library modules: `json`, `math`, `re`, `datetime`, `collections`, etc.
-- Pure Python packages and libraries
-- Basic I/O operations
-
-⚠️ **Limitations:**
-- Packages with C extensions like `numpy` and `pandas` are not yet supported. Support for compiled extensions is planned for future releases.
-
-### TypeScript / JavaScript
-
-✅ **Supported:**
-- npm packages and libraries
-- ES modules and modern JavaScript features
-
-⚠️ **Limitations:**
-- Only Node.js libraries like `fs`, `path`, `os`, etc. are not supported.
+**TypeScript/JavaScript:** npm packages and ES modules work. Node.js built-ins (`fs`, `path`, `os`) are not available in the sandbox.
 
 > [!NOTE]
 > TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
