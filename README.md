@@ -81,33 +81,13 @@ Each task operates within its own sandbox with configurable resource limits, ens
 
 ## Quick Start
 
-### Prerequisites
-
-- **Rust** (latest stable) – [Install Rust](https://rustup.rs/)
-- **Python 3.13+** – [Install Python](https://www.python.org/downloads/) *(required for Python support)*
-- **Node.js 22+** – [Install Node.js](https://nodejs.org/) *(required for TypeScript/JavaScript support)*
-
-### Installation
+### Python
 
 ```bash
-# Clone the repository
-git clone https://github.com/mavdol/capsule.git
-cd capsule
-
-# Install the Capsule CLI
-cargo install --path crates/capsule-cli
+pip install capsule-run
 ```
 
-Then, install the SDK for your language:
-
-<details>
-<summary><strong>Python</strong></summary>
-
-```bash
-pip install -e crates/capsule-sdk/python
-```
-
-**Your First Task**:
+Create `hello.py`:
 
 ```python
 from capsule import task
@@ -120,28 +100,17 @@ def main() -> str:
 Run it:
 
 ```bash
-capsule run hello.py --verbose
+capsule run hello.py
 ```
 
-</details>
-
-<details>
-<summary><strong>TypeScript / JavaScript</strong></summary>
+### TypeScript / JavaScript
 
 ```bash
-cd crates/capsule-sdk/javascript
-npm install
-npm run build
-npm link # makes the SDK available globally for local development
+npm install -g @capsule-run/cli
+npm install @capsule-run/sdk
 ```
 
-Then, in your project folder:
-
-```bash
-npm link @capsule-run/sdk
-```
-
-**Your First Task**:
+Create `hello.ts`:
 
 ```typescript
 import { task } from "@capsule-run/sdk";
@@ -158,12 +127,11 @@ export const main = task({
 Run it:
 
 ```bash
-capsule run hello.ts --verbose
+capsule run hello.ts
 ```
 
-</details>
 
-## 📚 Documentation
+## Documentation
 
 ### Task Configuration Options
 
@@ -247,14 +215,37 @@ Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run
 
 ## Contributing
 
-Contributions are welcome! Here's how you can help:
+Contributions are welcome!
+
+### Development setup
+
+**Prerequisites:** Rust (latest stable), Python 3.13+, Node.js 22+
+
+```bash
+git clone https://github.com/mavdol/capsule.git
+cd capsule
+
+# Build and install CLI
+cargo install --path crates/capsule-cli
+
+# Python SDK (editable install)
+pip install -e crates/capsule-sdk/python
+
+# TypeScript SDK (link for local dev)
+cd crates/capsule-sdk/javascript
+npm install && npm run build && npm link
+
+# Then in your project: npm link @capsule-run/sdk
+```
+
+### How to contribute
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Add tests** if applicable: `cargo test`
+3. **Run tests**: `cargo test`
 4. **Open** a Pull Request
 
-Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/issues)
+Need help? [Open an issue](https://github.com/mavdol/capsule/issues)
 
 ## Credits
 
