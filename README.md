@@ -4,8 +4,8 @@
 
 **A secure, durable runtime for agentic workflows**
 
-[![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
-[![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
+[![test](https://github.com/mavdol/capsule/actions/workflows/test.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/test.yml)
+
 
 [Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
@@ -14,20 +14,20 @@
 
 ---
 
-## 🎯 What is Capsule?
+## What is Capsule?
 
-Capsule is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle long-running workflows, large-scale processing, or even autonomous decision-making securely.
+Capsule is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle, long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
 
 Each task runs inside its own WebAssembly sandbox, providing:
 
-- 🔒 **Isolated execution**: Each task runs isolated from your host system
-- 📊 **Resource limits**: Set CPU, memory, and timeout limits per task
-- 🔄 **Automatic retries**: Handle failures without manual intervention
-- 📈 **Lifecycle tracking**: Monitor which tasks are running, completed, or failed
+- **Isolated execution**: Each task runs isolated from your host system
+- **Resource limits**: Set CPU, memory, and timeout limits per task
+- **Automatic retries**: Handle failures without manual intervention
+- **Lifecycle tracking**: Monitor which tasks are running, completed, or failed
 
 This enables safe task-level execution of untrusted code within AI agent systems.
 
-## 🚀 How It Works
+## How It Works
 
 Capsule leverages Wasm to create secure, isolated execution environments.
 
@@ -76,11 +76,11 @@ export const main = task({
 > TypeScript/JavaScript projects require a task named `"main"` as the entrypoint.
 
 
-When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
+When you run `capsule run main.py` (or `main.ts`), your code is primarily compiled into a WebAssembly module and executed in a dedicated to isolate tasks.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
 
-## 🏁 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -237,13 +237,16 @@ Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run
 ### TypeScript / JavaScript
 
 ✅ **Supported:**
-- TypeScript and JavaScript via `@capsule-run/sdk`
 - npm packages and libraries
 - ES modules and modern JavaScript features
 
-> 💡 TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
+⚠️ **Limitations:**
+- Only Node.js libraries like `fs`, `path`, `os`, etc. are not supported.
 
-## 🤝 Contributing
+> [!NOTE]
+> TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
+
+## Contributing
 
 Contributions are welcome! Here's how you can help:
 
@@ -254,8 +257,15 @@ Contributions are welcome! Here's how you can help:
 
 Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/issues)
 
+## Credits
 
-## 📄 License
+Capsule builds on these open source projects:
+
+- [componentize-py](https://github.com/bytecodealliance/componentize-py) – Python to WebAssembly Component compilation
+- [jco](https://github.com/bytecodealliance/jco) – JavaScript toolchain for WebAssembly Components
+- [wasmtime](https://github.com/bytecodealliance/wasmtime) – WebAssembly runtime
+- [WASI](https://github.com/bytecodealliance/wasi.dev) – WebAssembly System Interface
+
+## License
 
 This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
-
