@@ -4,8 +4,7 @@
 
 **A secure, durable runtime for agentic workflows**
 
-[![test](https://github.com/mavdol/capsule/actions/workflows/test.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/test.yml)
-
+[![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
 [Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
