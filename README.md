@@ -10,7 +10,6 @@
 
 </div>
 
-
 ---
 
 ## Overview
@@ -75,7 +74,7 @@ export const main = task({
 > TypeScript/JavaScript projects require a task named `"main"` as the entrypoint.
 
 
-When you run `capsule run main.py` (or `main.ts`), your code is primarily compiled into a WebAssembly module and executed in a dedicated to isolate tasks.
+When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated sandbox to isolate tasks.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
 
