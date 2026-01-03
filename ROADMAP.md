@@ -2,7 +2,8 @@
 
 This document tracks the development status of Capsule.
 
-> Note: Features marked as Planned are subject to change based on community feedback and real-world usage patterns.
+> [!NOTE]
+> This roadmap reflects current priorities. Feature requests and ideas are welcome in [Issues](https://github.com/mavdol/capsule/issues).
 
 ---
 
@@ -22,13 +23,13 @@ This document tracks the development status of Capsule.
 
 ## v0.2.0: Production & Polyglot
 
-**Status:** 🛠️ In progress
+**Status:** ✅ Done
 
 **Goal:** Stability, security, and expanding the ecosystem.
 
 - [x] **TypeScript SDK:** Functional wrapper support (`const t = task(...)`).
 - [x] **Better Logs:** Better logging for debugging and monitoring.
-- [ ] **Distribution:** CI/CD for binaries and Package Registries (PyPI, npm, crates.io).
+- [x] **Distribution:** CI/CD for binaries and Package Registries (PyPI, npm, crates.io).
 
 ---
 
@@ -42,4 +43,5 @@ This document tracks the development status of Capsule.
 - [ ] **Data:** Local file mounting (`fs_access`) for passing images/CSVs.
 
 ---
+
 
