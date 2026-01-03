@@ -1,0 +1,52 @@
+[build-system]
+requires = ["maturin>=1.4,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "capsule-run"
+version = "0.1.0"
+description = "Secure WASM runtime to isolate and manage AI agent tasks"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Capsule Contributors"}
+]
+keywords = [
+    "webassembly",
+    "sandbox",
+    "agents",
+    "isolation",
+    "llm",
+    "ai"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Rust",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Interpreters",
+]
+
+dependencies = [
+    "componentize-py>=0.19.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/mavdol/capsule"
+Repository = "https://github.com/mavdol/capsule"
+
+[tool.maturin]
+bindings = "bin"
+strip = true
+python-source = "../capsule-sdk/python/src"
+
