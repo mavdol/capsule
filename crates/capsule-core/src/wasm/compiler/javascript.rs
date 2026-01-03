@@ -148,6 +148,8 @@ impl JavascriptWasmCompiler {
                 .arg(&wit_path_normalized)
                 .arg("--world-name")
                 .arg("capsule-agent")
+                .arg("--enable")
+                .arg("http")
                 .arg("-o")
                 .arg(&output_wasm_normalized)
                 .current_dir(&sdk_path_normalized)
