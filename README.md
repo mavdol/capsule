@@ -4,30 +4,28 @@
 
 **A secure, durable runtime for agentic workflows**
 
-[![License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE)
-[![Rust](https://img.shields.io/badge/built_with-Rust-orange)](https://www.rust-lang.org/)
+[![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
 [Getting Started](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
 </div>
 
-
 ---
 
-## 🎯 What is Capsule?
+## Overview
 
-Capsule is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle long-running workflows, large-scale processing, or even autonomous decision-making securely.
+Capsule is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle, long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
 
 Each task runs inside its own WebAssembly sandbox, providing:
 
-- 🔒 **Isolated execution**: Each task runs isolated from your host system
-- 📊 **Resource limits**: Set CPU, memory, and timeout limits per task
-- 🔄 **Automatic retries**: Handle failures without manual intervention
-- 📈 **Lifecycle tracking**: Monitor which tasks are running, completed, or failed
+- **Isolated execution**: Each task runs isolated from your host system
+- **Resource limits**: Set CPU, memory, and timeout limits per task
+- **Automatic retries**: Handle failures without manual intervention
+- **Lifecycle tracking**: Monitor which tasks are running, completed, or failed
 
 This enables safe task-level execution of untrusted code within AI agent systems.
 
-## 🚀 How It Works
+## How It Works
 
 Capsule leverages Wasm to create secure, isolated execution environments.
 
@@ -76,39 +74,19 @@ export const main = task({
 > TypeScript/JavaScript projects require a task named `"main"` as the entrypoint.
 
 
-When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated, isolated Wasm instance managed by Capsule's Rust runtime.
+When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated sandbox to isolate tasks.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
 
-## 🏁 Quick Start
+## Quick Start
 
-### Prerequisites
-
-- **Rust** (latest stable) – [Install Rust](https://rustup.rs/)
-- **Python 3.13+** – [Install Python](https://www.python.org/downloads/) *(required for Python support)*
-- **Node.js 22+** – [Install Node.js](https://nodejs.org/) *(required for TypeScript/JavaScript support)*
-
-### Installation
+### Python
 
 ```bash
-# Clone the repository
-git clone https://github.com/mavdol/capsule.git
-cd capsule
-
-# Install the Capsule CLI
-cargo install --path crates/capsule-cli
+pip install capsule-run
 ```
 
-Then, install the SDK for your language:
-
-<details>
-<summary><strong>🐍 Python</strong></summary>
-
-```bash
-pip install -e crates/capsule-sdk/python
-```
-
-**Your First Task**:
+Create `hello.py`:
 
 ```python
 from capsule import task
@@ -121,28 +99,17 @@ def main() -> str:
 Run it:
 
 ```bash
-capsule run hello.py --verbose
+capsule run hello.py
 ```
 
-</details>
-
-<details>
-<summary><strong>🟦 TypeScript / JavaScript</strong></summary>
+### TypeScript / JavaScript
 
 ```bash
-cd crates/capsule-sdk/javascript
-npm install
-npm run build
-npm link # makes the SDK available globally for local development
+npm install -g @capsule-run/cli
+npm install @capsule-run/sdk
 ```
 
-Then, in your project folder:
-
-```bash
-npm link @capsule-run/sdk
-```
-
-**Your First Task**:
+Create `hello.ts`:
 
 ```typescript
 import { task } from "@capsule-run/sdk";
@@ -159,12 +126,11 @@ export const main = task({
 Run it:
 
 ```bash
-capsule run hello.ts --verbose
+capsule run hello.ts
 ```
 
-</details>
 
-## 📚 Documentation
+## Documentation
 
 ### Task Configuration Options
 
@@ -219,43 +185,58 @@ def main() -> dict:
 
 Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run/sdk`. However, standard libraries like `fetch` already compatible, so you can use whichever approach you prefer.
 
-## 🔧 Compatibility
+## Compatibility
 
-**Current Version**: v0.2 (Python + TypeScript/JavaScript)
+**Python:** Pure Python packages and standard library modules work. Packages with C extensions (`numpy`, `pandas`) are not yet supported.
 
-### Python
+**TypeScript/JavaScript:** npm packages and ES modules work. Node.js built-ins (`fs`, `path`, `os`) are not available in the sandbox.
 
-✅ **Supported:**
-- CPython 3.11 inside WebAssembly
-- Standard library modules: `json`, `math`, `re`, `datetime`, `collections`, etc.
-- Pure Python packages and libraries
-- Basic I/O operations
+> [!NOTE]
+> TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
 
-⚠️ **Limitations:**
-- Packages with C extensions like `numpy` and `pandas` are not yet supported. Support for compiled extensions is planned for future releases.
+## Contributing
 
-### TypeScript / JavaScript
+Contributions are welcome!
 
-✅ **Supported:**
-- TypeScript and JavaScript via `@capsule-run/sdk`
-- npm packages and libraries
-- ES modules and modern JavaScript features
+### Development setup
 
-> 💡 TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
+**Prerequisites:** Rust (latest stable), Python 3.13+, Node.js 22+
 
-## 🤝 Contributing
+```bash
+git clone https://github.com/mavdol/capsule.git
+cd capsule
 
-Contributions are welcome! Here's how you can help:
+# Build and install CLI
+cargo install --path crates/capsule-cli
+
+# Python SDK (editable install)
+pip install -e crates/capsule-sdk/python
+
+# TypeScript SDK (link for local dev)
+cd crates/capsule-sdk/javascript
+npm install && npm run build && npm link
+
+# Then in your project: npm link @capsule-run/sdk
+```
+
+### How to contribute
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Add tests** if applicable: `cargo test`
+3. **Run tests**: `cargo test`
 4. **Open** a Pull Request
 
-Need help or have questions? [Open an issue](https://github.com/mavdol/capsule/issues)
+Need help? [Open an issue](https://github.com/mavdol/capsule/issues)
 
+## Credits
 
-## 📄 License
+Capsule builds on these open source projects:
+
+- [componentize-py](https://github.com/bytecodealliance/componentize-py) – Python to WebAssembly Component compilation
+- [jco](https://github.com/bytecodealliance/jco) – JavaScript toolchain for WebAssembly Components
+- [wasmtime](https://github.com/bytecodealliance/wasmtime) – WebAssembly runtime
+- [WASI](https://github.com/bytecodealliance/wasi.dev) – WebAssembly System Interface
+
+## License
 
 This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
-

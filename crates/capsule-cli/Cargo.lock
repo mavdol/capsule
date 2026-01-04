@@ -265,16 +265,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "capsule-cli"
-version = "0.1.0"
-dependencies = [
- "capsule-core",
- "clap",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "capsule-core"
 version = "0.1.0"
 dependencies = [
@@ -292,6 +282,16 @@ dependencies = [
  "wasmtime",
  "wasmtime-wasi",
  "wasmtime-wasi-http",
+]
+
+[[package]]
+name = "capsule-run"
+version = "0.1.0"
+dependencies = [
+ "capsule-core",
+ "clap",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

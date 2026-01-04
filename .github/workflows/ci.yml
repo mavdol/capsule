@@ -1,4 +1,4 @@
-name: Lint & Format
+name: CI
 
 on:
   pull_request:
@@ -20,7 +20,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt
+          components: rustfmt, clippy
 
       - name: Check formatting (capsule-cli)
         working-directory: crates/capsule-cli
@@ -30,8 +30,16 @@ jobs:
         working-directory: crates/capsule-core
         run: cargo fmt --all -- --check
 
-  rust-clippy:
-    name: Rust Clippy Check
+      - name: Run clippy (capsule-cli)
+        working-directory: crates/capsule-cli
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run clippy (capsule-core)
+        working-directory: crates/capsule-core
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  rust-core-tests:
+    name: Rust Core Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -40,13 +48,11 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
 
-      - name: Run clippy (capsule-cli)
-        working-directory: crates/capsule-cli
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-      - name: Run clippy (capsule-core)
+      - name: Run cargo test in crates/capsule-core
         working-directory: crates/capsule-core
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo test --all --verbose
+
+      - name: Run cargo test in crates/capsule-cli
+        working-directory: crates/capsule-cli
+        run: cargo test --all --verbose

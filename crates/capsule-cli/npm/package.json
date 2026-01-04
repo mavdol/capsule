@@ -1,0 +1,28 @@
+{
+  "name": "@capsule-run/cli",
+  "version": "0.1.0",
+  "description": "Secure WASM runtime to isolate and manage AI agent tasks",
+  "keywords": [
+    "webassembly",
+    "cli",
+    "sandbox",
+    "agent",
+    "isolation",
+    "security",
+    "llm"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mavdol/capsule.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@capsule-run/cli-darwin-arm64": "0.1.0",
+    "@capsule-run/cli-darwin-x64": "0.1.0",
+    "@capsule-run/cli-linux-x64": "0.1.0",
+    "@capsule-run/cli-win32-x64": "0.1.0"
+  }
+}

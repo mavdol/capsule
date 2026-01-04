@@ -1,11 +1,17 @@
 [package]
-name = "capsule-cli"
+name = "capsule-run"
 version = "0.1.0"
 edition = "2024"
+description = "Secure WASM runtime to isolate and manage AI agent tasks"
+license = "Apache-2.0"
+repository = "https://github.com/mavdol/capsule"
+keywords = ["webassembly", "sandbox", "isolation", "llm", "ai"]
+categories = ["command-line-utilities", "wasm"]
 
 [[bin]]
 name = "capsule"
 path = "src/main.rs"
+
 
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
