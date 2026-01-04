@@ -1,6 +1,6 @@
 [package]
 name = "capsule-run"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 description = "Secure WASM runtime to isolate and manage AI agent tasks"
 license = "Apache-2.0"
