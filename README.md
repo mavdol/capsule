@@ -2,7 +2,7 @@
 
 # 📦 Capsule
 
-**A secure, durable runtime for agentic workflows**
+**A secure, durable runtime for AI agents**
 
 [![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
