@@ -132,6 +132,15 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Publish capsule-core
+        working-directory: crates/capsule-core
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for crates.io index update
+        run: sleep 60
+
       - name: Publish capsule-run
         working-directory: crates/capsule-cli
         run: cargo publish
