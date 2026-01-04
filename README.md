@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📦 Capsule
+# ```Capsule```
 
 **A secure, durable runtime for AI agents**
 
@@ -14,7 +14,7 @@
 
 ## Overview
 
-Capsule is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle, long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
+```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle, long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
 
 Each task runs inside its own WebAssembly sandbox, providing:
 
