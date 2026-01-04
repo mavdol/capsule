@@ -42,6 +42,7 @@ jobs:
 
       - name: Get version
         id: version
+        shell: bash
         run: |
           VERSION="${{ github.event.release.tag_name || github.event.inputs.version }}"
           VERSION="${VERSION#v}"
@@ -67,7 +68,7 @@ jobs:
         run: |
           mkdir -p dist
           cp crates/capsule-cli/target/${{ matrix.target }}/release/capsule dist/
-          cat > dist/package.json << 'EOF'
+          cat > dist/package.json << EOF
           {
             "name": "@capsule-run/cli-${{ matrix.platform }}",
             "version": "${{ steps.version.outputs.version }}",
@@ -84,7 +85,7 @@ jobs:
         run: |
           mkdir -p dist
           cp crates/capsule-cli/target/${{ matrix.target }}/release/capsule.exe dist/
-          cat > dist/package.json << 'EOF'
+          cat > dist/package.json << EOF
           {
             "name": "@capsule-run/cli-${{ matrix.platform }}",
             "version": "${{ steps.version.outputs.version }}",
@@ -130,6 +131,15 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish capsule-core
+        working-directory: crates/capsule-core
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for crates.io index update
+        run: sleep 60
 
       - name: Publish capsule-run
         working-directory: crates/capsule-cli
