@@ -42,6 +42,7 @@ jobs:
 
       - name: Get version
         id: version
+        shell: bash
         run: |
           VERSION="${{ github.event.release.tag_name || github.event.inputs.version }}"
           VERSION="${VERSION#v}"
