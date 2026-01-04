@@ -132,6 +132,12 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Prepare capsule-core for publishing
+        run: |
+          cp -r crates/capsule-wit crates/capsule-core/
+          sed -i 's|../../../../capsule-wit|../../../capsule-wit|g' crates/capsule-core/src/wasm/compiler/mod.rs
+          sed -i 's|"../capsule-wit"|"./capsule-wit"|g' crates/capsule-core/src/wasm/state.rs
+
       - name: Publish capsule-core
         working-directory: crates/capsule-core
         run: cargo publish || echo "Version may already exist, continuing..."
