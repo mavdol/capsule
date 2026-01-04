@@ -6,6 +6,7 @@ build-backend = "maturin"
 name = "capsule-run"
 version = "0.2.2"
 description = "Secure WASM runtime to isolate and manage AI agent tasks"
+readme = "docs/README-pypi.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 authors = [

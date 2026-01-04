@@ -5,6 +5,9 @@
   "bin": {
     "capsule": "./bin/capsule.js"
   },
+  "files": [
+    "bin/"
+  ],
   "keywords": [
     "webassembly",
     "sandbox",
@@ -17,6 +20,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/mavdol/capsule.git"
+  },
+  "homepage": "https://github.com/mavdol/capsule",
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=18"
