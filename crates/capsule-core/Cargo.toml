@@ -1,12 +1,13 @@
 [package]
 name = "capsule-core"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 description = "Core library for Capsule - WASM runtime for AI agent isolation"
 license = "Apache-2.0"
 repository = "https://github.com/mavdol/capsule"
 keywords = ["webassembly", "sandbox", "isolation", "runtime", "wasm"]
 categories = ["wasm"]
+readme = "../../README.md"
 
 [lib]
 crate-type = ["rlib"]

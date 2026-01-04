@@ -129,6 +129,8 @@ Run it:
 capsule run hello.ts
 ```
 
+> [!TIP]
+> Use `--verbose` to display real-time task execution details.
 
 ## Documentation
 
@@ -187,12 +189,12 @@ Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run
 
 ## Compatibility
 
+> [!NOTE]
+> TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
+
 **Python:** Pure Python packages and standard library modules work. Packages with C extensions (`numpy`, `pandas`) are not yet supported.
 
 **TypeScript/JavaScript:** npm packages and ES modules work. Node.js built-ins (`fs`, `path`, `os`) are not available in the sandbox.
-
-> [!NOTE]
-> TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
 
 ## Contributing
 
