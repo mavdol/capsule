@@ -68,7 +68,7 @@ jobs:
         run: |
           mkdir -p dist
           cp crates/capsule-cli/target/${{ matrix.target }}/release/capsule dist/
-          cat > dist/package.json << 'EOF'
+          cat > dist/package.json << EOF
           {
             "name": "@capsule-run/cli-${{ matrix.platform }}",
             "version": "${{ steps.version.outputs.version }}",
@@ -85,7 +85,7 @@ jobs:
         run: |
           mkdir -p dist
           cp crates/capsule-cli/target/${{ matrix.target }}/release/capsule.exe dist/
-          cat > dist/package.json << 'EOF'
+          cat > dist/package.json << EOF
           {
             "name": "@capsule-run/cli-${{ matrix.platform }}",
             "version": "${{ steps.version.outputs.version }}",
