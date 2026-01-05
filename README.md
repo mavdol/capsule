@@ -237,7 +237,7 @@ Capsule builds on these open source projects:
 - [componentize-py](https://github.com/bytecodealliance/componentize-py) – Python to WebAssembly Component compilation
 - [jco](https://github.com/bytecodealliance/jco) – JavaScript toolchain for WebAssembly Components
 - [wasmtime](https://github.com/bytecodealliance/wasmtime) – WebAssembly runtime
-- [WASI](https://github.com/bytecodealliance/wasi.dev) – WebAssembly System Interface
+- [WASI](https://github.com/WebAssembly/WASI) – WebAssembly System Interface
 
 ## License
 
