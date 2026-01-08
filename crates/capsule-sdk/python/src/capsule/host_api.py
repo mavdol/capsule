@@ -25,10 +25,6 @@ def _check_wasm():
         _is_wasm_checked = True
     return _is_wasm
 
-@property
-def IS_WASM():
-    return _check_wasm()
-
 def is_wasm_mode():
     return _check_wasm()
 
