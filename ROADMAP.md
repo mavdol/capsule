@@ -33,14 +33,13 @@ This document tracks the development status of Capsule.
 
 ---
 
-## v0.3.0: The AI Infrastructure (Data & GPU)
+## v0.3.0: Data Access
 
 **Status:** 📅 Planned
 
-**Goal:** Powering Data Science and heavy workloads.
+**Goal:** Enable agents to work with local files and datasets.
 
-- [ ] **Hardware:** Experimental **GPU** support via WASI-NN (Local Inference).
-- [ ] **Data:** Local file mounting (`fs_access`) for passing images/CSVs.
+- [ ] **Filesystem:** Local file mounting (`fs_access`) for reading images, CSVs, and datasets.
 
 ---
 
