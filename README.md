@@ -185,7 +185,20 @@ def main() -> dict:
 
 #### TypeScript / JavaScript
 
-Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run/sdk`. However, standard libraries like `fetch` already compatible, so you can use whichever approach you prefer.
+Standard libraries like `fetch` are already compatible, so no custom HTTP client is needed for TypeScript/JavaScript.
+
+```typescript
+import { task } from "@capsule-run/sdk";
+
+export const main = task({
+    name: "main",
+    compute: "MEDIUM"
+}, async () => {
+    const response = await fetch("https://api.example.com/data");
+    return response.json();
+});
+```
+
 
 ## Compatibility
 
