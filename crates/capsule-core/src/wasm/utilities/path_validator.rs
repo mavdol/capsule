@@ -2,16 +2,12 @@ use std::error::Error;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum FileAccessMode {
     ReadOnly,
-    ReadWrite,
-}
 
-impl Default for FileAccessMode {
-    fn default() -> Self {
-        FileAccessMode::ReadWrite
-    }
+    #[default]
+    ReadWrite,
 }
 
 #[derive(Debug)]
