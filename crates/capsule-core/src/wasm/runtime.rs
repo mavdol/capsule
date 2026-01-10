@@ -13,6 +13,7 @@ pub enum WasmRuntimeError {
     WasmtimeError(wasmtime::Error),
     LogError(LogError),
     ConfigError(String),
+    FilesystemError(String),
     Timeout,
 }
 
@@ -24,6 +25,9 @@ impl fmt::Display for WasmRuntimeError {
             }
             WasmRuntimeError::LogError(msg) => write!(f, "Runtime error > {}", msg),
             WasmRuntimeError::ConfigError(msg) => write!(f, "Runtime error > Config > {}", msg),
+            WasmRuntimeError::FilesystemError(msg) => {
+                write!(f, "Runtime error > Filesystem > {}", msg)
+            }
             WasmRuntimeError::Timeout => write!(f, "Timed out"),
         }
     }

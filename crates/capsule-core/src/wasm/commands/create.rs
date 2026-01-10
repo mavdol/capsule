@@ -5,14 +5,15 @@ use nanoid::nanoid;
 
 use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Store, StoreLimitsBuilder};
-use wasmtime_wasi::WasiCtxBuilder;
 use wasmtime_wasi::add_to_linker_async;
+use wasmtime_wasi::{DirPerms, FilePerms, WasiCtxBuilder};
 use wasmtime_wasi_http::WasiHttpCtx;
 
 use crate::config::log::{CreateInstanceLog, InstanceState, UpdateInstanceLog};
 use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
 use crate::wasm::state::{CapsuleAgent, State, capsule};
+use crate::wasm::utilities::path_validator::{validate_path, FileAccessMode};
 
 pub struct CreateInstance {
     pub policy: ExecutionPolicy,
@@ -22,6 +23,7 @@ pub struct CreateInstance {
     pub agent_name: String,
     pub agent_version: String,
     pub wasm_path: PathBuf,
+    pub project_root: PathBuf,
 }
 
 impl CreateInstance {
@@ -34,6 +36,7 @@ impl CreateInstance {
             agent_name: "default".to_string(),
             agent_version: "0.0.0".to_string(),
             wasm_path: PathBuf::from(".capsule/capsule.wasm"),
+            project_root: std::env::current_dir().unwrap_or_default(),
         }
     }
 
@@ -54,6 +57,11 @@ impl CreateInstance {
 
     pub fn wasm_path(mut self, wasm_path: PathBuf) -> Self {
         self.wasm_path = wasm_path;
+        self
+    }
+
+    pub fn project_root(mut self, project_root: PathBuf) -> Self {
+        self.project_root = project_root;
         self
     }
 }
@@ -85,11 +93,39 @@ impl RuntimeCommand for CreateInstance {
 
         capsule::host::api::add_to_linker(&mut linker, |state: &mut State| state)?;
 
-        let wasi = WasiCtxBuilder::new()
+        let mut wasi_builder = WasiCtxBuilder::new();
+        wasi_builder
             .inherit_stdout()
             .inherit_stderr()
-            .args(&self.args)
-            .build();
+            .args(&self.args);
+
+        for path_spec in &self.policy.allowed_files {
+            match validate_path(path_spec, &self.project_root) {
+                Ok(parsed) => {
+                    let (dir_perms, file_perms) = match parsed.mode {
+                        FileAccessMode::ReadOnly => (DirPerms::READ, FilePerms::READ),
+                        FileAccessMode::ReadWrite => (DirPerms::all(), FilePerms::all()),
+                    };
+
+                    if let Err(e) = wasi_builder.preopened_dir(
+                        &parsed.path,
+                        &parsed.guest_path,
+                        dir_perms,
+                        file_perms,
+                    ) {
+                        return Err(WasmRuntimeError::FilesystemError(format!(
+                            "Failed to preopen '{}': {}",
+                            path_spec, e
+                        )));
+                    }
+                }
+                Err(e) => {
+                    return Err(WasmRuntimeError::FilesystemError(e.to_string()));
+                }
+            }
+        }
+
+        let wasi = wasi_builder.build();
 
         let mut limits = StoreLimitsBuilder::new();
 
