@@ -16,5 +16,6 @@
 
 export { task, type TaskOptions } from "./task.js";
 export { TaskRunner, exports, type TaskConfig } from "./app.js";
-export * as http from "./http.js";
+export * as files from "./files.js";
 export { isWasmMode } from "./hostApi.js";
+
