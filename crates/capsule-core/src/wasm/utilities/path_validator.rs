@@ -42,7 +42,11 @@ impl fmt::Display for PathValidationError {
                 write!(f, "Path does not exist: {}", path)
             }
             PathValidationError::InvalidMode(mode) => {
-                write!(f, "Invalid access mode '{}'. Use :ro (read-only) or :rw (read-write)", mode)
+                write!(
+                    f,
+                    "Invalid access mode '{}'. Use :ro (read-only) or :rw (read-write)",
+                    mode
+                )
             }
         }
     }
@@ -58,9 +62,7 @@ fn parse_path_with_mode(path_spec: &str) -> (String, FileAccessMode) {
         match mode {
             "ro" => (path.to_string(), FileAccessMode::ReadOnly),
             "rw" => (path.to_string(), FileAccessMode::ReadWrite),
-            _ => {
-                (path_spec.to_string(), FileAccessMode::default())
-            }
+            _ => (path_spec.to_string(), FileAccessMode::default()),
         }
     } else {
         (path_spec.to_string(), FileAccessMode::default())

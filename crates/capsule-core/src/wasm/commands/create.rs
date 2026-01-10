@@ -13,7 +13,7 @@ use crate::config::log::{CreateInstanceLog, InstanceState, UpdateInstanceLog};
 use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
 use crate::wasm::state::{CapsuleAgent, State, capsule};
-use crate::wasm::utilities::path_validator::{validate_path, FileAccessMode};
+use crate::wasm::utilities::path_validator::{FileAccessMode, validate_path};
 
 pub struct CreateInstance {
     pub policy: ExecutionPolicy,
