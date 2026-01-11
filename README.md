@@ -145,6 +145,7 @@ Configure your tasks with these parameters:
 | `ram` | `str` | Memory limit for the task | `"512MB"`, `"2GB"` |
 | `timeout` | `str` | Maximum execution time | `"30s"`, `"5m"`, `"1h"` |
 | `max_retries` | `int` | Number of retry attempts on failure (default: 1) | `3` |
+| `allowed_files` | `list` | Files or folders accessible in the sandbox | `["./data", "./output"]` |
 
 ### Compute Levels
 
@@ -185,7 +186,59 @@ def main() -> dict:
 
 #### TypeScript / JavaScript
 
-Capsule also provides an HTTP client for TypeScript/JavaScript via `@capsule-run/sdk`. However, standard libraries like `fetch` already compatible, so you can use whichever approach you prefer.
+Standard libraries like `fetch` are already compatible, so no custom HTTP client is needed for TypeScript/JavaScript.
+
+```typescript
+import { task } from "@capsule-run/sdk";
+
+export const main = task({
+    name: "main",
+    compute: "MEDIUM"
+}, async () => {
+    const response = await fetch("https://api.example.com/data");
+    return response.json();
+});
+```
+
+### File Access
+
+By default, tasks run in a fully isolated sandbox with no filesystem access. Use the `allowed_files` parameter to grant read and write access to specific files or directories.
+
+#### Python
+
+Python's standard file operations work normally. Use `open()`, `os`, `pathlib`, or any file manipulation library.
+
+```python
+from capsule import task
+
+@task(name="main", allowed_files=["./data"])
+def main() -> str:
+    with open("./data/input.txt") as f:
+        return f.read()
+```
+
+#### TypeScript / JavaScript
+
+Node.js built-ins like `fs` are not available in the WebAssembly sandbox. Instead, use the `files` API provided by the SDK.
+
+```typescript
+import { task, files } from "@capsule-run/sdk";
+
+export const main = task({
+    name: "main",
+    allowedFiles: ["./data"]
+}, async () => {
+    return await files.readText("./data/input.txt");
+});
+```
+
+Available methods:
+- `files.readText(path)` — Read file as string
+- `files.readBytes(path)` — Read file as `Uint8Array`
+- `files.writeText(path, content)` — Write string to file
+- `files.writeBytes(path, data)` — Write bytes to file
+- `files.list(path)` — List directory contents
+- `files.exists(path)` — Check if file exists
 
 ## Compatibility
 

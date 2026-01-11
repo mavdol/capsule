@@ -104,7 +104,11 @@ impl JavascriptWasmCompiler {
             let wrapper_content = format!(
                 r#"// Auto-generated bootloader for Capsule
                     import * as hostApi from 'capsule:host/api';
+                    import * as fsTypes from 'wasi:filesystem/types@0.2.0';
+                    import * as fsPreopens from 'wasi:filesystem/preopens@0.2.0';
                     globalThis['capsule:host/api'] = hostApi;
+                    globalThis['wasi:filesystem/types'] = fsTypes;
+                    globalThis['wasi:filesystem/preopens'] = fsPreopens;
                     import '{}';
                     import {{ exports }} from '{}/dist/app.js';
                     export const taskRunner = exports;
@@ -127,6 +131,7 @@ impl JavascriptWasmCompiler {
                 .arg("--format=esm")
                 .arg("--platform=neutral")
                 .arg("--external:capsule:host/api")
+                .arg("--external:wasi:filesystem/*")
                 .arg(format!("--outfile={}", bundled_path_normalized.display()))
                 .current_dir(&sdk_path_normalized)
                 .stdout(Stdio::piped())
@@ -150,6 +155,8 @@ impl JavascriptWasmCompiler {
                 .arg("capsule-agent")
                 .arg("--enable")
                 .arg("http")
+                .arg("--enable")
+                .arg("filesystem")
                 .arg("-o")
                 .arg(&output_wasm_normalized)
                 .current_dir(&sdk_path_normalized)

@@ -13,6 +13,7 @@ export interface TaskConfig {
   ram?: string;
   timeout?: string;
   maxRetries?: number;
+  allowedFiles?: string[];
 }
 
 const TASKS: Map<string, TaskInfo<any>> = new Map();
@@ -53,12 +54,6 @@ interface TaskArgs {
   task_name?: string;
   args?: any[];
   kwargs?: Record<string, any>;
-}
-
-interface TaskResult {
-  result?: any;
-  error?: string;
-  traceback?: string;
 }
 
 /**

@@ -42,5 +42,9 @@ interface task-runner {
 
 world capsule-agent {
     import api;
+
+    import wasi:filesystem/types@0.2.0;
+    import wasi:filesystem/preopens@0.2.0;
+
     export task-runner;
 }
