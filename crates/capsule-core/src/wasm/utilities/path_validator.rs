@@ -77,7 +77,6 @@ pub fn validate_path(
     }
 
     let joined = project_root.join(p);
-
     let resolved = joined
         .canonicalize()
         .map_err(|_| PathValidationError::PathNotFound(path_str.clone()))?;
@@ -125,6 +124,35 @@ mod tests {
         let _ = fs::remove_dir(&test_dir);
 
         assert!(result.is_ok());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.guest_path, "./.capsule_test");
+    }
+
+    #[test]
+    fn test_non_existent_path_fails() {
+        let current = std::env::current_dir().unwrap();
+
+        let result = validate_path("./nonexistent_dir", &current);
+        assert!(matches!(
+            result,
+            Err(PathValidationError::PathNotFound(_))
+        ));
+    }
+
+    #[test]
+    fn test_escape_project_root_rejected() {
+        let temp = std::env::temp_dir();
+        let subdir = temp.join("test_subdir");
+        let _ = fs::create_dir(&subdir);
+
+        let result = validate_path("../", &subdir);
+
+        let _ = fs::remove_dir(&subdir);
+
+        assert!(matches!(
+            result,
+            Err(PathValidationError::EscapesProjectDirectory(_))
+        ));
     }
 
     #[test]
