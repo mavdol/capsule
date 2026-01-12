@@ -103,15 +103,15 @@ impl JavascriptWasmCompiler {
 
             let wrapper_content = format!(
                 r#"// Auto-generated bootloader for Capsule
-                    import * as hostApi from 'capsule:host/api';
-                    import * as fsTypes from 'wasi:filesystem/types@0.2.0';
-                    import * as fsPreopens from 'wasi:filesystem/preopens@0.2.0';
-                    globalThis['capsule:host/api'] = hostApi;
-                    globalThis['wasi:filesystem/types'] = fsTypes;
-                    globalThis['wasi:filesystem/preopens'] = fsPreopens;
-                    import '{}';
-                    import {{ exports }} from '{}/dist/app.js';
-                    export const taskRunner = exports;
+import * as hostApi from 'capsule:host/api';
+import * as fsTypes from 'wasi:filesystem/types@0.2.0';
+import * as fsPreopens from 'wasi:filesystem/preopens@0.2.0';
+globalThis['capsule:host/api'] = hostApi;
+globalThis['wasi:filesystem/types'] = fsTypes;
+globalThis['wasi:filesystem/preopens'] = fsPreopens;
+import '{}';
+import {{ exports }} from '{}/dist/app.js';
+export const taskRunner = exports;
                 "#,
                 import_path, sdk_path_str
             );
