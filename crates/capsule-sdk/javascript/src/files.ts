@@ -1,15 +1,5 @@
 /**
  * Capsule Files API for WASM filesystem access.
- *
- * We provide this API for reading/writing files in allowed directories.
- *
- * @example
- * ```typescript
- * import { files } from '@capsule-run/sdk';
- *
- * const content = await files.readText("./data/input.txt");
- * await files.writeText("./data/output.txt", content);
- * ```
  */
 
 declare const globalThis: {
@@ -21,8 +11,18 @@ interface Descriptor {
   read(length: bigint, offset: bigint): [Uint8Array, boolean];
   write(buffer: Uint8Array, offset: bigint): bigint;
   stat(): { size: bigint };
-  readDirectory(): Array<{ name: string; type: string }>;
-  openAt(pathFlags: number, path: string, openFlags: number, descriptorFlags: number): Descriptor;
+  readDirectory(): any;
+  openAt(
+    pathFlags: { symlinkFollow?: boolean },
+    path: string,
+    openFlags: { create?: boolean; directory?: boolean; exclusive?: boolean; truncate?: boolean },
+    descriptorFlags: { read?: boolean; write?: boolean; mutateDirectory?: boolean }
+  ): Descriptor;
+}
+
+interface PreopenedDir {
+  descriptor: Descriptor;
+  guestPath: string;
 }
 
 function getFsBindings(): { types: any; preopens: any } | null {
@@ -36,22 +36,59 @@ function getFsBindings(): { types: any; preopens: any } | null {
   return null;
 }
 
-function getPreopenedDir(): Descriptor | null {
+function getPreopenedDirs(): PreopenedDir[] {
   const fs = getFsBindings();
-  if (!fs) return null;
+  if (!fs) return [];
 
   try {
     const dirs = fs.preopens.getDirectories();
-    if (dirs && dirs.length > 0) {
-      return dirs[0][0];
+    return (dirs || []).map((entry: [Descriptor, string]) => ({
+      descriptor: entry[0],
+      guestPath: entry[1]
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function normalizePath(path: string): string {
+  if (path.startsWith('./')) {
+    return path.slice(2);
+  }
+  return path;
+}
+
+function resolvePath(path: string): { dir: Descriptor; relativePath: string } | null {
+  const preopens = getPreopenedDirs();
+  if (preopens.length === 0) return null;
+
+  const normalizedPath = normalizePath(path);
+
+  for (const { descriptor, guestPath } of preopens) {
+    const normalizedGuest = normalizePath(guestPath);
+
+    if (normalizedGuest === '.' || normalizedGuest === '') {
+      return { dir: descriptor, relativePath: normalizedPath };
     }
-  } catch {}
-  return null;
+
+    if (normalizedPath.startsWith(normalizedGuest + '/')) {
+      const relativePath = normalizedPath.slice(normalizedGuest.length + 1);
+      return { dir: descriptor, relativePath };
+    }
+
+    if (normalizedPath === normalizedGuest) {
+      return { dir: descriptor, relativePath: '.' };
+    }
+  }
+
+  return { dir: preopens[0].descriptor, relativePath: normalizedPath };
 }
 
 /**
  * Read a file as text.
- * @param path - Relative path to the file (must be in allowed_files)
+ *
+ * @param path - The path to read.
+ * @returns A promise that resolves to a string containing the file contents.
  */
 export async function readText(path: string): Promise<string> {
   const bytes = await readBytes(path);
@@ -60,16 +97,22 @@ export async function readText(path: string): Promise<string> {
 
 /**
  * Read a file as bytes.
- * @param path - Relative path to the file (must be in allowed_files)
+ *
+ * @param path - The path to read.
+ * @returns A promise that resolves to a Uint8Array containing the file contents.
  */
 export async function readBytes(path: string): Promise<Uint8Array> {
-  const dir = getPreopenedDir();
-  if (!dir) {
-    throw new Error("Filesystem not available. Make sure you've set allowedFiles in your task config.");
+  const resolved = resolvePath(path);
+  if (!resolved) {
+    throw new Error("Filesystem not available.");
   }
 
   try {
-    const fd = dir.openAt(0, path, 0, 1);
+    const pathFlags = { symlinkFollow: false };
+    const openFlags = {};
+    const descriptorFlags = { read: true };
+
+    const fd = resolved.dir.openAt(pathFlags, resolved.relativePath, openFlags, descriptorFlags);
     const stat = fd.stat();
     const [data] = fd.read(stat.size, BigInt(0));
     return data;
@@ -80,8 +123,9 @@ export async function readBytes(path: string): Promise<Uint8Array> {
 
 /**
  * Write text content to a file.
- * @param path - Relative path to the file (must be in allowed_files)
- * @param content - Text content to write
+ *
+ * @param path - The path to write.
+ * @param content - The text content to write.
  */
 export async function writeText(path: string, content: string): Promise<void> {
   const bytes = new TextEncoder().encode(content);
@@ -90,17 +134,22 @@ export async function writeText(path: string, content: string): Promise<void> {
 
 /**
  * Write bytes to a file.
- * @param path - Relative path to the file (must be in allowed_files)
- * @param data - Binary data to write
+ *
+ * @param path - The path to write.
+ * @param data - The bytes to write.
  */
 export async function writeBytes(path: string, data: Uint8Array): Promise<void> {
-  const dir = getPreopenedDir();
-  if (!dir) {
-    throw new Error("Filesystem not available. Make sure you've set allowedFiles in your task config.");
+  const resolved = resolvePath(path);
+  if (!resolved) {
+    throw new Error("Filesystem not available.");
   }
 
   try {
-    const fd = dir.openAt(0, path, 1 | 2, 2);
+    const pathFlags = { symlinkFollow: false };
+    const openFlags = { create: true, truncate: true };
+    const descriptorFlags = { write: true };
+
+    const fd = resolved.dir.openAt(pathFlags, resolved.relativePath, openFlags, descriptorFlags);
     fd.write(data, BigInt(0));
   } catch (e) {
     throw new Error(`Failed to write file '${path}': ${e}`);
@@ -109,18 +158,36 @@ export async function writeBytes(path: string, data: Uint8Array): Promise<void> 
 
 /**
  * List files/directories at a path.
- * @param path - Relative path to the directory (defaults to ".")
+ *
+ * @param path - The path to list.
+ * @returns A promise that resolves to an array of strings representing the files and directories at the specified path.
  */
 export async function list(path: string = "."): Promise<string[]> {
-  const dir = getPreopenedDir();
-  if (!dir) {
-    throw new Error("Filesystem not available. Make sure you've set allowedFiles in your task config.");
+  const resolved = resolvePath(path);
+  if (!resolved) {
+    throw new Error("Filesystem not available.");
   }
 
   try {
-    const targetDir = path === "." ? dir : dir.openAt(0, path, 0, 1);
-    const entries = targetDir.readDirectory();
-    return entries.map((entry: { name: string }) => entry.name);
+    let targetDir = resolved.dir;
+    if (resolved.relativePath !== ".") {
+      const pathFlags = { symlinkFollow: false };
+      const openFlags = { directory: true };
+      const descriptorFlags = { read: true };
+      targetDir = resolved.dir.openAt(pathFlags, resolved.relativePath, openFlags, descriptorFlags);
+    }
+
+    const stream = targetDir.readDirectory();
+    const entries: string[] = [];
+
+    let entry;
+    while ((entry = stream.readDirectoryEntry()) !== undefined && entry !== null) {
+      if (entry.name) {
+        entries.push(entry.name);
+      }
+    }
+
+    return entries;
   } catch (e) {
     throw new Error(`Failed to list directory '${path}': ${e}`);
   }
@@ -128,16 +195,21 @@ export async function list(path: string = "."): Promise<string[]> {
 
 /**
  * Check if a file or directory exists.
- * @param path - Relative path to check
+ *
+ * @param path - The path to check.
+ * @returns A promise that resolves to a boolean indicating whether the file or directory exists.
  */
 export async function exists(path: string): Promise<boolean> {
-  const dir = getPreopenedDir();
-  if (!dir) {
+  const resolved = resolvePath(path);
+  if (!resolved) {
     return false;
   }
 
   try {
-    dir.openAt(0, path, 0, 1);
+    const pathFlags = { symlinkFollow: false };
+    const openFlags = {};
+    const descriptorFlags = { read: true };
+    resolved.dir.openAt(pathFlags, resolved.relativePath, openFlags, descriptorFlags);
     return true;
   } catch {
     return false;
