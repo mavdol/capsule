@@ -133,10 +133,7 @@ mod tests {
         let current = std::env::current_dir().unwrap();
 
         let result = validate_path("./nonexistent_dir", &current);
-        assert!(matches!(
-            result,
-            Err(PathValidationError::PathNotFound(_))
-        ));
+        assert!(matches!(result, Err(PathValidationError::PathNotFound(_))));
     }
 
     #[test]
