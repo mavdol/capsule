@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use super::CAPSULE_WIT;
+use crate::wasm::utilities::wit_manager::WitManager;
 
 #[derive(Debug)]
 pub enum JavascriptWasmCompilerError {
@@ -155,8 +155,6 @@ impl JavascriptWasmCompiler {
                 .arg("capsule-agent")
                 .arg("--enable")
                 .arg("http")
-                .arg("--enable")
-                .arg("filesystem")
                 .arg("-o")
                 .arg(&output_wasm_normalized)
                 .current_dir(&sdk_path_normalized)
@@ -184,11 +182,9 @@ impl JavascriptWasmCompiler {
         }
 
         let wit_dir = self.cache_dir.join("wit");
-        let wit_file = wit_dir.join("capsule.wit");
 
-        if !wit_file.exists() {
-            fs::create_dir_all(&wit_dir)?;
-            fs::write(&wit_file, CAPSULE_WIT)?;
+        if !wit_dir.join("capsule.wit").exists() {
+            WitManager::import_wit_deps(&wit_dir)?;
         }
 
         Ok(wit_dir)

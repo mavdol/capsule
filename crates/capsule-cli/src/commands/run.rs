@@ -105,9 +105,19 @@ pub async fn execute(
     };
     let runtime = Runtime::with_config(runtime_config)?;
 
-    let execution_policy = ExecutionPolicy::default().compute(Some(Compute::Custom(u64::MAX)));
+    let execution_policy = ExecutionPolicy::default()
+        .compute(Some(Compute::Custom(u64::MAX)))
+        .allowed_files(vec![".".to_string()]);  // Preopen project root for main task
+
+    let project_root = file_path
+        .canonicalize()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+
     let create_instance_command = CreateInstance::new(execution_policy.clone(), args.clone())
-        .wasm_path(compile_result.wasm_path);
+        .wasm_path(compile_result.wasm_path)
+        .project_root(project_root);
 
     let (store, instance, task_id) = runtime.execute(create_instance_command).await?;
     reporter.finish_progress(Some("Runtime launched"));
