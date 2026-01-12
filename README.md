@@ -202,7 +202,10 @@ export const main = task({
 
 ### File Access
 
-By default, tasks run in a fully isolated sandbox with no filesystem access. Use the `allowed_files` parameter to grant read and write access to specific files or directories.
+The **entry point task** (main) has access to the entire project directory. Sub-tasks have **no filesystem access by default** and must declare `allowed_files` to access specific paths.
+
+> [!NOTE]
+> Currently, `allowed_files` only supports directory paths, not individual files.
 
 #### Python
 
@@ -211,10 +214,14 @@ Python's standard file operations work normally. Use `open()`, `os`, `pathlib`, 
 ```python
 from capsule import task
 
-@task(name="main", allowed_files=["./data"])
+@task(name="restricted_writer", allowed_files=["./output"])  # Sub-task with limited access
+def restricted_writer() -> None:
+    with open("./output/result.txt", "w") as f:
+        f.write("result")
+
+@task(name="main")  # Has access to entire project
 def main() -> str:
-    with open("./data/input.txt") as f:
-        return f.read()
+    restricted_writer()
 ```
 
 #### TypeScript / JavaScript
@@ -224,10 +231,15 @@ Node.js built-ins like `fs` are not available in the WebAssembly sandbox. Instea
 ```typescript
 import { task, files } from "@capsule-run/sdk";
 
-export const main = task({
-    name: "main",
-    allowedFiles: ["./data"]
+export const restrictedWriter = task({
+    name: "restricted_writer",
+    allowedFiles: ["./output"]
 }, async () => {
+    await files.writeText("./output/result.txt", "result");
+});
+
+export const main = task({ name: "main" }, async () => {
+    restrictedWriter();
     return await files.readText("./data/input.txt");
 });
 ```
@@ -239,6 +251,7 @@ Available methods:
 - `files.writeBytes(path, data)` — Write bytes to file
 - `files.list(path)` — List directory contents
 - `files.exists(path)` — Check if file exists
+
 
 ## Compatibility
 
