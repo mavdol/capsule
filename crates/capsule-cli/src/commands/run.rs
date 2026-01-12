@@ -107,7 +107,7 @@ pub async fn execute(
 
     let execution_policy = ExecutionPolicy::default()
         .compute(Some(Compute::Custom(u64::MAX)))
-        .allowed_files(vec![".".to_string()]);  // Preopen project root for main task
+        .allowed_files(vec![".".to_string()]);
 
     let project_root = file_path
         .canonicalize()
