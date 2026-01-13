@@ -63,6 +63,7 @@ When you run `capsule run main.py`, your code is compiled into a WebAssembly mod
 | `ram` | `str` | Memory limit | `"512MB"`, `"2GB"` |
 | `timeout` | `str` | Maximum execution time | `"30s"`, `"5m"` |
 | `max_retries` | `int` | Retry attempts on failure | `3` |
+| `allowed_files` | `list` | Files or folders accessible in the sandbox | `["./data", "./output"]` |
 
 ### Compute Levels
 
@@ -83,6 +84,25 @@ from capsule.http import get, post
 def main() -> dict:
     response = get("https://api.example.com/data")
     return {"status": response.status_code, "ok": response.ok()}
+```
+
+### File Access
+
+The **entry point task** (main) has access to the entire project directory. Sub-tasks have **no filesystem access by default** and must declare `allowed_files` to access specific paths.
+
+Python's standard file operations work normally. Use `open()`, `os`, `pathlib`, or any file manipulation library:
+
+```python
+from capsule import task
+
+@task(name="restricted_writer", allowed_files=["./output"])  # Sub-task with limited access
+def restricted_writer() -> None:
+    with open("./output/result.txt", "w") as f:
+        f.write("result")
+
+@task(name="main")  # Has access to entire project
+def main() -> str:
+    restricted_writer()
 ```
 
 ## Compatibility
