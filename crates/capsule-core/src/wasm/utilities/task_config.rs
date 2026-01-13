@@ -11,6 +11,9 @@ pub struct TaskConfig {
 
     #[serde(alias = "maxRetries")]
     max_retries: Option<u64>,
+
+    #[serde(alias = "allowedFiles")]
+    allowed_files: Option<Vec<String>>,
 }
 
 impl TaskConfig {
@@ -36,6 +39,7 @@ impl TaskConfig {
             .ram(ram)
             .timeout(self.timeout.clone())
             .max_retries(self.max_retries)
+            .allowed_files(self.allowed_files.clone().unwrap_or_default())
     }
 
     pub fn parse_ram_string(s: &str) -> Option<u64> {
@@ -131,6 +135,7 @@ mod tests {
             ram: Some("2GB".to_string()),
             timeout: Some("30s".to_string()),
             max_retries: Some(3),
+            allowed_files: Some(vec!["./data/input.txt".to_string()]),
         };
 
         let policy = config.to_execution_policy();

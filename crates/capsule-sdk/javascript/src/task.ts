@@ -23,6 +23,8 @@ export interface TaskOptions {
   timeout?: string | number;
   /** Maximum number of retries */
   maxRetries?: number;
+  /** Files/folders accessible in the sandbox, e.g., ["./data"] */
+  allowedFiles?: string[];
 }
 
 interface TaskResult {
@@ -35,7 +37,6 @@ interface TaskResult {
  *
  * @example
  * ```typescript
- * // String timeout format
  * export const greet = task({
  *   name: "greet",
  *   compute: "LOW",
@@ -44,11 +45,10 @@ interface TaskResult {
  *   return `Hello, ${name}!`;
  * });
  *
- * // Numeric timeout format (milliseconds)
  * export const process = task({
  *   name: "process",
  *   compute: "HIGH",
- *   timeout: 30000  // 30 seconds
+ *   timeout: 30000
  * }, (data: any): any => {
  *   return processData(data);
  * });
@@ -90,6 +90,7 @@ export function task<TArgs extends any[], TReturn>(
     ram: options.ram,
     timeout: normalizeTimeout(options.timeout),
     maxRetries: options.maxRetries,
+    allowedFiles: options.allowedFiles,
   };
 
   const wrapper = (...args: TArgs): TReturn => {

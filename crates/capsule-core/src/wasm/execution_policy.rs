@@ -32,6 +32,8 @@ pub struct ExecutionPolicy {
     pub ram: Option<u64>,
     pub timeout: Option<String>,
     pub max_retries: u64,
+    #[serde(default)]
+    pub allowed_files: Vec<String>,
 }
 
 impl Default for ExecutionPolicy {
@@ -42,6 +44,7 @@ impl Default for ExecutionPolicy {
             ram: None,
             timeout: None,
             max_retries: 0,
+            allowed_files: Vec::new(),
         }
     }
 }
@@ -87,6 +90,11 @@ impl ExecutionPolicy {
             .as_ref()
             .and_then(|s| humantime::parse_duration(s).ok())
     }
+
+    pub fn allowed_files(mut self, files: Vec<String>) -> Self {
+        self.allowed_files = files;
+        self
+    }
 }
 
 #[cfg(test)]
@@ -100,12 +108,14 @@ mod tests {
             .compute(None)
             .ram(Some(128))
             .timeout(Some("60s".to_string()))
-            .max_retries(Some(3));
+            .max_retries(Some(3))
+            .allowed_files(vec!["/etc/passwd".to_string()]);
 
         assert_eq!(policy.name, "test");
         assert_eq!(policy.compute, Compute::Medium);
         assert_eq!(policy.ram, Some(128));
         assert_eq!(policy.timeout, Some("60s".to_string()));
         assert_eq!(policy.max_retries, 3);
+        assert_eq!(policy.allowed_files, vec!["/etc/passwd".to_string()]);
     }
 }

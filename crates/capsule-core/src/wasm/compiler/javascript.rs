@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use super::CAPSULE_WIT;
+use crate::wasm::utilities::wit_manager::WitManager;
 
 #[derive(Debug)]
 pub enum JavascriptWasmCompilerError {
@@ -103,11 +103,15 @@ impl JavascriptWasmCompiler {
 
             let wrapper_content = format!(
                 r#"// Auto-generated bootloader for Capsule
-                    import * as hostApi from 'capsule:host/api';
-                    globalThis['capsule:host/api'] = hostApi;
-                    import '{}';
-                    import {{ exports }} from '{}/dist/app.js';
-                    export const taskRunner = exports;
+import * as hostApi from 'capsule:host/api';
+import * as fsTypes from 'wasi:filesystem/types@0.2.0';
+import * as fsPreopens from 'wasi:filesystem/preopens@0.2.0';
+globalThis['capsule:host/api'] = hostApi;
+globalThis['wasi:filesystem/types'] = fsTypes;
+globalThis['wasi:filesystem/preopens'] = fsPreopens;
+import '{}';
+import {{ exports }} from '{}/dist/app.js';
+export const taskRunner = exports;
                 "#,
                 import_path, sdk_path_str
             );
@@ -127,6 +131,7 @@ impl JavascriptWasmCompiler {
                 .arg("--format=esm")
                 .arg("--platform=neutral")
                 .arg("--external:capsule:host/api")
+                .arg("--external:wasi:filesystem/*")
                 .arg(format!("--outfile={}", bundled_path_normalized.display()))
                 .current_dir(&sdk_path_normalized)
                 .stdout(Stdio::piped())
@@ -177,11 +182,9 @@ impl JavascriptWasmCompiler {
         }
 
         let wit_dir = self.cache_dir.join("wit");
-        let wit_file = wit_dir.join("capsule.wit");
 
-        if !wit_file.exists() {
-            fs::create_dir_all(&wit_dir)?;
-            fs::write(&wit_file, CAPSULE_WIT)?;
+        if !wit_dir.join("capsule.wit").exists() {
+            WitManager::import_wit_deps(&wit_dir)?;
         }
 
         Ok(wit_dir)

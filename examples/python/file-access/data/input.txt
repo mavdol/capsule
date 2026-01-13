@@ -1,0 +1,2 @@
+Hello from Capsule!
+This is a sample text file for testing filesystem access.

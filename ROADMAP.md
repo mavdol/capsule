@@ -35,11 +35,11 @@ This document tracks the development status of Capsule.
 
 ## v0.3.0: Data Access
 
-**Status:** 📅 Planned
+**Status:** 📅 In Progress
 
 **Goal:** Enable agents to work with local files and datasets.
 
-- [ ] **Filesystem:** Local file mounting (`fs_access`) for reading images, CSVs, and datasets.
+- [x] **Filesystem:** Local file mounting (`fs_access`) for reading images, CSVs, and datasets.
 
 ---
 

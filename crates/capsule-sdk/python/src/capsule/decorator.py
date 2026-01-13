@@ -10,7 +10,7 @@ from .host_api import call_host, is_wasm_mode
 from . import app
 
 
-def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None):
+def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, allowed_files=None):
     """
     Decorator to mark a function as a Capsule task.
 
@@ -20,6 +20,7 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None):
         ram: RAM limit - e.g., "512MB", "2GB"
         timeout: Timeout duration - e.g., "30s", "5m"
         max_retries: Maximum number of retries (default: 1)
+        allowed_files: List of files/folders accessible in sandbox - e.g., ["./data"]
 
     In WASM mode:
     - The function is registered in the task registry with its config
@@ -43,6 +44,8 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None):
             task_config["timeout"] = timeout
         if max_retries is not None:
             task_config["max_retries"] = max_retries
+        if allowed_files is not None:
+            task_config["allowed_files"] = allowed_files
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
