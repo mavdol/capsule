@@ -144,8 +144,8 @@ Configure your tasks with these parameters:
 | `compute` | `str` | CPU allocation level: `"LOW"`, `"MEDIUM"`, or `"HIGH"` | `"MEDIUM"` |
 | `ram` | `str` | Memory limit for the task | `"512MB"`, `"2GB"` |
 | `timeout` | `str` | Maximum execution time | `"30s"`, `"5m"`, `"1h"` |
-| `max_retries` | `int` | Number of retry attempts on failure (default: 1) | `3` |
-| `allowed_files` | `list` | Folders accessible in the sandbox | `["./data", "./output"]` |
+| `max_retries` / `maxRetries` | `int` | Number of retry attempts on failure (default: 0) | `3` |
+| `allowed_files` / `allowedFiles` | `list` | Folders accessible in the sandbox | `["./data", "./output"]` |
 
 ### Compute Levels
 
