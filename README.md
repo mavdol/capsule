@@ -45,7 +45,7 @@ def analyze_data(dataset: list) -> dict:
 
 ### With TypeScript / JavaScript
 
-Capsule now supports TypeScript and JavaScript with the `task()` wrapper function. This offers compatibility with the entire JavaScript ecosystem.
+For TypeScript and JavaScript, use the `task()` wrapper function with full access to the npm ecosystem:
 
 ```typescript
 import { task } from "@capsule-run/sdk";
