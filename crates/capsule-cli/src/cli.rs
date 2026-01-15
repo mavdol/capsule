@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "capsule")]
-#[command(about = "Runtime for multi agent orchestration", long_about = None)]
+#[command(about = "A secure, durable runtime for AI agents", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
