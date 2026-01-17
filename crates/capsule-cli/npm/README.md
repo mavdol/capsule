@@ -91,22 +91,6 @@ When you run `capsule run main.ts`, your code is compiled into a WebAssembly mod
 - **HIGH**: Maximum fuel for compute-intensive operations
 - **CUSTOM**: Specify exact fuel value (e.g., `compute="1000000"`)
 
-### HTTP Client
-
-Standard `fetch` is already compatible, so no custom HTTP client is needed:
-
-```typescript
-import { task } from "@capsule-run/sdk";
-
-export const main = task({
-    name: "main",
-    compute: "MEDIUM"
-}, async () => {
-    const response = await fetch("https://api.example.com/data");
-    return response.json();
-});
-```
-
 ### File Access
 
 The **entry point task** (main) has access to the entire project directory. Sub-tasks have **no filesystem access by default** and must declare `allowedFiles` to access specific paths.
@@ -149,7 +133,3 @@ Available methods:
 
 - [GitHub](https://github.com/mavdol/capsule)
 - [Issues](https://github.com/mavdol/capsule/issues)
-
-## License
-
-Apache-2.0
