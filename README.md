@@ -202,7 +202,7 @@ export const main = task({
 
 ### File Access
 
-The **entry point task** (main) has access to the entire project directory. Sub-tasks have **no filesystem access by default** and must declare `allowed_files` to access specific paths.
+The entry point task (main) has access to the entire project directory. Sub-tasks have no filesystem access by default and must declare `allowed_files` to access specific paths.
 
 > [!NOTE]
 > Currently, `allowed_files` only supports directory paths, not individual files.
