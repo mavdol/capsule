@@ -27,8 +27,6 @@ This enables safe task-level execution of untrusted code within AI agent systems
 
 ## How It Works
 
-Capsule leverages Wasm to create secure, isolated execution environments.
-
 ### With Python
 
 Simply annotate your Python functions with the `@task` decorator:
