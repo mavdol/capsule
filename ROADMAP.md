@@ -33,13 +33,57 @@ This document tracks the development status of Capsule.
 
 ---
 
-## v0.3.0: Data Access
+## v0.3.0: Data Access (Filesystem)
 
 **Status:** ✅ Done
 
 **Goal:** Enable agents to work with local files and datasets.
 
 - [x] **Filesystem:** Local file mounting (`fs_access`) for reading images, CSVs, and datasets.
+
+---
+
+## v0.4.0: Configuration & Observability
+
+**Status:** 🚧 Planned
+
+**Goal:** Improve developer workflow with project configuration and richer task feedback.
+
+- [ ] **Config File:** `capsule.toml` for default task options.
+- [ ] **Structured Output:** Tasks return a detailed JSON envelope with execution metadata:
+
+```json
+{
+  "success": true,
+  "result": "<task return value>",
+  "error": null,
+  "execution": {
+    "task_name": "analyze_data",
+    "duration_ms": 1523,
+    "retries": 0,
+    "fuel_consumed": 45000
+  }
+}
+```
+
+On failure:
+
+```json
+{
+  "success": false,
+  "result": null,
+  "error": {
+    "type": "timeout",
+    "message": "Task exceeded 30s timeout limit"
+  },
+  "execution": {
+    "task_name": "analyze_data",
+    "duration_ms": 30000,
+    "retries": 1,
+    "fuel_consumed": null
+  }
+}
+```
 
 ---
 
