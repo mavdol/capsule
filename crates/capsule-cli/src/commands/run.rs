@@ -16,14 +16,14 @@ use capsule_core::wasm::utilities::task_reporter::TaskReporter;
 
 pub enum RunError {
     IoError(String),
-    CompileFailed(String),
+    ExecutionFailed(String),
 }
 
 impl fmt::Display for RunError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             RunError::IoError(msg) => write!(f, "{}", msg),
-            RunError::CompileFailed(msg) => write!(f, "🛠️ Mission aborted: {}", msg),
+            RunError::ExecutionFailed(msg) => write!(f, "Execution failed: {}", msg),
         }
     }
 }
@@ -36,19 +36,19 @@ impl From<std::io::Error> for RunError {
 
 impl From<PythonWasmCompilerError> for RunError {
     fn from(err: PythonWasmCompilerError) -> Self {
-        RunError::CompileFailed(err.to_string())
+        RunError::ExecutionFailed(err.to_string())
     }
 }
 
 impl From<JavascriptWasmCompilerError> for RunError {
     fn from(err: JavascriptWasmCompilerError) -> Self {
-        RunError::CompileFailed(err.to_string())
+        RunError::ExecutionFailed(err.to_string())
     }
 }
 
 impl From<WasmRuntimeError> for RunError {
     fn from(err: WasmRuntimeError) -> Self {
-        RunError::CompileFailed(err.to_string())
+        RunError::ExecutionFailed(err.to_string())
     }
 }
 
@@ -80,7 +80,7 @@ fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, RunError> {
                 cache_dir: compiler.cache_dir,
             })
         }
-        _ => Err(RunError::CompileFailed(format!(
+        _ => Err(RunError::ExecutionFailed(format!(
             "Unsupported file extension: '{}'. Supported: .py, .js, .mjs, .ts",
             extension
         ))),
@@ -94,11 +94,11 @@ pub async fn execute(
 ) -> Result<String, RunError> {
     let mut reporter = TaskReporter::new(true);
 
-    reporter.start_progress("Preparing capsule environment");
+    reporter.start_progress("Preparing environment");
     let compile_result = compile_to_wasm(file_path)?;
-    reporter.finish_progress(Some("Environment prepared"));
+    reporter.finish_progress(Some("Environment ready"));
 
-    reporter.start_progress("Launching capsule runtime");
+    reporter.start_progress("Initializing runtime");
     let runtime_config = RuntimeConfig {
         cache_dir: compile_result.cache_dir,
         verbose,
@@ -120,9 +120,7 @@ pub async fn execute(
         .project_root(project_root);
 
     let (store, instance, task_id) = runtime.execute(create_instance_command).await?;
-    reporter.finish_progress(Some("Runtime launched"));
-
-    reporter.success("📡 Capsule in orbit. Systems nominal.");
+    reporter.finish_progress(Some("Runtime ready"));
 
     let start_time = Instant::now();
 

@@ -118,7 +118,3 @@ def main() -> str:
 
 - [GitHub](https://github.com/mavdol/capsule)
 - [Issues](https://github.com/mavdol/capsule/issues)
-
-## License
-
-Apache-2.0

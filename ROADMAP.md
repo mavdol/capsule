@@ -35,7 +35,7 @@ This document tracks the development status of Capsule.
 
 ## v0.3.0: Data Access
 
-**Status:** 📅 In Progress
+**Status:** ✅ Done
 
 **Goal:** Enable agents to work with local files and datasets.
 

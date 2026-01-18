@@ -45,7 +45,7 @@ def analyze_data(dataset: list) -> dict:
 
 ### With TypeScript / JavaScript
 
-Capsule now supports TypeScript and JavaScript with the `task()` wrapper function. This offers compatibility with the entire JavaScript ecosystem.
+For TypeScript and JavaScript, use the `task()` wrapper function with full access to the npm ecosystem:
 
 ```typescript
 import { task } from "@capsule-run/sdk";
@@ -144,8 +144,8 @@ Configure your tasks with these parameters:
 | `compute` | `str` | CPU allocation level: `"LOW"`, `"MEDIUM"`, or `"HIGH"` | `"MEDIUM"` |
 | `ram` | `str` | Memory limit for the task | `"512MB"`, `"2GB"` |
 | `timeout` | `str` | Maximum execution time | `"30s"`, `"5m"`, `"1h"` |
-| `max_retries` | `int` | Number of retry attempts on failure (default: 1) | `3` |
-| `allowed_files` | `list` | Files or folders accessible in the sandbox | `["./data", "./output"]` |
+| `max_retries` / `maxRetries` | `int` | Number of retry attempts on failure (default: 0) | `3` |
+| `allowed_files` / `allowedFiles` | `list` | Folders accessible in the sandbox | `["./data", "./output"]` |
 
 ### Compute Levels
 
@@ -202,7 +202,7 @@ export const main = task({
 
 ### File Access
 
-The **entry point task** (main) has access to the entire project directory. Sub-tasks have **no filesystem access by default** and must declare `allowed_files` to access specific paths.
+The entry point task (main) has access to the entire project directory. Sub-tasks have no filesystem access by default and must declare `allowed_files` to access specific paths.
 
 > [!NOTE]
 > Currently, `allowed_files` only supports directory paths, not individual files.
