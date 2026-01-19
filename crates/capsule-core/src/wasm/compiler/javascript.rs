@@ -66,23 +66,24 @@ impl JavascriptWasmCompiler {
     }
 
     fn npx_command() -> Command {
-        #[cfg(target_os = "windows")]
+        // Try npx.cmd first (Windows), fall back to npx (Unix)
+        if Command::new("npx.cmd")
+            .arg("--version")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_ok()
         {
             Command::new("npx.cmd")
-        }
-        #[cfg(not(target_os = "windows"))]
-        {
+        } else {
             Command::new("npx")
         }
     }
 
     fn normalize_path_for_command(path: &Path) -> PathBuf {
-        #[cfg(windows)]
-        {
-            let path_str = path.to_string_lossy();
-            if path_str.starts_with(r"\\?\") {
-                return PathBuf::from(&path_str[4..]);
-            }
+        let path_str = path.to_string_lossy();
+        if path_str.starts_with(r"\\?\") {
+            return PathBuf::from(&path_str[4..]);
         }
         path.to_path_buf()
     }

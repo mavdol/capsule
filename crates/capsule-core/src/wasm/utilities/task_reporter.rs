@@ -41,7 +41,7 @@ impl TaskReporter {
         self.start_time = Instant::now();
         if self.verbose {
             println!(
-                "{} {} [{}] Starting task...",
+                "{} {} [{}] Starting task",
                 Self::timestamp(),
                 "INFO".cyan(),
                 task_name.magenta()
