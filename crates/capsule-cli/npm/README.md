@@ -75,14 +75,14 @@ When you run `capsule run main.ts`, your code is compiled into a WebAssembly mod
 
 ### Task Configuration Options
 
-| Parameter | Type | Default | Description | Example |
-|-----------|------|---------|-------------|---------|
-| `name` | `string` | *required* | Task identifier | `"process_data"` |
-| `compute` | `string` | `"MEDIUM"` | CPU level: `"LOW"`, `"MEDIUM"`, `"HIGH"` | `"HIGH"` |
-| `ram` | `string` | unlimited | Memory limit | `"512MB"`, `"2GB"` |
-| `timeout` | `string` or `number` | unlimited | Maximum execution time | `"30s"`, `"5m"`, `30000` (ms) |
-| `maxRetries` | `number` | `0` | Retry attempts on failure | `3` |
-| `allowedFiles` | `string[]` | `[]` | Folders accessible in the sandbox | `["./data", "./output"]` |
+| Parameter | Description | Type | Default | Example |
+|-----------|-------------|------|---------|---------|
+| `name` | Task identifier | `string` | *required* | `"process_data"` |
+| `compute` | CPU level: `"LOW"`, `"MEDIUM"`, `"HIGH"` | `string` | `"MEDIUM"` | `"HIGH"` |
+| `ram` | Memory limit | `string` | unlimited | `"512MB"`, `"2GB"` |
+| `timeout` | Maximum execution time | `string` or `number` | unlimited | `"30s"`, `"5m"`, `30000` (ms) |
+| `maxRetries` | Retry attempts on failure | `number` | `0` | `3` |
+| `allowedFiles` | Folders accessible in the sandbox | `string[]` | `[]` | `["./data", "./output"]` |
 
 ### Compute Levels
 

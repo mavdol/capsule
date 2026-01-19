@@ -56,14 +56,14 @@ When you run `capsule run main.py`, your code is compiled into a WebAssembly mod
 
 ### Task Configuration Options
 
-| Parameter | Type | Default | Description | Example |
-|-----------|------|---------|-------------|---------|
-| `name` | `str` | function name | Task identifier | `"process_data"` |
-| `compute` | `str` | `"MEDIUM"` | CPU level: `"LOW"`, `"MEDIUM"`, `"HIGH"` | `"HIGH"` |
-| `ram` | `str` | unlimited | Memory limit | `"512MB"`, `"2GB"` |
-| `timeout` | `str` | unlimited | Maximum execution time | `"30s"`, `"5m"` |
-| `max_retries` | `int` | `0` | Retry attempts on failure | `3` |
-| `allowed_files` | `list` | `[]` | Folders accessible in the sandbox | `["./data", "./output"]` |
+| Parameter | Description | Type | Default | Example |
+|-----------|-------------|------|---------|---------|
+| `name` | Task identifier | `str` | function name | `"process_data"` |
+| `compute` | CPU level: `"LOW"`, `"MEDIUM"`, `"HIGH"` | `str` | `"MEDIUM"` | `"HIGH"` |
+| `ram` | Memory limit | `str` | unlimited | `"512MB"`, `"2GB"` |
+| `timeout` | Maximum execution time | `str` | unlimited | `"30s"`, `"5m"` |
+| `max_retries` | Retry attempts on failure | `int` | `0` | `3` |
+| `allowed_files` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
 
 ### Compute Levels
 
