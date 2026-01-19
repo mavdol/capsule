@@ -67,23 +67,23 @@ impl PythonWasmCompiler {
     }
 
     fn python_command() -> &'static str {
-        #[cfg(target_os = "windows")]
+        if Command::new("python")
+            .arg("--version")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_ok()
         {
             "python"
-        }
-        #[cfg(not(target_os = "windows"))]
-        {
+        } else {
             "python3"
         }
     }
 
     fn normalize_path_for_command(path: &Path) -> PathBuf {
-        #[cfg(windows)]
-        {
-            let path_str = path.to_string_lossy();
-            if path_str.starts_with(r"\\?\") {
-                return PathBuf::from(&path_str[4..]);
-            }
+        let path_str = path.to_string_lossy();
+        if let Some(stripped) = path_str.strip_prefix(r"\\?\") {
+            return PathBuf::from(stripped);
         }
         path.to_path_buf()
     }
