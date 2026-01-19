@@ -56,7 +56,7 @@ impl JavascriptWasmCompiler {
 
         fs::create_dir_all(&cache_dir)?;
 
-        let output_wasm = cache_dir.join("agent.wasm");
+        let output_wasm = cache_dir.join("capsule.wasm");
 
         Ok(Self {
             source_path,
