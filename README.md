@@ -136,14 +136,14 @@ capsule run hello.ts
 
 Configure your tasks with these parameters:
 
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `name` | `str` | Task identifier (defaults to function name) | `"process_data"` |
-| `compute` | `str` | CPU allocation level: `"LOW"`, `"MEDIUM"`, or `"HIGH"` | `"MEDIUM"` |
-| `ram` | `str` | Memory limit for the task | `"512MB"`, `"2GB"` |
-| `timeout` | `str` | Maximum execution time | `"30s"`, `"5m"`, `"1h"` |
-| `max_retries` / `maxRetries` | `int` | Number of retry attempts on failure (default: 0) | `3` |
-| `allowed_files` / `allowedFiles` | `list` | Folders accessible in the sandbox | `["./data", "./output"]` |
+| Parameter | Description | Type | Default | Example |
+|-----------|-------------|------|---------|---------|
+| `name` | Task identifier | `str` | function name (Python) / *required* (TS) | `"process_data"` |
+| `compute` | CPU allocation level: `"LOW"`, `"MEDIUM"`, or `"HIGH"` | `str` | `"MEDIUM"` | `"HIGH"` |
+| `ram` | Memory limit for the task | `str` | unlimited | `"512MB"`, `"2GB"` |
+| `timeout` | Maximum execution time | `str` | unlimited | `"30s"`, `"5m"`, `"1h"` |
+| `max_retries` / `maxRetries` | Number of retry attempts on failure | `int` | `0` | `3` |
+| `allowed_files` / `allowedFiles` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
 
 ### Compute Levels
 
