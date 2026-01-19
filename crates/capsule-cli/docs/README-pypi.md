@@ -56,14 +56,14 @@ When you run `capsule run main.py`, your code is compiled into a WebAssembly mod
 
 ### Task Configuration Options
 
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `name` | `str` | Task identifier | `"process_data"` |
-| `compute` | `str` | CPU level: `"LOW"`, `"MEDIUM"`, `"HIGH"` | `"MEDIUM"` |
-| `ram` | `str` | Memory limit | `"512MB"`, `"2GB"` |
-| `timeout` | `str` | Maximum execution time | `"30s"`, `"5m"` |
-| `max_retries` | `int` | Retry attempts on failure | `3` |
-| `allowed_files` | `list` | Files or folders accessible in the sandbox | `["./data", "./output"]` |
+| Parameter | Type | Default | Description | Example |
+|-----------|------|---------|-------------|---------|
+| `name` | `str` | function name | Task identifier | `"process_data"` |
+| `compute` | `str` | `"MEDIUM"` | CPU level: `"LOW"`, `"MEDIUM"`, `"HIGH"` | `"HIGH"` |
+| `ram` | `str` | unlimited | Memory limit | `"512MB"`, `"2GB"` |
+| `timeout` | `str` | unlimited | Maximum execution time | `"30s"`, `"5m"` |
+| `max_retries` | `int` | `0` | Retry attempts on failure | `3` |
+| `allowed_files` | `list` | `[]` | Folders accessible in the sandbox | `["./data", "./output"]` |
 
 ### Compute Levels
 
