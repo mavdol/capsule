@@ -1,6 +1,6 @@
 {
   "name": "@capsule-run/sdk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Capsule JavaScript SDK - run AI agent tasks in secure WASM sandboxes",
   "type": "module",
   "main": "./dist/index.js",
@@ -39,9 +39,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@bytecodealliance/jco": "^1.0.0",
-    "esbuild": "^0.27.2"
-  },
-  "devDependencies": {
+    "esbuild": "^0.27.2",
     "typescript": "^5.9.3"
   }
 }
