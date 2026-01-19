@@ -66,7 +66,6 @@ impl JavascriptWasmCompiler {
     }
 
     fn npx_command() -> Command {
-        // Try npx.cmd first (Windows), fall back to npx (Unix)
         if Command::new("npx.cmd")
             .arg("--version")
             .stdout(Stdio::null())
@@ -82,8 +81,8 @@ impl JavascriptWasmCompiler {
 
     fn normalize_path_for_command(path: &Path) -> PathBuf {
         let path_str = path.to_string_lossy();
-        if path_str.starts_with(r"\\?\") {
-            return PathBuf::from(&path_str[4..]);
+        if let Some(stripped) = path_str.strip_prefix(r"\\?\") {
+            return PathBuf::from(stripped);
         }
         path.to_path_buf()
     }
@@ -112,9 +111,11 @@ impl JavascriptWasmCompiler {
         let wrapper_path = self.cache_dir.join("_capsule_boot.js");
         let bundled_path = self.cache_dir.join("_capsule_bundled.js");
 
-        let import_path = Self::normalize_path_for_import(&source_for_import
-            .canonicalize()
-            .unwrap_or_else(|_| source_for_import.to_path_buf()));
+        let import_path = Self::normalize_path_for_import(
+            &source_for_import
+                .canonicalize()
+                .unwrap_or_else(|_| source_for_import.to_path_buf()),
+        );
 
         let sdk_path_str = Self::normalize_path_for_import(&sdk_path);
 

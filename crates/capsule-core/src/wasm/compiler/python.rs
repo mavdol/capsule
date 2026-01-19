@@ -82,8 +82,8 @@ impl PythonWasmCompiler {
 
     fn normalize_path_for_command(path: &Path) -> PathBuf {
         let path_str = path.to_string_lossy();
-        if path_str.starts_with(r"\\?\") {
-            return PathBuf::from(&path_str[4..]);
+        if let Some(stripped) = path_str.strip_prefix(r"\\?\") {
+            return PathBuf::from(stripped);
         }
         path.to_path_buf()
     }
