@@ -198,8 +198,23 @@ jobs:
       - name: Install Maturin
         run: pip install maturin
 
+      - name: Copy SDK source for maturin
+        shell: bash
+        run: |
+          cp -r crates/capsule-sdk/python/src crates/capsule-cli/python_src
+
+      - name: Update python-source path
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            sed -i 's|python-source = "../capsule-sdk/python/src"|python-source = "python_src"|g' crates/capsule-cli/pyproject.toml
+          else
+            sed -i'' -e 's|python-source = "../capsule-sdk/python/src"|python-source = "python_src"|g' crates/capsule-cli/pyproject.toml
+          fi
+
       - name: Build and publish
         working-directory: crates/capsule-cli
         run: maturin publish --skip-existing
         env:
           MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
