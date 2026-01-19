@@ -206,11 +206,7 @@ jobs:
       - name: Update python-source path
         shell: bash
         run: |
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            sed -i 's|python-source = "../capsule-sdk/python/src"|python-source = "python_src"|g' crates/capsule-cli/pyproject.toml
-          else
-            sed -i'' -e 's|python-source = "../capsule-sdk/python/src"|python-source = "python_src"|g' crates/capsule-cli/pyproject.toml
-          fi
+          perl -i -pe 's|python-source = "../capsule-sdk/python/src"|python-source = "python_src"|g' crates/capsule-cli/pyproject.toml
 
       - name: Build and publish
         working-directory: crates/capsule-cli
