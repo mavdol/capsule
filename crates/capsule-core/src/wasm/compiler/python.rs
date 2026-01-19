@@ -41,35 +41,6 @@ pub struct PythonWasmCompiler {
 }
 
 impl PythonWasmCompiler {
-    fn get_python_command() -> String {
-        let candidates = vec!["python3", "python"];
-
-        for cmd in candidates {
-            if Command::new(cmd)
-                .arg("--version")
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status()
-                .is_ok()
-            {
-                return cmd.to_string();
-            }
-        }
-
-        "python3".to_string()
-    }
-
-    fn normalize_path_for_command(path: &Path) -> PathBuf {
-        #[cfg(windows)]
-        {
-            let path_str = path.to_string_lossy();
-            if path_str.starts_with(r"\\?\") {
-                return PathBuf::from(&path_str[4..]);
-            }
-        }
-        path.to_path_buf()
-    }
-
     pub fn new(source_path: &Path) -> Result<Self, PythonWasmCompilerError> {
         let source_path = source_path.canonicalize().map_err(|e| {
             PythonWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e))
@@ -95,88 +66,112 @@ impl PythonWasmCompiler {
         })
     }
 
+    fn python_command() -> &'static str {
+        #[cfg(target_os = "windows")]
+        {
+            "python"
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            "python3"
+        }
+    }
+
+    fn normalize_path_for_command(path: &Path) -> PathBuf {
+        #[cfg(windows)]
+        {
+            let path_str = path.to_string_lossy();
+            if path_str.starts_with(r"\\?\") {
+                return PathBuf::from(&path_str[4..]);
+            }
+        }
+        path.to_path_buf()
+    }
+
     pub fn compile_wasm(&self) -> Result<PathBuf, PythonWasmCompilerError> {
-        if self.needs_rebuild(&self.source_path, &self.output_wasm)? {
-            let module_name = self
-                .source_path
-                .file_stem()
-                .ok_or(PythonWasmCompilerError::FsError(
-                    "Invalid source file name".to_string(),
-                ))?
-                .to_str()
-                .ok_or(PythonWasmCompilerError::FsError(
-                    "Invalid UTF-8 in file name".to_string(),
-                ))?;
+        if !self.needs_rebuild(&self.source_path, &self.output_wasm)? {
+            return Ok(self.output_wasm.clone());
+        }
 
-            let python_path = self
-                .source_path
-                .parent()
-                .ok_or(PythonWasmCompilerError::FsError(
-                    "Cannot determine parent directory".to_string(),
-                ))?;
+        let module_name = self
+            .source_path
+            .file_stem()
+            .ok_or(PythonWasmCompilerError::FsError(
+                "Invalid source file name".to_string(),
+            ))?
+            .to_str()
+            .ok_or(PythonWasmCompilerError::FsError(
+                "Invalid UTF-8 in file name".to_string(),
+            ))?;
 
-            let wit_path = self.get_wit_path()?;
+        let python_path = self
+            .source_path
+            .parent()
+            .ok_or(PythonWasmCompilerError::FsError(
+                "Cannot determine parent directory".to_string(),
+            ))?;
 
-            let sdk_path = self.get_sdk_path()?;
+        let wit_path = self.get_wit_path()?;
 
-            if !sdk_path.exists() {
-                return Err(PythonWasmCompilerError::FsError(format!(
-                    "SDK directory not found: {}",
-                    sdk_path.display()
-                )));
-            }
+        let sdk_path = self.get_sdk_path()?;
 
-            if !sdk_path.exists() {
-                return Err(PythonWasmCompilerError::FsError(format!(
-                    "SDK directory not found: {}",
-                    sdk_path.display()
-                )));
-            }
+        if !sdk_path.exists() {
+            return Err(PythonWasmCompilerError::FsError(format!(
+                "SDK directory not found: {}",
+                sdk_path.display()
+            )));
+        }
 
-            let bootloader_path = self.cache_dir.join("_capsule_boot.py");
-            let bootloader_content = format!(
-                r#"# Auto-generated bootloader for Capsule
+        if !sdk_path.exists() {
+            return Err(PythonWasmCompilerError::FsError(format!(
+                "SDK directory not found: {}",
+                sdk_path.display()
+            )));
+        }
+
+        let bootloader_path = self.cache_dir.join("_capsule_boot.py");
+        let bootloader_content = format!(
+            r#"# Auto-generated bootloader for Capsule
 import {module_name}
 import capsule.app
 capsule.app._main_module = {module_name}
 from capsule.app import TaskRunner, exports
 "#,
-                module_name = module_name
-            );
+            module_name = module_name
+        );
 
-            fs::write(&bootloader_path, bootloader_content)?;
+        fs::write(&bootloader_path, bootloader_content)?;
 
-            let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
-            let cache_dir_normalized = Self::normalize_path_for_command(&self.cache_dir);
-            let python_path_normalized = Self::normalize_path_for_command(python_path);
-            let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
-            let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
+        let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
+        let cache_dir_normalized = Self::normalize_path_for_command(&self.cache_dir);
+        let python_path_normalized = Self::normalize_path_for_command(python_path);
+        let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
+        let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
-            let output = Command::new("componentize-py")
-                .arg("-d")
-                .arg(&wit_path_normalized)
-                .arg("-w")
-                .arg("capsule-agent")
-                .arg("componentize")
-                .arg("_capsule_boot")
-                .arg("-p")
-                .arg(&cache_dir_normalized)
-                .arg("-p")
-                .arg(&python_path_normalized)
-                .arg("-p")
-                .arg(&sdk_path_normalized)
-                .arg("-o")
-                .arg(&output_wasm_normalized)
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .output()?;
+        let output = Command::new("componentize-py")
+            .arg("-d")
+            .arg(&wit_path_normalized)
+            .arg("-w")
+            .arg("capsule-agent")
+            .arg("componentize")
+            .arg("_capsule_boot")
+            .arg("-p")
+            .arg(&cache_dir_normalized)
+            .arg("-p")
+            .arg(&python_path_normalized)
+            .arg("-p")
+            .arg(&sdk_path_normalized)
+            .arg("-o")
+            .arg(&output_wasm_normalized)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()?;
 
-            if !output.status.success() {
-                return Err(PythonWasmCompilerError::CompileFailed(format!(
-                    "Compilation failed: {}",
-                    String::from_utf8_lossy(&output.stderr).trim()
-                )));
-            }
+        if !output.status.success() {
+            return Err(PythonWasmCompilerError::CompileFailed(format!(
+                "Compilation failed: {}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            )));
         }
 
         Ok(self.output_wasm.clone())
@@ -283,25 +278,28 @@ from capsule.app import TaskRunner, exports
         }
 
         Err(PythonWasmCompilerError::FsError(
-            "Cannot find SDK. Set CAPSULE_SDK_PATH environment variable or install capsule package.".to_string(),
+            "Cannot find SDK. Make sure to install capsule package.".to_string(),
         ))
     }
 
     fn find_sdk_via_python(&self) -> Result<PathBuf, PythonWasmCompilerError> {
-        let python_cmd = Self::get_python_command();
-        let output = Command::new(&python_cmd)
+        let python_cmd = Self::python_command();
+        let output = Command::new(python_cmd)
             .arg("-c")
             .arg("import capsule; import os; print(os.path.dirname(os.path.dirname(capsule.__file__)), end='')")
             .output()
             .map_err(|e| {
-                PythonWasmCompilerError::FsError(format!("Failed to execute {}: {}", python_cmd, e))
+                PythonWasmCompilerError::FsError(format!(
+                    "Failed to execute '{}': {}. Make sure Python is installed and 'pip install capsule-run' was run.",
+                    python_cmd, e
+                ))
             })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(PythonWasmCompilerError::FsError(format!(
-                "Python command failed: {}",
-                stderr
+                "Cannot find 'capsule' module. Run 'pip install capsule-run' first. Python error: {}",
+                stderr.trim()
             )));
         }
 

@@ -44,17 +44,6 @@ pub struct JavascriptWasmCompiler {
 }
 
 impl JavascriptWasmCompiler {
-    fn normalize_path_for_command(path: &Path) -> PathBuf {
-        #[cfg(windows)]
-        {
-            let path_str = path.to_string_lossy();
-            if path_str.starts_with(r"\\?\") {
-                return PathBuf::from(&path_str[4..]);
-            }
-        }
-        path.to_path_buf()
-    }
-
     pub fn new(source_path: &Path) -> Result<Self, JavascriptWasmCompilerError> {
         let source_path = source_path.canonicalize().map_err(|e| {
             JavascriptWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e))
@@ -76,33 +65,58 @@ impl JavascriptWasmCompiler {
         })
     }
 
+    fn npx_command() -> Command {
+        #[cfg(target_os = "windows")]
+        {
+            Command::new("npx.cmd")
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            Command::new("npx")
+        }
+    }
+
+    fn normalize_path_for_command(path: &Path) -> PathBuf {
+        #[cfg(windows)]
+        {
+            let path_str = path.to_string_lossy();
+            if path_str.starts_with(r"\\?\") {
+                return PathBuf::from(&path_str[4..]);
+            }
+        }
+        path.to_path_buf()
+    }
+
     pub fn compile_wasm(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
-        if self.needs_rebuild(&self.source_path, &self.output_wasm)? {
-            let wit_path = self.get_wit_path()?;
+        if !self.needs_rebuild(&self.source_path, &self.output_wasm)? {
+            return Ok(self.output_wasm.clone());
+        }
 
-            let sdk_path = self.get_sdk_path()?;
+        let wit_path = self.get_wit_path()?;
 
-            let source_for_import = if self.source_path.extension().is_some_and(|ext| ext == "ts") {
-                self.transpile_typescript()?
-            } else {
-                self.source_path.clone()
-            };
+        let sdk_path = self.get_sdk_path()?;
 
-            let wrapper_path = self.cache_dir.join("_capsule_boot.js");
-            let bundled_path = self.cache_dir.join("_capsule_bundled.js");
+        let source_for_import = if self.source_path.extension().is_some_and(|ext| ext == "ts") {
+            self.transpile_typescript()?
+        } else {
+            self.source_path.clone()
+        };
 
-            let import_path = source_for_import
-                .canonicalize()
-                .unwrap_or_else(|_| source_for_import.to_path_buf())
-                .display()
-                .to_string();
+        let wrapper_path = self.cache_dir.join("_capsule_boot.js");
+        let bundled_path = self.cache_dir.join("_capsule_bundled.js");
 
-            let sdk_path_str = sdk_path.to_str().ok_or_else(|| {
-                JavascriptWasmCompilerError::FsError("Invalid SDK path".to_string())
-            })?;
+        let import_path = source_for_import
+            .canonicalize()
+            .unwrap_or_else(|_| source_for_import.to_path_buf())
+            .display()
+            .to_string();
 
-            let wrapper_content = format!(
-                r#"// Auto-generated bootloader for Capsule
+        let sdk_path_str = sdk_path
+            .to_str()
+            .ok_or_else(|| JavascriptWasmCompilerError::FsError("Invalid SDK path".to_string()))?;
+
+        let wrapper_content = format!(
+            r#"// Auto-generated bootloader for Capsule
 import * as hostApi from 'capsule:host/api';
 import * as fsTypes from 'wasi:filesystem/types@0.2.0';
 import * as fsPreopens from 'wasi:filesystem/preopens@0.2.0';
@@ -112,62 +126,61 @@ globalThis['wasi:filesystem/preopens'] = fsPreopens;
 import '{}';
 import {{ exports }} from '{}/dist/app.js';
 export const taskRunner = exports;
-                "#,
-                import_path, sdk_path_str
-            );
+            "#,
+            import_path, sdk_path_str
+        );
 
-            fs::write(&wrapper_path, wrapper_content)?;
+        fs::write(&wrapper_path, wrapper_content)?;
 
-            let wrapper_path_normalized = Self::normalize_path_for_command(&wrapper_path);
-            let bundled_path_normalized = Self::normalize_path_for_command(&bundled_path);
-            let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
-            let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
-            let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
+        let wrapper_path_normalized = Self::normalize_path_for_command(&wrapper_path);
+        let bundled_path_normalized = Self::normalize_path_for_command(&bundled_path);
+        let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
+        let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
+        let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
-            let esbuild_output = Command::new("npx")
-                .arg("esbuild")
-                .arg(&wrapper_path_normalized)
-                .arg("--bundle")
-                .arg("--format=esm")
-                .arg("--platform=neutral")
-                .arg("--external:capsule:host/api")
-                .arg("--external:wasi:filesystem/*")
-                .arg(format!("--outfile={}", bundled_path_normalized.display()))
-                .current_dir(&sdk_path_normalized)
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .output()?;
+        let esbuild_output = Self::npx_command()
+            .arg("esbuild")
+            .arg(&wrapper_path_normalized)
+            .arg("--bundle")
+            .arg("--format=esm")
+            .arg("--platform=neutral")
+            .arg("--external:capsule:host/api")
+            .arg("--external:wasi:filesystem/*")
+            .arg(format!("--outfile={}", bundled_path_normalized.display()))
+            .current_dir(&sdk_path_normalized)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()?;
 
-            if !esbuild_output.status.success() {
-                return Err(JavascriptWasmCompilerError::CompileFailed(format!(
-                    "Bundling failed: {}",
-                    String::from_utf8_lossy(&esbuild_output.stderr).trim()
-                )));
-            }
+        if !esbuild_output.status.success() {
+            return Err(JavascriptWasmCompilerError::CompileFailed(format!(
+                "Bundling failed: {}",
+                String::from_utf8_lossy(&esbuild_output.stderr).trim()
+            )));
+        }
 
-            let jco_output = Command::new("npx")
-                .arg("jco")
-                .arg("componentize")
-                .arg(&bundled_path_normalized)
-                .arg("--wit")
-                .arg(&wit_path_normalized)
-                .arg("--world-name")
-                .arg("capsule-agent")
-                .arg("--enable")
-                .arg("http")
-                .arg("-o")
-                .arg(&output_wasm_normalized)
-                .current_dir(&sdk_path_normalized)
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .output()?;
+        let jco_output = Self::npx_command()
+            .arg("jco")
+            .arg("componentize")
+            .arg(&bundled_path_normalized)
+            .arg("--wit")
+            .arg(&wit_path_normalized)
+            .arg("--world-name")
+            .arg("capsule-agent")
+            .arg("--enable")
+            .arg("http")
+            .arg("-o")
+            .arg(&output_wasm_normalized)
+            .current_dir(&sdk_path_normalized)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()?;
 
-            if !jco_output.status.success() {
-                return Err(JavascriptWasmCompilerError::CompileFailed(format!(
-                    "Component creation failed: {}",
-                    String::from_utf8_lossy(&jco_output.stderr).trim()
-                )));
-            }
+        if !jco_output.status.success() {
+            return Err(JavascriptWasmCompilerError::CompileFailed(format!(
+                "Component creation failed: {}",
+                String::from_utf8_lossy(&jco_output.stderr).trim()
+            )));
         }
 
         Ok(self.output_wasm.clone())
@@ -220,7 +233,7 @@ export const taskRunner = exports;
         }
 
         Err(JavascriptWasmCompilerError::FsError(
-            "Could not find JavaScript SDK. Set CAPSULE_JS_SDK_PATH environment variable or run 'npm link @capsule-run/sdk' in your project directory.".to_string()
+            "Could not find JavaScript SDK.".to_string(),
         ))
     }
 
@@ -293,7 +306,7 @@ export const taskRunner = exports;
                 })?,
         );
 
-        let output = Command::new("npx")
+        let output = Self::npx_command()
             .arg("tsc")
             .arg(&self.source_path)
             .arg("--outDir")
