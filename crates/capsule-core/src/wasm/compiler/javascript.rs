@@ -87,6 +87,12 @@ impl JavascriptWasmCompiler {
         path.to_path_buf()
     }
 
+    fn normalize_path_for_import(path: &Path) -> String {
+        Self::normalize_path_for_command(path)
+            .to_string_lossy()
+            .replace('\\', "/")
+    }
+
     pub fn compile_wasm(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
         if !self.needs_rebuild(&self.source_path, &self.output_wasm)? {
             return Ok(self.output_wasm.clone());
@@ -105,15 +111,11 @@ impl JavascriptWasmCompiler {
         let wrapper_path = self.cache_dir.join("_capsule_boot.js");
         let bundled_path = self.cache_dir.join("_capsule_bundled.js");
 
-        let import_path = source_for_import
+        let import_path = Self::normalize_path_for_import(&source_for_import
             .canonicalize()
-            .unwrap_or_else(|_| source_for_import.to_path_buf())
-            .display()
-            .to_string();
+            .unwrap_or_else(|_| source_for_import.to_path_buf()));
 
-        let sdk_path_str = sdk_path
-            .to_str()
-            .ok_or_else(|| JavascriptWasmCompilerError::FsError("Invalid SDK path".to_string()))?;
+        let sdk_path_str = Self::normalize_path_for_import(&sdk_path);
 
         let wrapper_content = format!(
             r#"// Auto-generated bootloader for Capsule
