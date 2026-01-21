@@ -2,6 +2,8 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+use capsule_core::config::manifest::{Manifest, ManifestError};
+
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
 use capsule_core::wasm::compiler::javascript::{
@@ -52,6 +54,12 @@ impl From<WasmRuntimeError> for RunError {
     }
 }
 
+impl From<ManifestError> for RunError {
+    fn from(err: ManifestError) -> Self {
+        RunError::ExecutionFailed(err.to_string())
+    }
+}
+
 struct CompileResult {
     wasm_path: PathBuf,
     cache_dir: PathBuf,
@@ -88,14 +96,20 @@ fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, RunError> {
 }
 
 pub async fn execute(
-    file_path: &Path,
+    file_path: Option<&Path>,
     args: Vec<String>,
     verbose: bool,
 ) -> Result<String, RunError> {
+    let manifest = Manifest::new()?;
     let mut reporter = TaskReporter::new(true);
 
+    let file_path: PathBuf = match file_path {
+        Some(path) => path.to_path_buf(),
+        None => PathBuf::from(manifest.get_entrypoint()?),
+    };
+
     reporter.start_progress("Preparing environment");
-    let compile_result = compile_to_wasm(file_path)?;
+    let compile_result = compile_to_wasm(&file_path)?;
     reporter.finish_progress(Some("Environment ready"));
 
     reporter.start_progress("Initializing runtime");
