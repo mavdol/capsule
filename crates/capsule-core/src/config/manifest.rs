@@ -37,7 +37,7 @@ pub struct DefaultPolicy {
     pub default_allowed_files: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct CapsuleToml {
     pub workflow: Option<Workflow>,
     pub tasks: Option<DefaultPolicy>,
@@ -89,14 +89,11 @@ impl Manifest {
             )
         })?;
 
-        let entrypoint = workflow
-            .entrypoint
-            .as_ref()
-            .ok_or_else(|| {
-                ManifestError::ParseError(
-                    "No 'entrypoint' field found in [workflow] section of capsule.toml.".to_string()
-                )
-            })?;
+        let entrypoint = workflow.entrypoint.as_ref().ok_or_else(|| {
+            ManifestError::ParseError(
+                "No 'entrypoint' field found in [workflow] section of capsule.toml.".to_string(),
+            )
+        })?;
 
         Ok(entrypoint.clone())
     }
