@@ -117,7 +117,7 @@ pub async fn execute(
         cache_dir: compile_result.cache_dir,
         verbose,
     };
-    let runtime = Runtime::with_config(runtime_config)?;
+    let runtime = Runtime::new(runtime_config, manifest.capsule_toml)?;
 
     let execution_policy = ExecutionPolicy::default()
         .compute(Some(Compute::Custom(u64::MAX)))
