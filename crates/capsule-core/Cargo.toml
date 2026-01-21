@@ -27,6 +27,7 @@ wasmtime-wasi-http = "29.0.0"
 indicatif = "0.17"
 chrono = "0.4"
 colored = "2.1"
+toml = "0.9.11"
 
 [dev-dependencies]
 rustfmt = "0.10.0"
