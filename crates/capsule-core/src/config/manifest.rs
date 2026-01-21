@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::wasm::execution_policy::{Compute, ExecutionPolicy};
+use crate::wasm::execution_policy::Compute;
 
 #[derive(Debug)]
 pub enum ManifestError {
@@ -49,8 +49,8 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    pub fn load_from_file(path: &Path) -> Result<Self, ManifestError> {
-        let source_path = path
+    pub fn new() -> Result<Self, ManifestError> {
+        let source_path = Path::new(".")
             .canonicalize()
             .map_err(|e| ManifestError::FsError(format!("Cannot resolve source path: {}", e)))?;
 
