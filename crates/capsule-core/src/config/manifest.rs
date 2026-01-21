@@ -78,6 +78,29 @@ impl Manifest {
         })
     }
 
+    pub fn get_entrypoint(&self) -> Result<String, ManifestError> {
+        let workflow = self
+        .capsule_toml
+        .workflow
+        .as_ref()
+        .ok_or_else(|| {
+            ManifestError::ParseError(
+                "No [workflow] section found in capsule.toml. Please add a workflow configuration or specify a file path.".to_string()
+            )
+        })?;
+
+        let entrypoint = workflow
+            .entrypoint
+            .as_ref()
+            .ok_or_else(|| {
+                ManifestError::ParseError(
+                    "No 'entrypoint' field found in [workflow] section of capsule.toml.".to_string()
+                )
+            })?;
+
+        Ok(entrypoint.clone())
+    }
+
     fn find_capsule_toml(dir: &Path) -> Option<PathBuf> {
         let lowercase = dir.join("capsule.toml");
         if lowercase.exists() {
