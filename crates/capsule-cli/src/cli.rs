@@ -12,7 +12,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Run {
-        file: String,
+        file: Option<String>,
 
         #[arg(short, long)]
         verbose: bool,
