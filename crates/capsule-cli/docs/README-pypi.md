@@ -106,7 +106,7 @@ def main() -> dict:
 
 ### File Access
 
-Python's standard file operations work normally. Use `open()`, `os`, `pathlib`, or any file manipulation library:
+Tasks can read and write files within directories specified in `allowed_files`. Any attempt to access files outside these directories is not possible.
 
 ```python
 from capsule import task

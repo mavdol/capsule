@@ -111,6 +111,8 @@ Task-level options always override these defaults.
 
 ### File Access
 
+Tasks can read and write files within directories specified in `allowedFiles`. Any attempt to access files outside these directories is not possible.
+
 Node.js built-ins like `fs` are not available in the WebAssembly sandbox. Instead, use the `files` API provided by the SDK:
 
 ```typescript

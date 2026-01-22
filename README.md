@@ -227,8 +227,10 @@ export const main = task({
 
 ### File Access
 
+Tasks can read and write files within directories specified in `allowed_files`. Any attempt to access files outside these directories is not possible.
+
 > [!NOTE]
-> Currently, `allowed_files` only supports directory paths, not individual files.
+> Currently, `allowed_files` supports directory paths, not individual files.
 
 #### Python
 
@@ -237,12 +239,12 @@ Python's standard file operations work normally. Use `open()`, `os`, `pathlib`, 
 ```python
 from capsule import task
 
-@task(name="restricted_writer", allowed_files=["./output"])  # Sub-task with limited access
+@task(name="restricted_writer", allowed_files=["./output"])
 def restricted_writer() -> None:
     with open("./output/result.txt", "w") as f:
         f.write("result")
 
-@task(name="main")  # Has access to entire project
+@task(name="main")
 def main() -> str:
     restricted_writer()
 ```
