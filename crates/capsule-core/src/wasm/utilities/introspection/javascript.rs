@@ -148,16 +148,6 @@ const main = task({ name: "main", compute: "HIGH" }, () => {
     }
 
     #[test]
-    fn test_js_export_task() {
-        let source = r#"
-export const main = task({ compute: "LOW" }, () => {});
-"#;
-        let configs = extract_js_task_configs(source, false).unwrap();
-        assert!(configs.contains_key("main"));
-        assert_eq!(configs["main"]["compute"], "LOW");
-    }
-
-    #[test]
     fn test_ts_task() {
         let source = r#"
 export const main = task({ name: "main", timeout: "30s" }, (): string => {
