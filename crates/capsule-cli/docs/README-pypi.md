@@ -72,6 +72,24 @@ When you run `capsule run main.py`, your code is compiled into a WebAssembly mod
 - **HIGH**: Maximum fuel for compute-intensive operations
 - **CUSTOM**: Specify exact fuel value (e.g., `compute="1000000"`)
 
+### Project Configuration (Optional)
+
+Create a `capsule.toml` file in your project root to set default options:
+
+```toml
+[workflow]
+name = "My AI Workflow"
+version = "1.0.0"
+entrypoint = "src/main.py"  # Run `capsule run` without specifying a file
+
+[tasks]
+default_compute = "MEDIUM"
+default_ram = "256MB"
+default_timeout = "30s"
+```
+
+Task-level options always override these defaults.
+
 ### HTTP Client
 
 Standard `requests` library isn't compatible with WASM. Use Capsule's HTTP client:

@@ -64,7 +64,7 @@ impl Host for State {
         };
 
         let task_config: TaskConfig = serde_json::from_str(&config).unwrap_or_default();
-        let policy = task_config.to_execution_policy();
+        let policy = task_config.to_execution_policy(&runtime.capsule_toml);
         let max_retries = policy.max_retries;
 
         let mut last_error: Option<String> = None;

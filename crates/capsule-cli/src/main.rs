@@ -37,7 +37,8 @@ async fn main() -> Result<(), CliError> {
             verbose,
             args,
         } => {
-            run::execute(Path::new(&file), args, verbose).await?;
+            let file_path = file.as_deref().map(Path::new);
+            run::execute(file_path, args, verbose).await?;
         }
     }
 

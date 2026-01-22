@@ -91,6 +91,24 @@ When you run `capsule run main.ts`, your code is compiled into a WebAssembly mod
 - **HIGH**: Maximum fuel for compute-intensive operations
 - **CUSTOM**: Specify exact fuel value (e.g., `compute="1000000"`)
 
+### Project Configuration (Optional)
+
+Create a `capsule.toml` file in your project root to set default options:
+
+```toml
+[workflow]
+name = "My AI Workflow"
+version = "1.0.0"
+entrypoint = "src/main.ts"  # Run `capsule run` without specifying a file
+
+[tasks]
+default_compute = "MEDIUM"
+default_ram = "256MB"
+default_timeout = "30s"
+```
+
+Task-level options always override these defaults.
+
 ### File Access
 
 The entry point task (main) has access to the entire project directory. Sub-tasks have no filesystem access by default and must declare `allowedFiles` to access specific paths.
@@ -108,7 +126,7 @@ export const restrictedWriter = task({
 });
 
 export const main = task({ name: "main" }, async () => {
-    restrictedWriter();
+    await restrictedWriter();
     return await files.readText("./data/input.txt");
 });
 ```

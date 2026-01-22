@@ -20,7 +20,7 @@ export const main = task({ name: "main" }, async () => {
     const lines = content.trim().split("\n");
     const lineCount = lines.length;
 
-    const result = restrictedWriter(
+    const result = await restrictedWriter(
         `Processed ${lineCount} lines\nFirst line: ${lines[0]}\n`
     );
 

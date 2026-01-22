@@ -46,13 +46,12 @@ impl PythonWasmCompiler {
             PythonWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e))
         })?;
 
-        let source_dir = source_path
-            .parent()
-            .ok_or(PythonWasmCompilerError::FsError(
-                "Cannot determine source directory".to_string(),
-            ))?;
+        let cache_dir = std::env::current_dir()
+            .map_err(|e| {
+                PythonWasmCompilerError::FsError(format!("Cannot get current directory: {}", e))
+            })?
+            .join(".capsule");
 
-        let cache_dir = source_dir.join(".capsule");
         let output_wasm = cache_dir.join("capsule.wasm");
 
         if !cache_dir.exists() {
@@ -173,6 +172,8 @@ from capsule.app import TaskRunner, exports
                 String::from_utf8_lossy(&output.stderr).trim()
             )));
         }
+
+        self.cleanup_pycache(python_path);
 
         Ok(self.output_wasm.clone())
     }
@@ -321,5 +322,25 @@ from capsule.app import TaskRunner, exports
         }
 
         Ok(sdk_path)
+    }
+
+    fn cleanup_pycache(&self, source_dir: &Path) {
+        Self::remove_pycache_recursive(source_dir);
+        Self::remove_pycache_recursive(&self.cache_dir);
+    }
+
+    fn remove_pycache_recursive(dir: &Path) {
+        if let Ok(entries) = fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    if path.file_name().is_some_and(|n| n == "__pycache__") {
+                        let _ = fs::remove_dir_all(&path);
+                    } else {
+                        Self::remove_pycache_recursive(&path);
+                    }
+                }
+            }
+        }
     }
 }

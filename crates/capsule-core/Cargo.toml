@@ -1,6 +1,6 @@
 [package]
 name = "capsule-core"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2024"
 description = "Core library for Capsule - WASM runtime for AI agent isolation"
 license = "Apache-2.0"
@@ -27,6 +27,7 @@ wasmtime-wasi-http = "29.0.0"
 indicatif = "0.17"
 chrono = "0.4"
 colored = "2.1"
+toml = "0.9.11"
 
 [dev-dependencies]
 rustfmt = "0.10.0"

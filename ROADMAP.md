@@ -45,11 +45,11 @@ This document tracks the development status of Capsule.
 
 ## v0.4.0: Configuration & Observability
 
-**Status:** 🚧 Planned
+**Status:** In progress
 
 **Goal:** Improve developer workflow with project configuration and richer task feedback.
 
-- [ ] **Config File:** `capsule.toml` for default task options.
+- [x] **Config File:** `capsule.toml` for default task options.
 - [ ] **Structured Output:** Tasks return a detailed JSON envelope with execution metadata:
 
 ```json

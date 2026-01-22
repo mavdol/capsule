@@ -7,6 +7,7 @@ use wasmtime::component::Component;
 use wasmtime::{Config, Engine};
 
 use crate::config::log::{Log, LogError};
+use crate::config::manifest::CapsuleToml;
 use crate::wasm::utilities::task_reporter::TaskReporter;
 
 pub enum WasmRuntimeError {
@@ -78,14 +79,14 @@ pub struct Runtime {
 
     component: RwLock<Option<Component>>,
     pub task_reporter: Arc<Mutex<TaskReporter>>,
+    pub capsule_toml: CapsuleToml,
 }
 
 impl Runtime {
-    pub fn new() -> Result<Arc<Self>, WasmRuntimeError> {
-        Self::with_config(RuntimeConfig::default())
-    }
-
-    pub fn with_config(config: RuntimeConfig) -> Result<Arc<Self>, WasmRuntimeError> {
+    pub fn new(
+        config: RuntimeConfig,
+        capsule_toml: CapsuleToml,
+    ) -> Result<Arc<Self>, WasmRuntimeError> {
         let mut engine_config = Config::new();
         let db_path = config.cache_dir.join("trace.db");
         let log = Log::new(
@@ -116,6 +117,7 @@ impl Runtime {
             verbose: config.verbose,
             component: RwLock::new(None),
             task_reporter,
+            capsule_toml,
         }))
     }
 

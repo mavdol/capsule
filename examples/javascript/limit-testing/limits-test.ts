@@ -1,9 +1,7 @@
 import { task } from "@capsule-run/sdk";
+
 /**
  * This task should TIMEOUT because it sleeps longer than the configured timeout.
- *
- * Expected: Timeout error after 2 seconds
- * Actual behavior: Sleeps for 10 seconds
  */
 export const testTimeout = task(
   {
@@ -12,10 +10,6 @@ export const testTimeout = task(
     compute: "HIGH"
   },
   async (): Promise<string> => {
-    console.log("Starting timeout test...");
-    console.log("Configured timeout: 2 seconds");
-    console.log("Will attempt to sleep for: 10 seconds");
-
     await new Promise(resolve => setTimeout(resolve, 10000));
 
     console.log("Sleep completed (this should NOT print)");
@@ -25,10 +19,6 @@ export const testTimeout = task(
 
 /**
  * This task should EXCEED compute limits with intensive CPU operations.
- *
- * LOW compute: ~100M fuel
- * Expected: Out of fuel error
- * Actual behavior: Performs billions of operations
  */
 export const testComputeLimitLow = task(
   {
@@ -37,10 +27,6 @@ export const testComputeLimitLow = task(
     timeout: "60s"
   },
   (): string => {
-    console.log("Starting LOW compute limit test...");
-    console.log("Configured compute: LOW (~100M fuel)");
-    console.log("Will perform intensive CPU operations...");
-
     let result = 0;
 
     for (let i = 0; i < 100000000; i++) {
@@ -58,9 +44,6 @@ export const testComputeLimitLow = task(
 
 /**
  * This task should EXCEED MEDIUM compute limits.
- *
- * MEDIUM compute: ~2B fuel
- * Expected: Out of fuel error
  */
 export const testComputeLimitMedium = task(
   {
@@ -69,10 +52,6 @@ export const testComputeLimitMedium = task(
     timeout: "60s"
   },
   (): string => {
-    console.log("🔥 Starting MEDIUM compute limit test...");
-    console.log("⚡ Configured compute: MEDIUM (~2B fuel)");
-    console.log("⚡ Will perform VERY intensive CPU operations...");
-
     let result = 0;
 
     for (let i = 0; i < 10000000000; i++) {
@@ -90,9 +69,6 @@ export const testComputeLimitMedium = task(
 
 /**
  * This task should EXCEED RAM limits by allocating large arrays.
- *
- * Expected: Out of memory error
- * Actual behavior: Allocates ~1GB+ of memory
  */
 export const testRAMLimit = task(
   {
@@ -102,10 +78,6 @@ export const testRAMLimit = task(
     timeout: "30s"
   },
   (): string => {
-    console.log("Starting RAM limit test...");
-    console.log("Configured RAM: 10MB");
-    console.log("Will attempt to allocate: ~100MB+");
-
     const arrays: number[][] = [];
 
     try {
@@ -132,8 +104,6 @@ export const testRAMLimit = task(
  * - Very low timeout
  * - Low compute
  * - Low RAM
- *
- * Expected: Should fail on whichever limit is hit first
  */
 export const testCombinedLimits = task(
   {
@@ -143,18 +113,10 @@ export const testCombinedLimits = task(
     ram: "5MB"
   },
   async (): Promise<string> => {
-    console.log("Starting combined limits test...");
-    console.log("Timeout: 3s");
-    console.log("Compute: LOW");
-    console.log("RAM: 5MB");
-    console.log("");
-
     const data: number[][] = [];
     let computeResult = 0;
 
     for (let i = 0; i < 100; i++) {
-      console.log(`🔄 Iteration ${i}...`);
-
       data.push(new Array(100000).fill(0).map(() => Math.random()));
 
       for (let j = 0; j < 1000000; j++) {
@@ -171,8 +133,6 @@ export const testCombinedLimits = task(
 
 /**
  * Tests timeout with multiple async operations.
- *
- * Expected: Timeout error after 5 seconds
  */
 export const testAsyncTimeout = task(
   {
@@ -181,13 +141,9 @@ export const testAsyncTimeout = task(
     compute: "MEDIUM"
   },
   async (): Promise<string> => {
-    console.log("Starting async timeout test...");
-    console.log("Configured timeout: 5 seconds");
-
     const delays = [2000, 2000, 2000, 2000, 2000];
 
     for (let i = 0; i < delays.length; i++) {
-      console.log(`Delay ${i + 1}/${delays.length} (${delays[i]}ms)...`);
       await new Promise(resolve => setTimeout(resolve, delays[i]));
       console.log(`✓ Delay ${i + 1} completed`);
     }
@@ -204,13 +160,8 @@ export const testImmediateFuelExhaustion = task(
     timeout: "60s"
   },
   (): string => {
-    console.log("Starting immediate fuel exhaustion test...");
-    console.log("This should fail almost immediately with LOW compute");
-
     let result = 0;
     const iterations = 1000000000;
-
-    console.log(`Starting ${iterations.toLocaleString()} iterations...`);
 
     for (let i = 0; i < iterations; i++) {
       result += Math.pow(Math.sqrt(i), 2) * Math.sin(i) * Math.cos(i) * Math.tan(i) * Math.log(i + 1);

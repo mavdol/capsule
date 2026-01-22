@@ -1,5 +1,6 @@
 use serde::Deserialize;
 
+use crate::config::manifest::CapsuleToml;
 use crate::wasm::execution_policy::{Compute, ExecutionPolicy};
 
 #[derive(Debug, Deserialize, Default)]
@@ -17,7 +18,9 @@ pub struct TaskConfig {
 }
 
 impl TaskConfig {
-    pub fn to_execution_policy(&self) -> ExecutionPolicy {
+    pub fn to_execution_policy(&self, capsule_toml: &CapsuleToml) -> ExecutionPolicy {
+        let default_policy = capsule_toml.tasks.as_ref();
+
         let compute = self
             .compute
             .as_ref()
@@ -29,17 +32,41 @@ impl TaskConfig {
                     .parse::<u64>()
                     .map(Compute::Custom)
                     .unwrap_or(Compute::Medium),
+            })
+            .or_else(|| default_policy.and_then(|p| p.default_compute.clone()));
+
+        let ram = self
+            .ram
+            .as_ref()
+            .and_then(|r| Self::parse_ram_string(r))
+            .or_else(|| {
+                default_policy
+                    .and_then(|p| p.default_ram.as_ref())
+                    .and_then(|r| Self::parse_ram_string(r))
             });
 
-        let ram = self.ram.as_ref().and_then(|r| Self::parse_ram_string(r));
+        let timeout = self
+            .timeout
+            .clone()
+            .or_else(|| default_policy.and_then(|p| p.default_timeout.clone()));
+
+        let max_retries = self
+            .max_retries
+            .or_else(|| default_policy.and_then(|p| p.default_max_retries));
+
+        let allowed_files = self
+            .allowed_files
+            .clone()
+            .or_else(|| default_policy.and_then(|p| p.default_allowed_files.clone()))
+            .unwrap_or_default();
 
         ExecutionPolicy::new()
             .name(self.name.clone())
             .compute(compute)
             .ram(ram)
-            .timeout(self.timeout.clone())
-            .max_retries(self.max_retries)
-            .allowed_files(self.allowed_files.clone().unwrap_or_default())
+            .timeout(timeout)
+            .max_retries(max_retries)
+            .allowed_files(allowed_files)
     }
 
     pub fn parse_ram_string(s: &str) -> Option<u64> {
@@ -71,6 +98,7 @@ impl TaskConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::manifest::DefaultPolicy;
 
     #[test]
     fn test_parse_ram_string() {
@@ -118,7 +146,7 @@ mod tests {
     #[test]
     fn test_to_execution_policy_default() {
         let config = TaskConfig::default();
-        let policy = config.to_execution_policy();
+        let policy = config.to_execution_policy(&CapsuleToml::default());
 
         assert_eq!(policy.name, "default");
         assert_eq!(policy.compute, Compute::Medium);
@@ -135,10 +163,10 @@ mod tests {
             ram: Some("2GB".to_string()),
             timeout: Some("30s".to_string()),
             max_retries: Some(3),
-            allowed_files: Some(vec!["./data/input.txt".to_string()]),
+            allowed_files: Some(vec!["./data".to_string()]),
         };
 
-        let policy = config.to_execution_policy();
+        let policy = config.to_execution_policy(&CapsuleToml::default());
 
         assert_eq!(policy.name, "test_task");
         assert_eq!(policy.compute, Compute::High);
@@ -153,24 +181,123 @@ mod tests {
             compute: Some("LOW".to_string()),
             ..Default::default()
         };
-        assert_eq!(low.to_execution_policy().compute, Compute::Low);
+        assert_eq!(
+            low.to_execution_policy(&CapsuleToml::default()).compute,
+            Compute::Low
+        );
 
         let medium = TaskConfig {
             compute: Some("MEDIUM".to_string()),
             ..Default::default()
         };
-        assert_eq!(medium.to_execution_policy().compute, Compute::Medium);
+        assert_eq!(
+            medium.to_execution_policy(&CapsuleToml::default()).compute,
+            Compute::Medium
+        );
 
         let high = TaskConfig {
             compute: Some("HIGH".to_string()),
             ..Default::default()
         };
-        assert_eq!(high.to_execution_policy().compute, Compute::High);
+        assert_eq!(
+            high.to_execution_policy(&CapsuleToml::default()).compute,
+            Compute::High
+        );
 
         let invalid = TaskConfig {
             compute: Some("INVALID".to_string()),
             ..Default::default()
         };
-        assert_eq!(invalid.to_execution_policy().compute, Compute::Medium);
+        assert_eq!(
+            invalid.to_execution_policy(&CapsuleToml::default()).compute,
+            Compute::Medium
+        );
+    }
+
+    #[test]
+    fn test_to_execution_policy_uses_capsule_toml_defaults() {
+        let capsule_toml = CapsuleToml {
+            workflow: None,
+            tasks: Some(DefaultPolicy {
+                default_compute: Some(Compute::High),
+                default_ram: Some("1GB".to_string()),
+                default_timeout: Some("60s".to_string()),
+                default_max_retries: Some(5),
+                default_allowed_files: Some(vec!["./default".to_string()]),
+            }),
+        };
+
+        let config = TaskConfig::default();
+        let policy = config.to_execution_policy(&capsule_toml);
+
+        assert_eq!(policy.compute, Compute::High);
+        assert_eq!(policy.ram, Some(1024 * 1024 * 1024));
+        assert_eq!(policy.timeout, Some("60s".to_string()));
+        assert_eq!(policy.max_retries, 5);
+        assert_eq!(policy.allowed_files, vec!["./default".to_string()]);
+    }
+
+    #[test]
+    fn test_task_config_overrides_capsule_toml_defaults() {
+        let capsule_toml = CapsuleToml {
+            workflow: None,
+            tasks: Some(DefaultPolicy {
+                default_compute: Some(Compute::Low),
+                default_ram: Some("512MB".to_string()),
+                default_timeout: Some("30s".to_string()),
+                default_max_retries: Some(2),
+                default_allowed_files: Some(vec!["./default.txt".to_string()]),
+            }),
+        };
+
+        let config = TaskConfig {
+            name: Some("override_task".to_string()),
+            compute: Some("HIGH".to_string()),
+            ram: Some("4GB".to_string()),
+            timeout: Some("120s".to_string()),
+            max_retries: Some(10),
+            allowed_files: Some(vec!["./custom".to_string()]),
+        };
+
+        let policy = config.to_execution_policy(&capsule_toml);
+
+        assert_eq!(policy.name, "override_task");
+        assert_eq!(policy.compute, Compute::High);
+        assert_eq!(policy.ram, Some(4 * 1024 * 1024 * 1024));
+        assert_eq!(policy.timeout, Some("120s".to_string()));
+        assert_eq!(policy.max_retries, 10);
+        assert_eq!(policy.allowed_files, vec!["./custom".to_string()]);
+    }
+
+    #[test]
+    fn test_partial_task_config_with_capsule_toml_defaults() {
+        let capsule_toml = CapsuleToml {
+            workflow: None,
+            tasks: Some(DefaultPolicy {
+                default_compute: Some(Compute::Medium),
+                default_ram: Some("2GB".to_string()),
+                default_timeout: Some("45s".to_string()),
+                default_max_retries: Some(3),
+                default_allowed_files: Some(vec!["./default".to_string()]),
+            }),
+        };
+
+        let config = TaskConfig {
+            name: Some("partial_task".to_string()),
+            compute: Some("LOW".to_string()),
+            ram: None,
+            timeout: None,
+            max_retries: Some(1),
+            allowed_files: None,
+        };
+
+        let policy = config.to_execution_policy(&capsule_toml);
+
+        assert_eq!(policy.name, "partial_task");
+        assert_eq!(policy.compute, Compute::Low);
+        assert_eq!(policy.ram, Some(2 * 1024 * 1024 * 1024));
+        assert_eq!(policy.timeout, Some("45s".to_string()));
+        assert_eq!(policy.max_retries, 1);
+        assert_eq!(policy.allowed_files, vec!["./default".to_string()]);
     }
 }
