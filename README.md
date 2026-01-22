@@ -145,6 +145,14 @@ Configure your tasks with these parameters:
 | `max_retries` / `maxRetries` | Number of retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` / `allowedFiles` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
 
+### Compute Levels
+
+Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meters instruction execution. The compute level determines how much fuel your task receives.
+- **LOW** provides minimal allocation for lightweight tasks
+- **MEDIUM** offers balanced resources for typical workloads
+- **HIGH** grants maximum fuel for compute-intensive operations
+- **CUSTOM** to specify an exact fuel value (e.g., `compute="1000000"`) for precise control over execution limits.
+
 ### Project Configuration (Optional)
 
 You can create a `capsule.toml` file in your project root to set default options for all tasks and define workflow metadata:
@@ -171,14 +179,6 @@ capsule run
 ```
 
 Task-level options always override these defaults when specified.
-
-### Compute Levels
-
-Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meters instruction execution. The compute level determines how much fuel your task receives.
-- **LOW** provides minimal allocation for lightweight tasks
-- **MEDIUM** offers balanced resources for typical workloads
-- **HIGH** grants maximum fuel for compute-intensive operations
-- **CUSTOM** to specify an exact fuel value (e.g., `compute="1000000"`) for precise control over execution limits.
 
 ### HTTP Client API
 
