@@ -1,8 +1,9 @@
+use std::collections::HashMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use capsule_core::config::manifest::{Manifest, ManifestError};
+use capsule_core::config::manifest::{CapsuleToml, Manifest, ManifestError};
 
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
@@ -14,6 +15,7 @@ use capsule_core::wasm::execution_policy::{Compute, ExecutionPolicy};
 use capsule_core::wasm::runtime::Runtime;
 use capsule_core::wasm::runtime::RuntimeConfig;
 use capsule_core::wasm::runtime::WasmRuntimeError;
+use capsule_core::wasm::utilities::task_config::TaskConfig;
 use capsule_core::wasm::utilities::task_reporter::TaskReporter;
 
 pub enum RunError {
@@ -60,9 +62,12 @@ impl From<ManifestError> for RunError {
     }
 }
 
+type TaskRegistry = HashMap<String, serde_json::Value>;
+
 struct CompileResult {
     wasm_path: PathBuf,
     cache_dir: PathBuf,
+    task_registry: Option<TaskRegistry>,
 }
 
 fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, RunError> {
@@ -75,17 +80,23 @@ fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, RunError> {
         "py" => {
             let compiler = PythonWasmCompiler::new(file_path)?;
             let wasm_path = compiler.compile_wasm()?;
+            let task_registry = compiler.introspect_task_registry();
+
             Ok(CompileResult {
                 wasm_path,
                 cache_dir: compiler.cache_dir,
+                task_registry,
             })
         }
         "js" | "mjs" | "ts" => {
             let compiler = JavascriptWasmCompiler::new(file_path)?;
             let wasm_path = compiler.compile_wasm()?;
+            let task_registry = compiler.introspect_task_registry();
+
             Ok(CompileResult {
                 wasm_path,
                 cache_dir: compiler.cache_dir,
+                task_registry,
             })
         }
         _ => Err(RunError::ExecutionFailed(format!(
@@ -93,6 +104,17 @@ fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, RunError> {
             extension
         ))),
     }
+}
+
+fn extract_main_execution_policy(
+    task_registry: Option<TaskRegistry>,
+    capsule_toml: &CapsuleToml,
+) -> Option<ExecutionPolicy> {
+    let registry = task_registry?;
+    let main_config = registry.get("main")?;
+    let task_config: TaskConfig = serde_json::from_value(main_config.clone()).ok()?;
+
+    Some(task_config.to_execution_policy(capsule_toml))
 }
 
 pub async fn execute(
@@ -117,11 +139,16 @@ pub async fn execute(
         cache_dir: compile_result.cache_dir,
         verbose,
     };
-    let runtime = Runtime::new(runtime_config, manifest.capsule_toml)?;
 
-    let execution_policy = ExecutionPolicy::default()
-        .compute(Some(Compute::Custom(u64::MAX)))
-        .allowed_files(vec![".".to_string()]);
+    let execution_policy =
+        extract_main_execution_policy(compile_result.task_registry, &manifest.capsule_toml)
+            .unwrap_or_else(|| {
+                ExecutionPolicy::default()
+                    .compute(Some(Compute::Custom(u64::MAX)))
+                    .allowed_files(vec![".".to_string()])
+            });
+
+    let runtime = Runtime::new(runtime_config, manifest.capsule_toml)?;
 
     let project_root = file_path
         .canonicalize()

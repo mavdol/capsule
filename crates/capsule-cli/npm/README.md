@@ -111,7 +111,7 @@ Task-level options always override these defaults.
 
 ### File Access
 
-The **entry point task** (main) has access to the entire project directory. Sub-tasks have **no filesystem access by default** and must declare `allowedFiles` to access specific paths.
+Tasks can read and write files within directories specified in `allowedFiles`. Any attempt to access files outside these directories is not possible.
 
 Node.js built-ins like `fs` are not available in the WebAssembly sandbox. Instead, use the `files` API provided by the SDK:
 

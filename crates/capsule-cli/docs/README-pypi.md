@@ -106,19 +106,17 @@ def main() -> dict:
 
 ### File Access
 
-The **entry point task** (main) has access to the entire project directory. Sub-tasks have **no filesystem access by default** and must declare `allowed_files` to access specific paths.
-
-Python's standard file operations work normally. Use `open()`, `os`, `pathlib`, or any file manipulation library:
+Tasks can read and write files within directories specified in `allowed_files`. Any attempt to access files outside these directories is not possible.
 
 ```python
 from capsule import task
 
-@task(name="restricted_writer", allowed_files=["./output"])  # Sub-task with limited access
+@task(name="restricted_writer", allowed_files=["./output"])
 def restricted_writer() -> None:
     with open("./output/result.txt", "w") as f:
         f.write("result")
 
-@task(name="main")  # Has access to entire project
+@task(name="main")
 def main() -> str:
     restricted_writer()
 ```
