@@ -1,2 +1,0 @@
-Processed 2 lines
-First line: Hello from Capsule!
