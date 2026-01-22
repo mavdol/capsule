@@ -3,8 +3,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::process::Stdio;
+use std::collections::HashMap;
 
 use crate::wasm::utilities::wit_manager::WitManager;
+use crate::wasm::utilities::introspection::python;
 
 pub enum PythonWasmCompilerError {
     CompileFailed(String),
@@ -342,5 +344,13 @@ from capsule.app import TaskRunner, exports
                 }
             }
         }
+    }
+
+    pub fn introspect_task_registry(
+        &self,
+    ) -> Option<HashMap<String, serde_json::Value>> {
+        let source = fs::read_to_string(&self.source_path).ok()?;
+
+        python::extract_python_task_configs(&source)
     }
 }
