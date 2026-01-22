@@ -145,6 +145,33 @@ Configure your tasks with these parameters:
 | `max_retries` / `maxRetries` | Number of retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` / `allowedFiles` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
 
+### Project Configuration (Optional)
+
+You can create a `capsule.toml` file in your project root to set default options for all tasks and define workflow metadata:
+
+```toml
+# capsule.toml
+
+[workflow]
+name = "My AI Workflow"
+version = "1.0.0"
+entrypoint = "src/main.py"  # Default file when running `capsule run`
+
+[tasks]
+default_compute = "MEDIUM"
+default_ram = "256MB"
+default_timeout = "30s"
+default_max_retries = 2
+```
+
+With an entrypoint defined, you can simply run:
+
+```bash
+capsule run
+```
+
+Task-level options always override these defaults when specified.
+
 ### Compute Levels
 
 Capsule controls CPU usage through WebAssembly's **fuel mechanism**, which meters instruction execution. The compute level determines how much fuel your task receives.
@@ -237,7 +264,7 @@ export const restrictedWriter = task({
 });
 
 export const main = task({ name: "main" }, async () => {
-    restrictedWriter();
+    await restrictedWriter();
     return await files.readText("./data/input.txt");
 });
 ```
