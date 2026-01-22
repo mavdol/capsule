@@ -43,7 +43,7 @@ def create_post():
         print(f"❌ Request failed with status: {response.status_code}")
         return {"error": response.status_code}
 
-
+@task(name="main")
 def main():
     """Run HTTP examples."""
     print("🌐 HTTP Request Example")
