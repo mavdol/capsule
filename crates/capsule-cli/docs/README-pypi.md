@@ -65,6 +65,24 @@ When you run `capsule run main.py`, your code is compiled into a WebAssembly mod
 | `max_retries` | Retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
 
+### Project Configuration (Optional)
+
+Create a `capsule.toml` file in your project root to set default options:
+
+```toml
+[workflow]
+name = "My AI Workflow"
+version = "1.0.0"
+entrypoint = "src/main.py"  # Run `capsule run` without specifying a file
+
+[tasks]
+default_compute = "MEDIUM"
+default_ram = "256MB"
+default_timeout = "30s"
+```
+
+Task-level options always override these defaults.
+
 ### Compute Levels
 
 - **LOW**: Minimal allocation for lightweight tasks

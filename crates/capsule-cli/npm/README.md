@@ -84,6 +84,24 @@ When you run `capsule run main.ts`, your code is compiled into a WebAssembly mod
 | `maxRetries` | Retry attempts on failure | `number` | `0` | `3` |
 | `allowedFiles` | Folders accessible in the sandbox | `string[]` | `[]` | `["./data", "./output"]` |
 
+### Project Configuration (Optional)
+
+Create a `capsule.toml` file in your project root to set default options:
+
+```toml
+[workflow]
+name = "My AI Workflow"
+version = "1.0.0"
+entrypoint = "src/main.ts"  # Run `capsule run` without specifying a file
+
+[tasks]
+default_compute = "MEDIUM"
+default_ram = "256MB"
+default_timeout = "30s"
+```
+
+Task-level options always override these defaults.
+
 ### Compute Levels
 
 - **LOW**: Minimal allocation for lightweight tasks
@@ -108,7 +126,7 @@ export const restrictedWriter = task({
 });
 
 export const main = task({ name: "main" }, async () => {
-    restrictedWriter();
+    await restrictedWriter();
     return await files.readText("./data/input.txt");
 });
 ```
