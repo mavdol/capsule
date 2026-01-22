@@ -1,4 +1,4 @@
-use rustpython_parser::{Mode, parse, ast};
+use rustpython_parser::{Mode, ast, parse};
 use std::collections::HashMap;
 
 pub fn extract_python_task_configs(source: &str) -> Option<HashMap<String, serde_json::Value>> {
@@ -33,7 +33,6 @@ fn extract_task_decorator(
     func_name: &str,
 ) -> Option<HashMap<String, serde_json::Value>> {
     match decorator {
-
         ast::Expr::Name(name) if name.id.as_str() == "task" => {
             let mut config: HashMap<String, serde_json::Value> = HashMap::new();
             config.insert(
@@ -45,9 +44,10 @@ fn extract_task_decorator(
 
         ast::Expr::Call(call) => {
             if let ast::Expr::Name(name) = call.func.as_ref()
-                && name.id.as_str() == "task" {
-                    return extract_call_args(call, func_name);
-                }
+                && name.id.as_str() == "task"
+            {
+                return extract_call_args(call, func_name);
+            }
             None
         }
         _ => None,
@@ -62,9 +62,10 @@ fn extract_call_args(
 
     for keyword in &call.keywords {
         if let Some(arg_name) = &keyword.arg
-            && let Some(value) = extract_literal(&keyword.value) {
-                config.insert(arg_name.to_string(), value);
-            }
+            && let Some(value) = extract_literal(&keyword.value)
+        {
+            config.insert(arg_name.to_string(), value);
+        }
     }
 
     if !config.contains_key("name") {
@@ -80,9 +81,7 @@ fn extract_call_args(
 fn extract_literal(expr: &ast::Expr) -> Option<serde_json::Value> {
     match expr {
         ast::Expr::Constant(c) => match &c.value {
-            ast::Constant::Str(s) => {
-                Some(serde_json::Value::String(s.to_string()))
-            }
+            ast::Constant::Str(s) => Some(serde_json::Value::String(s.to_string())),
             ast::Constant::Int(i) => {
                 let val: i64 = i.to_string().parse().ok()?;
                 Some(serde_json::Value::Number(val.into()))

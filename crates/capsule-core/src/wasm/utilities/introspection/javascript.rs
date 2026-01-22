@@ -3,7 +3,8 @@ use swc_common::input::StringInput;
 use swc_common::sync::Lrc;
 use swc_common::{FileName, SourceMap};
 use swc_ecma_ast::{
-    Callee, Decl, Expr, Lit, ModuleDecl, ModuleItem, ObjectLit, Prop, PropName, PropOrSpread, Stmt, Pat
+    Callee, Decl, Expr, Lit, ModuleDecl, ModuleItem, ObjectLit, Pat, Prop, PropName, PropOrSpread,
+    Stmt,
 };
 use swc_ecma_parser::{EsSyntax, Parser, Syntax, TsSyntax};
 
@@ -31,25 +32,29 @@ pub fn extract_js_task_configs(
     for item in &module.body {
         if let ModuleItem::Stmt(stmt) = item
             && let Stmt::Decl(decl) = stmt
-                && let Decl::Var(var_decl) = decl {
-                    for decl in var_decl.decls.iter() {
-                        if let Some(init) = &decl.init
-                            && let Some((var_name, config)) = extract_task_call(init, &decl.name) {
-                                tasks.insert(var_name, serde_json::to_value(&config).unwrap());
-                            }
-                    }
+            && let Decl::Var(var_decl) = decl
+        {
+            for decl in var_decl.decls.iter() {
+                if let Some(init) = &decl.init
+                    && let Some((var_name, config)) = extract_task_call(init, &decl.name)
+                {
+                    tasks.insert(var_name, serde_json::to_value(&config).unwrap());
                 }
+            }
+        }
 
         if let ModuleItem::ModuleDecl(mod_decl) = item
             && let ModuleDecl::ExportDecl(export) = mod_decl
-                && let Decl::Var(var_decl) = &export.decl {
-                    for decl in var_decl.decls.iter() {
-                        if let Some(init) = &decl.init
-                            && let Some((var_name, config)) = extract_task_call(init, &decl.name) {
-                                tasks.insert(var_name, serde_json::to_value(&config).unwrap());
-                            }
-                    }
+            && let Decl::Var(var_decl) = &export.decl
+        {
+            for decl in var_decl.decls.iter() {
+                if let Some(init) = &decl.init
+                    && let Some((var_name, config)) = extract_task_call(init, &decl.name)
+                {
+                    tasks.insert(var_name, serde_json::to_value(&config).unwrap());
                 }
+            }
+        }
     }
 
     if tasks.is_empty() { None } else { Some(tasks) }
@@ -66,22 +71,23 @@ fn extract_task_call(
 
     if let Expr::Call(call) = expr
         && let Callee::Expr(callee) = &call.callee
-            && let Expr::Ident(ident) = callee.as_ref()
-                && ident.sym.as_ref() == "task"
-                    && let Some(first_arg) = call.args.first()
-                        && let Expr::Object(obj) = first_arg.expr.as_ref() {
-                            let mut config = extract_object_literal(obj);
-                            let task_name = config
-                                .get("name")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or(&var_name)
-                                .to_string();
-                            config.insert(
-                                "name".to_string(),
-                                serde_json::Value::String(task_name.clone()),
-                            );
-                            return Some((task_name, config));
-                        }
+        && let Expr::Ident(ident) = callee.as_ref()
+        && ident.sym.as_ref() == "task"
+        && let Some(first_arg) = call.args.first()
+        && let Expr::Object(obj) = first_arg.expr.as_ref()
+    {
+        let mut config = extract_object_literal(obj);
+        let task_name = config
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or(&var_name)
+            .to_string();
+        config.insert(
+            "name".to_string(),
+            serde_json::Value::String(task_name.clone()),
+        );
+        return Some((task_name, config));
+    }
 
     None
 }
@@ -91,17 +97,18 @@ fn extract_object_literal(obj: &ObjectLit) -> HashMap<String, serde_json::Value>
 
     for prop in &obj.props {
         if let PropOrSpread::Prop(prop) = prop
-            && let Prop::KeyValue(kv) = prop.as_ref() {
-                let key = match &kv.key {
-                    PropName::Ident(ident) => ident.sym.as_str().to_string(),
-                    PropName::Str(s) => s.value.as_str().unwrap_or_default().to_string(),
-                    _ => continue,
-                };
+            && let Prop::KeyValue(kv) = prop.as_ref()
+        {
+            let key = match &kv.key {
+                PropName::Ident(ident) => ident.sym.as_str().to_string(),
+                PropName::Str(s) => s.value.as_str().unwrap_or_default().to_string(),
+                _ => continue,
+            };
 
-                if let Some(value) = extract_js_literal(&kv.value) {
-                    config.insert(key, value);
-                }
+            if let Some(value) = extract_js_literal(&kv.value) {
+                config.insert(key, value);
             }
+        }
     }
 
     config

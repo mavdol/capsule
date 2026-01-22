@@ -1,10 +1,10 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::collections::HashMap;
 
-use crate::wasm::utilities::wit_manager::WitManager;
 use crate::wasm::utilities::introspection::javascript;
+use crate::wasm::utilities::wit_manager::WitManager;
 
 #[derive(Debug)]
 pub enum JavascriptWasmCompilerError {
@@ -356,9 +356,7 @@ export const taskRunner = exports;
         Ok(output_path)
     }
 
-    pub fn introspect_task_registry(
-        &self,
-    ) -> Option<HashMap<String, serde_json::Value>> {
+    pub fn introspect_task_registry(&self) -> Option<HashMap<String, serde_json::Value>> {
         let source = fs::read_to_string(&self.source_path).ok()?;
         let is_typescript = self.source_path.extension().is_some_and(|ext| ext == "ts");
 
