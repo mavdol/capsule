@@ -84,6 +84,13 @@ When you run `capsule run main.ts`, your code is compiled into a WebAssembly mod
 | `maxRetries` | Retry attempts on failure | `number` | `0` | `3` |
 | `allowedFiles` | Folders accessible in the sandbox | `string[]` | `[]` | `["./data", "./output"]` |
 
+### Compute Levels
+
+- **LOW**: Minimal allocation for lightweight tasks
+- **MEDIUM**: Balanced resources for typical workloads
+- **HIGH**: Maximum fuel for compute-intensive operations
+- **CUSTOM**: Specify exact fuel value (e.g., `compute="1000000"`)
+
 ### Project Configuration (Optional)
 
 Create a `capsule.toml` file in your project root to set default options:
@@ -101,13 +108,6 @@ default_timeout = "30s"
 ```
 
 Task-level options always override these defaults.
-
-### Compute Levels
-
-- **LOW**: Minimal allocation for lightweight tasks
-- **MEDIUM**: Balanced resources for typical workloads
-- **HIGH**: Maximum fuel for compute-intensive operations
-- **CUSTOM**: Specify exact fuel value (e.g., `compute="1000000"`)
 
 ### File Access
 

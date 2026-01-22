@@ -65,6 +65,13 @@ When you run `capsule run main.py`, your code is compiled into a WebAssembly mod
 | `max_retries` | Retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
 
+### Compute Levels
+
+- **LOW**: Minimal allocation for lightweight tasks
+- **MEDIUM**: Balanced resources for typical workloads
+- **HIGH**: Maximum fuel for compute-intensive operations
+- **CUSTOM**: Specify exact fuel value (e.g., `compute="1000000"`)
+
 ### Project Configuration (Optional)
 
 Create a `capsule.toml` file in your project root to set default options:
@@ -82,13 +89,6 @@ default_timeout = "30s"
 ```
 
 Task-level options always override these defaults.
-
-### Compute Levels
-
-- **LOW**: Minimal allocation for lightweight tasks
-- **MEDIUM**: Balanced resources for typical workloads
-- **HIGH**: Maximum fuel for compute-intensive operations
-- **CUSTOM**: Specify exact fuel value (e.g., `compute="1000000"`)
 
 ### HTTP Client
 
