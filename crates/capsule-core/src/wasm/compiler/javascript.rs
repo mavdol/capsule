@@ -49,9 +49,10 @@ impl JavascriptWasmCompiler {
             JavascriptWasmCompilerError::FsError(format!("Cannot resolve source path: {}", e))
         })?;
 
-        let cache_dir = source_path
-            .parent()
-            .ok_or_else(|| JavascriptWasmCompilerError::FsError("Invalid source path".to_string()))?
+        let cache_dir = std::env::current_dir()
+            .map_err(|e| {
+                JavascriptWasmCompilerError::FsError(format!("Cannot get current directory: {}", e))
+            })?
             .join(".capsule");
 
         fs::create_dir_all(&cache_dir)?;
