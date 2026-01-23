@@ -50,6 +50,10 @@ def analyze_data(dataset: list) -> dict:
     return {"processed": len(dataset), "status": "complete"}
 ```
 
+> [!NOTE]
+> The runtime requires a task named `"main"` as the entrypoint. Python can define the main task itself, but it's recommended to set it manually.
+
+
 When you run `capsule run main.py`, your code is compiled into a WebAssembly module and executed in a dedicated sandbox.
 
 ## Documentation

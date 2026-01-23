@@ -68,8 +68,9 @@ export const main = task({
 });
 
 ```
+
 > [!NOTE]
-> TypeScript/JavaScript projects require a task named `"main"` as the entrypoint.
+> The runtime requires a task named `"main"` as the entrypoint. Python can define the main task itself, but it's recommended to set it manually as well.
 
 
 When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated sandbox to isolate tasks.
