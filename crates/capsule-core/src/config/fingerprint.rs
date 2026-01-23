@@ -15,12 +15,11 @@ impl SourceFingerprint {
     pub fn load(cache_dir: &Path) -> Self {
         let fingerprint_path = cache_dir.join(Self::MANIFEST_FILENAME);
 
-        if fingerprint_path.exists() {
-            if let Ok(content) = fs::read_to_string(&fingerprint_path) {
-                if let Ok(fingerprint) = serde_json::from_str(&content) {
-                    return fingerprint;
-                }
-            }
+        if fingerprint_path.exists()
+            && let Ok(content) = fs::read_to_string(&fingerprint_path)
+            && let Ok(fingerprint) = serde_json::from_str(&content)
+        {
+            return fingerprint;
         }
 
         Self::default()
@@ -68,10 +67,10 @@ impl SourceFingerprint {
                 }
 
                 Self::collect_files_recursive(&path, extensions, ignored_dirs, files);
-            } else if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-                if extensions.contains(&ext) {
-                    files.push(path);
-                }
+            } else if let Some(ext) = path.extension().and_then(|e| e.to_str())
+                && extensions.contains(&ext)
+            {
+                files.push(path);
             }
         }
     }
