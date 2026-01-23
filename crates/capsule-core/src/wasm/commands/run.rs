@@ -82,7 +82,7 @@ impl RuntimeCommand for RunInstance {
                             success: false,
                             result: None,
                             error: Some(TaskError {
-                                error_type: "TaskError".to_string(),
+                                error_type: "task_error".to_string(),
                                 message: error_string,
                             }),
                             execution: TaskExecution {
@@ -98,7 +98,7 @@ impl RuntimeCommand for RunInstance {
                         success: false,
                         result: None,
                         error: Some(TaskError {
-                            error_type: "WasmError".to_string(),
+                            error_type: "Wasm_error".to_string(),
                             message: e.to_string(),
                         }),
                         execution: TaskExecution {
@@ -110,39 +110,21 @@ impl RuntimeCommand for RunInstance {
                         },
                     },
                 },
-                Err(_elapsed) => {
-                    runtime
-                        .log
-                        .update_log(UpdateInstanceLog {
-                            task_id: self.task_id.clone(),
-                            state: InstanceState::TimedOut,
-                            fuel_consumed: self.policy.compute.as_fuel()
-                                - self.store.get_fuel().unwrap_or(0),
-                        })
-                        .await?;
-
-                    runtime
-                        .task_reporter
-                        .lock()
-                        .await
-                        .task_failed(&self.policy.name, "Timed out");
-
-                    TaskResult {
-                        success: false,
-                        result: None,
-                        error: Some(TaskError {
-                            error_type: "Timeout".to_string(),
-                            message: "your task has timed out".to_string(),
-                        }),
-                        execution: TaskExecution {
-                            task_name: self.policy.name.clone(),
-                            duration_ms: duration.as_millis() as u64,
-                            retries: self.policy.max_retries,
-                            fuel_consumed: self.policy.compute.as_fuel()
-                                - self.store.get_fuel().unwrap_or(0),
-                        },
-                    }
-                }
+                Err(_elapsed) => TaskResult {
+                    success: false,
+                    result: None,
+                    error: Some(TaskError {
+                        error_type: "timeout".to_string(),
+                        message: format!("timeout after {}ms", duration.as_millis()),
+                    }),
+                    execution: TaskExecution {
+                        task_name: self.policy.name.clone(),
+                        duration_ms: duration.as_millis() as u64,
+                        retries: self.policy.max_retries,
+                        fuel_consumed: self.policy.compute.as_fuel()
+                            - self.store.get_fuel().unwrap_or(0),
+                    },
+                },
             },
             None => match wasm_future.await {
                 Ok(inner_result) => match inner_result {
@@ -172,7 +154,7 @@ impl RuntimeCommand for RunInstance {
                         success: false,
                         result: None,
                         error: Some(TaskError {
-                            error_type: "TaskError".to_string(),
+                            error_type: "task_error".to_string(),
                             message: error_string,
                         }),
                         execution: TaskExecution {
@@ -188,7 +170,7 @@ impl RuntimeCommand for RunInstance {
                     success: false,
                     result: None,
                     error: Some(TaskError {
-                        error_type: "WasmError".to_string(),
+                        error_type: "wasm_error".to_string(),
                         message: e.to_string(),
                     }),
                     execution: TaskExecution {

@@ -9,7 +9,7 @@ use wasmtime_wasi_http::{WasiHttpCtx, WasiHttpView};
 use crate::wasm::commands::create::CreateInstance;
 use crate::wasm::commands::run::RunInstance;
 use crate::wasm::runtime::Runtime;
-use crate::wasm::utilities::task_config::TaskConfig;
+use crate::wasm::utilities::task_config::{TaskConfig, TaskResult};
 
 use capsule::host::api::{Host, HttpError, HttpResponse, TaskError};
 
@@ -108,22 +108,33 @@ impl Host for State {
                             continue;
                         }
                     } else {
-                        let elapsed = start_time.elapsed();
-                        runtime
-                            .task_reporter
-                            .lock()
-                            .await
-                            .task_completed_with_time(&name, elapsed);
-                        return Ok(result);
+                        match serde_json::from_str::<TaskResult>(&result) {
+                            Ok(task_result) if task_result.success => {
+                                let elapsed = start_time.elapsed();
+                                runtime
+                                    .task_reporter
+                                    .lock()
+                                    .await
+                                    .task_completed_with_time(&name, elapsed);
+
+                                return Ok(result);
+                            }
+                            Ok(_) => {
+                                if attempt < max_retries {
+                                    continue;
+                                }
+
+                                return Ok(result);
+                            }
+                            Err(_) => {
+                                if attempt < max_retries {
+                                    continue;
+                                }
+                            }
+                        }
                     }
                 }
-                Err(e) => {
-                    runtime
-                        .task_reporter
-                        .lock()
-                        .await
-                        .task_failed(&name, &e.to_string());
-                    last_error = Some(format!("Failed to run instance: {}", e));
+                Err(_) => {
                     if attempt < max_retries {
                         continue;
                     }
