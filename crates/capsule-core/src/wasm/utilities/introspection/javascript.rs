@@ -27,7 +27,7 @@ pub fn extract_js_task_configs(
     let mut parser = Parser::new(syntax, StringInput::from(&*fm), None);
     let module = parser.parse_module().ok()?;
 
-    let mut tasks: HashMap<String, serde_json::Value> = HashMap::new();
+    let mut tasks = HashMap::new();
 
     for item in &module.body {
         if let ModuleItem::Stmt(stmt) = item
@@ -82,6 +82,7 @@ fn extract_task_call(
             .and_then(|v| v.as_str())
             .unwrap_or(&var_name)
             .to_string();
+
         config.insert(
             "name".to_string(),
             serde_json::Value::String(task_name.clone()),
@@ -132,6 +133,7 @@ fn extract_js_literal(expr: &Expr) -> Option<serde_json::Value> {
                 .filter_map(|e| e.as_ref())
                 .map(|e| extract_js_literal(&e.expr))
                 .collect();
+
             items.map(serde_json::Value::Array)
         }
         _ => None,
