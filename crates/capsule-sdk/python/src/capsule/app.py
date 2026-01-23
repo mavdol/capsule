@@ -60,7 +60,6 @@ class TaskRunner:
             JSON string with the task result or error
 
         The host calls this function to execute a task within this Wasm instance.
-        This is the entry point from the Rust host into the Python code.
         """
         try:
             data = json.loads(args_json)
@@ -89,9 +88,9 @@ class TaskRunner:
             result = task_func(*args, **kwargs)
 
             if result is None:
-                return json.dumps({"result": None})
+                return json.dumps({"error": "Unknown error"})
 
-            return json.dumps({"result": result})
+            return json.dumps(result)
 
         except Exception as e:
             import traceback
