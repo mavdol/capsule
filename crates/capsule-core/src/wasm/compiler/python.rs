@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::process::Stdio;
 
+use crate::config::fingerprint::SourceFingerprint;
 use crate::wasm::utilities::introspection::python;
 use crate::wasm::utilities::wit_manager::WitManager;
-use crate::config::fingerprint::SourceFingerprint;
 
 pub enum PythonWasmCompilerError {
     CompileFailed(String),

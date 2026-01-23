@@ -76,17 +76,12 @@ impl SourceFingerprint {
         }
     }
 
-    pub fn build(
-        base_dir: &Path,
-        extensions: &[&str],
-        ignored_dirs: &[&str],
-    ) -> Self {
+    pub fn build(base_dir: &Path, extensions: &[&str], ignored_dirs: &[&str]) -> Self {
         let files = Self::collect_source_files(base_dir, extensions, ignored_dirs);
         let mut fingerprint = Self::default();
 
         for file_path in files {
             if let Some(hash) = Self::hash_file(&file_path) {
-
                 let relative = file_path
                     .strip_prefix(base_dir)
                     .unwrap_or(&file_path)
@@ -159,10 +154,14 @@ mod tests {
     #[test]
     fn test_fingerprint_no_changes() {
         let mut fingerprint1 = SourceFingerprint::default();
-        fingerprint1.files.insert("main.py".to_string(), "abc123".to_string());
+        fingerprint1
+            .files
+            .insert("main.py".to_string(), "abc123".to_string());
 
         let mut fingerprint2 = SourceFingerprint::default();
-        fingerprint2.files.insert("main.py".to_string(), "abc123".to_string());
+        fingerprint2
+            .files
+            .insert("main.py".to_string(), "abc123".to_string());
 
         assert!(!fingerprint1.has_changes(&fingerprint2));
     }
@@ -170,10 +169,14 @@ mod tests {
     #[test]
     fn test_fingerprint_content_changed() {
         let mut fingerprint1 = SourceFingerprint::default();
-        fingerprint1.files.insert("main.py".to_string(), "abc123".to_string());
+        fingerprint1
+            .files
+            .insert("main.py".to_string(), "abc123".to_string());
 
         let mut fingerprint2 = SourceFingerprint::default();
-        fingerprint2.files.insert("main.py".to_string(), "xyz789".to_string());
+        fingerprint2
+            .files
+            .insert("main.py".to_string(), "xyz789".to_string());
 
         assert!(fingerprint1.has_changes(&fingerprint2));
     }
@@ -181,11 +184,17 @@ mod tests {
     #[test]
     fn test_fingerprint_file_added() {
         let mut fingerprint1 = SourceFingerprint::default();
-        fingerprint1.files.insert("main.py".to_string(), "abc123".to_string());
+        fingerprint1
+            .files
+            .insert("main.py".to_string(), "abc123".to_string());
 
         let mut fingerprint2 = SourceFingerprint::default();
-        fingerprint2.files.insert("main.py".to_string(), "abc123".to_string());
-        fingerprint2.files.insert("helper.py".to_string(), "def456".to_string());
+        fingerprint2
+            .files
+            .insert("main.py".to_string(), "abc123".to_string());
+        fingerprint2
+            .files
+            .insert("helper.py".to_string(), "def456".to_string());
 
         assert!(fingerprint1.has_changes(&fingerprint2));
     }
@@ -193,11 +202,17 @@ mod tests {
     #[test]
     fn test_fingerprint_file_deleted() {
         let mut fingerprint1 = SourceFingerprint::default();
-        fingerprint1.files.insert("main.py".to_string(), "abc123".to_string());
-        fingerprint1.files.insert("helper.py".to_string(), "def456".to_string());
+        fingerprint1
+            .files
+            .insert("main.py".to_string(), "abc123".to_string());
+        fingerprint1
+            .files
+            .insert("helper.py".to_string(), "def456".to_string());
 
         let mut fingerprint2 = SourceFingerprint::default();
-        fingerprint2.files.insert("main.py".to_string(), "abc123".to_string());
+        fingerprint2
+            .files
+            .insert("main.py".to_string(), "abc123".to_string());
 
         assert!(fingerprint1.has_changes(&fingerprint2));
     }

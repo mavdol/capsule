@@ -3,9 +3,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use crate::config::fingerprint::SourceFingerprint;
 use crate::wasm::utilities::introspection::javascript;
 use crate::wasm::utilities::wit_manager::WitManager;
-use crate::config::fingerprint::SourceFingerprint;
 
 #[derive(Debug)]
 pub enum JavascriptWasmCompilerError {
