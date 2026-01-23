@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -10,8 +11,8 @@ pub enum ManifestError {
     ParseError(String),
 }
 
-impl std::fmt::Display for ManifestError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ManifestError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ManifestError::FsError(e) => write!(f, "Filesystem error > {}", e),
             ManifestError::ParseError(e) => write!(f, "Parse error > {}", e),
