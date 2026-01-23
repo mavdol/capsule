@@ -70,7 +70,7 @@ interface TaskResult {
  * @returns String format for host API, or undefined
  */
 function normalizeTimeout(timeout?: string | number): string | undefined {
-  if (timeout === undefined) return undefined;
+  if (!timeout) return undefined;
   if (typeof timeout === "number") {
     return `${timeout}ms`;
   }

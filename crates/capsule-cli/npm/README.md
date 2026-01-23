@@ -60,7 +60,6 @@ export const analyzeData = task({
   return { processed: dataset.length, status: "complete" };
 });
 
-// The "main" task is required as the entrypoint
 export const main = task({
     name: "main",
     compute: "HIGH"
@@ -68,6 +67,9 @@ export const main = task({
   return analyzeData([1, 2, 3, 4, 5]);
 });
 ```
+
+> [!NOTE]
+> The runtime requires a task named `"main"` as the entrypoint.
 
 When you run `capsule run main.ts`, your code is compiled into a WebAssembly module and executed in a dedicated sandbox.
 

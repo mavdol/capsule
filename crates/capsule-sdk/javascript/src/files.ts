@@ -181,7 +181,7 @@ export async function list(path: string = "."): Promise<string[]> {
     const entries: string[] = [];
 
     let entry;
-    while ((entry = stream.readDirectoryEntry()) !== undefined && entry !== null) {
+    while ((entry = stream.readDirectoryEntry()) && entry) {
       if (entry.name) {
         entries.push(entry.name);
       }

@@ -49,7 +49,7 @@ export function callHost(
   args: any[],
   config: Record<string, any>
 ): string {
-  if (checkWasm() && hostModule !== null) {
+  if (checkWasm() && hostModule) {
     try {
       const result = hostModule.scheduleTask(
         name,

@@ -142,11 +142,7 @@ pub async fn execute(
 
     let execution_policy =
         extract_main_execution_policy(compile_result.task_registry, &manifest.capsule_toml)
-            .unwrap_or_else(|| {
-                ExecutionPolicy::default()
-                    .compute(Some(Compute::Custom(u64::MAX)))
-                    .allowed_files(vec![".".to_string()])
-            });
+            .unwrap_or_else(|| ExecutionPolicy::default().compute(Some(Compute::Custom(u64::MAX))));
 
     let runtime = Runtime::new(runtime_config, manifest.capsule_toml)?;
 
