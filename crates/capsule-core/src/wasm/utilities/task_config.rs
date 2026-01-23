@@ -25,7 +25,6 @@ pub struct TaskExecution {
     pub fuel_consumed: u64,
 }
 
-
 #[derive(Debug, Deserialize, Default)]
 pub struct TaskConfig {
     name: Option<String>,

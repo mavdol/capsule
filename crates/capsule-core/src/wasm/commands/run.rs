@@ -6,7 +6,7 @@ use crate::config::log::{InstanceState, UpdateInstanceLog};
 use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
 use crate::wasm::state::{CapsuleAgent, State};
-use crate::wasm::utilities::task_config::{TaskExecution, TaskResult, TaskError};
+use crate::wasm::utilities::task_config::{TaskError, TaskExecution, TaskResult};
 
 pub struct RunInstance {
     task_id: String,
@@ -52,91 +52,38 @@ impl RuntimeCommand for RunInstance {
             .capsule_host_task_runner()
             .call_run(&mut self.store, &self.args_json);
 
-         let response = match self.policy.timeout_duration() {
-            Some(duration) => {
-                match tokio::time::timeout(duration, wasm_future).await {
-                    Ok(wasm_result) => {
-                        match wasm_result {
-                            Ok(inner_result) => {
-                                match inner_result {
-                                    Ok(json_string) => {
-                                        let value = serde_json::from_str(&json_string)
-                                            .unwrap_or(serde_json::Value::String(json_string));
+        let response = match self.policy.timeout_duration() {
+            Some(duration) => match tokio::time::timeout(duration, wasm_future).await {
+                Ok(wasm_result) => match wasm_result {
+                    Ok(inner_result) => match inner_result {
+                        Ok(json_string) => {
+                            let result_object = serde_json::from_str(&json_string)
+                                .unwrap_or(serde_json::Value::String(json_string));
 
-                                        TaskResult {
-                                            success: true,
-                                            result: Some(value),
-                                            error: None,
-                                            execution: TaskExecution {
-                                                task_name: self.policy.name.clone(),
-                                                duration_ms: duration.as_millis() as u64,
-                                                retries: self.policy.max_retries,
-                                                fuel_consumed: self.policy.compute.as_fuel()
-                                                    - self.store.get_fuel().unwrap_or(0),
-                                            },
-                                        }
-                                    }
-                                    Err(error_string) => {
-                                        TaskResult {
-                                            success: false,
-                                            result: None,
-                                            error: Some(TaskError {
-                                                error_type: "TaskError".to_string(),
-                                                message: error_string,
-                                            }),
-                                            execution: TaskExecution {
-                                                task_name: self.policy.name.clone(),
-                                                duration_ms: duration.as_millis() as u64,
-                                                retries: self.policy.max_retries,
-                                                fuel_consumed: self.policy.compute.as_fuel()
-                                                    - self.store.get_fuel().unwrap_or(0),
-                                            },
-                                        }
-                                    }
-                                }
-                            }
-                            Err(e) => {
-                                TaskResult {
-                                    success: false,
-                                    result: None,
-                                    error: Some(TaskError {
-                                        error_type: "WasmError".to_string(),
-                                        message: e.to_string(),
-                                    }),
-                                    execution: TaskExecution {
-                                        task_name: self.policy.name.clone(),
-                                        duration_ms: duration.as_millis() as u64,
-                                        retries: self.policy.max_retries,
-                                        fuel_consumed: self.policy.compute.as_fuel()
-                                            - self.store.get_fuel().unwrap_or(0),
-                                    },
-                                }
+                            let result = result_object
+                                .get("result")
+                                .cloned()
+                                .unwrap_or(result_object);
+
+                            TaskResult {
+                                success: true,
+                                result: Some(result),
+                                error: None,
+                                execution: TaskExecution {
+                                    task_name: self.policy.name.clone(),
+                                    duration_ms: duration.as_millis() as u64,
+                                    retries: self.policy.max_retries,
+                                    fuel_consumed: self.policy.compute.as_fuel()
+                                        - self.store.get_fuel().unwrap_or(0),
+                                },
                             }
                         }
-                    }
-                    Err(_elapsed) => {
-                        runtime
-                            .log
-                            .update_log(UpdateInstanceLog {
-                                task_id: self.task_id.clone(),
-                                state: InstanceState::TimedOut,
-                                fuel_consumed: self.policy.compute.as_fuel()
-                                    - self.store.get_fuel().unwrap_or(0),
-                            })
-                            .await?;
-
-                        runtime
-                            .task_reporter
-                            .lock()
-                            .await
-                            .task_failed(&self.policy.name, "Timed out");
-
-                        TaskResult {
+                        Err(error_string) => TaskResult {
                             success: false,
                             result: None,
                             error: Some(TaskError {
-                                error_type: "timeout".to_string(),
-                                message: "your task has timed out".to_string(),
+                                error_type: "TaskError".to_string(),
+                                message: error_string,
                             }),
                             execution: TaskExecution {
                                 task_name: self.policy.name.clone(),
@@ -145,58 +92,73 @@ impl RuntimeCommand for RunInstance {
                                 fuel_consumed: self.policy.compute.as_fuel()
                                     - self.store.get_fuel().unwrap_or(0),
                             },
-                        }
+                        },
+                    },
+                    Err(e) => TaskResult {
+                        success: false,
+                        result: None,
+                        error: Some(TaskError {
+                            error_type: "WasmError".to_string(),
+                            message: e.to_string(),
+                        }),
+                        execution: TaskExecution {
+                            task_name: self.policy.name.clone(),
+                            duration_ms: duration.as_millis() as u64,
+                            retries: self.policy.max_retries,
+                            fuel_consumed: self.policy.compute.as_fuel()
+                                - self.store.get_fuel().unwrap_or(0),
+                        },
+                    },
+                },
+                Err(_elapsed) => {
+                    runtime
+                        .log
+                        .update_log(UpdateInstanceLog {
+                            task_id: self.task_id.clone(),
+                            state: InstanceState::TimedOut,
+                            fuel_consumed: self.policy.compute.as_fuel()
+                                - self.store.get_fuel().unwrap_or(0),
+                        })
+                        .await?;
+
+                    runtime
+                        .task_reporter
+                        .lock()
+                        .await
+                        .task_failed(&self.policy.name, "Timed out");
+
+                    TaskResult {
+                        success: false,
+                        result: None,
+                        error: Some(TaskError {
+                            error_type: "Timeout".to_string(),
+                            message: "your task has timed out".to_string(),
+                        }),
+                        execution: TaskExecution {
+                            task_name: self.policy.name.clone(),
+                            duration_ms: duration.as_millis() as u64,
+                            retries: self.policy.max_retries,
+                            fuel_consumed: self.policy.compute.as_fuel()
+                                - self.store.get_fuel().unwrap_or(0),
+                        },
                     }
                 }
-            }
-            None => {
-                match wasm_future.await {
-                    Ok(inner_result) => {
-                        match inner_result {
-                            Ok(json_string) => {
-                                let value = serde_json::from_str(&json_string)
-                                    .unwrap_or(serde_json::Value::String(json_string));
+            },
+            None => match wasm_future.await {
+                Ok(inner_result) => match inner_result {
+                    Ok(json_string) => {
+                        let result_object = serde_json::from_str(&json_string)
+                            .unwrap_or(serde_json::Value::String(json_string));
 
-                                TaskResult {
-                                    success: true,
-                                    result: Some(value),
-                                    error: None,
-                                    execution: TaskExecution {
-                                        task_name: self.policy.name.clone(),
-                                        duration_ms: 0,
-                                        retries: self.policy.max_retries,
-                                        fuel_consumed: self.policy.compute.as_fuel()
-                                            - self.store.get_fuel().unwrap_or(0),
-                                    },
-                                }
-                            }
-                            Err(error_string) => {
-                                TaskResult {
-                                    success: false,
-                                    result: None,
-                                    error: Some(TaskError {
-                                        error_type: "TaskError".to_string(),
-                                        message: error_string,
-                                    }),
-                                    execution: TaskExecution {
-                                        task_name: self.policy.name.clone(),
-                                        duration_ms: 0,
-                                        retries: self.policy.max_retries,
-                                        fuel_consumed: self.policy.compute.as_fuel()
-                                            - self.store.get_fuel().unwrap_or(0),
-                                    },
-                                }
-                            }
-                        }
-                    }
-                    Err(e) => {
+                        let result = result_object
+                            .get("result")
+                            .cloned()
+                            .unwrap_or(result_object);
+
                         TaskResult {
-                            success: false,
-                            result: None,
-                            error: Some(TaskError {
-                                error_type: "WasmError".to_string(),
-                                message: e.to_string(),
-                            }),
+                            success: true,
+                            result: Some(result),
+                            error: None,
                             execution: TaskExecution {
                                 task_name: self.policy.name.clone(),
                                 duration_ms: 0,
@@ -206,10 +168,39 @@ impl RuntimeCommand for RunInstance {
                             },
                         }
                     }
-                }
-            }
+                    Err(error_string) => TaskResult {
+                        success: false,
+                        result: None,
+                        error: Some(TaskError {
+                            error_type: "TaskError".to_string(),
+                            message: error_string,
+                        }),
+                        execution: TaskExecution {
+                            task_name: self.policy.name.clone(),
+                            duration_ms: 0,
+                            retries: self.policy.max_retries,
+                            fuel_consumed: self.policy.compute.as_fuel()
+                                - self.store.get_fuel().unwrap_or(0),
+                        },
+                    },
+                },
+                Err(e) => TaskResult {
+                    success: false,
+                    result: None,
+                    error: Some(TaskError {
+                        error_type: "WasmError".to_string(),
+                        message: e.to_string(),
+                    }),
+                    execution: TaskExecution {
+                        task_name: self.policy.name.clone(),
+                        duration_ms: 0,
+                        retries: self.policy.max_retries,
+                        fuel_consumed: self.policy.compute.as_fuel()
+                            - self.store.get_fuel().unwrap_or(0),
+                    },
+                },
+            },
         };
-
 
         let state = if response.success {
             InstanceState::Completed
@@ -227,7 +218,8 @@ impl RuntimeCommand for RunInstance {
             .await?;
 
         if !response.success {
-            let error_message = response.error
+            let error_message = response
+                .error
                 .as_ref()
                 .map(|e| e.message.as_str())
                 .unwrap_or("Unknown error");
