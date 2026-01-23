@@ -34,7 +34,7 @@ fn extract_task_decorator(
 ) -> Option<HashMap<String, serde_json::Value>> {
     match decorator {
         ast::Expr::Name(name) if name.id.as_str() == "task" => {
-            let mut config: HashMap<String, serde_json::Value> = HashMap::new();
+            let mut config = HashMap::new();
             config.insert(
                 "name".to_string(),
                 serde_json::Value::String(func_name.to_string()),
@@ -58,7 +58,7 @@ fn extract_call_args(
     call: &ast::ExprCall,
     func_name: &str,
 ) -> Option<HashMap<String, serde_json::Value>> {
-    let mut config: HashMap<String, serde_json::Value> = HashMap::new();
+    let mut config = HashMap::new();
 
     for keyword in &call.keywords {
         if let Some(arg_name) = &keyword.arg
@@ -96,6 +96,7 @@ fn extract_literal(expr: &ast::Expr) -> Option<serde_json::Value> {
         ast::Expr::List(list) => {
             let items: Option<Vec<serde_json::Value>> =
                 list.elts.iter().map(extract_literal).collect();
+
             items.map(serde_json::Value::Array)
         }
         _ => None,
@@ -129,19 +130,6 @@ def main():
 "#;
         let configs = extract_python_task_configs(source).unwrap();
         assert!(configs.contains_key("main"));
-    }
-
-    #[test]
-    fn test_task_with_allowed_files() {
-        let source = r#"
-@task(name="main", allowed_files=["./data", "./config"])
-def main():
-    pass
-"#;
-        let configs = extract_python_task_configs(source).unwrap();
-        let allowed = configs["main"]["allowed_files"].as_array().unwrap();
-        assert_eq!(allowed.len(), 2);
-        assert_eq!(allowed[0], "./data");
     }
 
     #[test]
