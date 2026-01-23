@@ -37,6 +37,9 @@ Run it:
 capsule run hello.py
 ```
 
+> [!TIP]
+> Use `--verbose` to display real-time task execution details.
+
 ## How It Works
 
 Simply annotate your Python functions with the `@task` decorator:

@@ -71,8 +71,10 @@ export const main = task({
 > [!NOTE]
 > The runtime requires a task named `"main"` as the entry point.
 
-
 When you run `capsule run main.ts`, your code is compiled into a WebAssembly module and executed in a dedicated sandbox.
+
+> [!TIP]
+> Use `--verbose` to display real-time task execution details.
 
 ## Documentation
 

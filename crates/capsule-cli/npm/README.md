@@ -73,6 +73,9 @@ export const main = task({
 
 When you run `capsule run main.ts`, your code is compiled into a WebAssembly module and executed in a dedicated sandbox.
 
+> [!TIP]
+> Use `--verbose` to display real-time task execution details.
+
 ## Documentation
 
 ### Task Configuration Options
