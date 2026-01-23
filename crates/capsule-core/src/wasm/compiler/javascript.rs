@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+use crate::config::fingerprint::SourceFingerprint;
 use crate::wasm::utilities::introspection::javascript;
 use crate::wasm::utilities::wit_manager::WitManager;
 
@@ -97,7 +98,17 @@ impl JavascriptWasmCompiler {
     }
 
     pub fn compile_wasm(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
-        if !self.needs_rebuild(&self.source_path, &self.output_wasm)? {
+        let source_dir = self.source_path.parent().ok_or_else(|| {
+            JavascriptWasmCompilerError::FsError("Cannot determine source directory".to_string())
+        })?;
+
+        if !SourceFingerprint::needs_rebuild(
+            &self.cache_dir,
+            source_dir,
+            &self.output_wasm,
+            &["js", "ts", "toml"],
+            &["node_modules", "dist"],
+        ) {
             return Ok(self.output_wasm.clone());
         }
 
@@ -190,6 +201,13 @@ export const taskRunner = exports;
             )));
         }
 
+        let _ = SourceFingerprint::update_after_build(
+            &self.cache_dir,
+            source_dir,
+            &["js", "ts", "toml"],
+            &["node_modules", "dist"],
+        );
+
         Ok(self.output_wasm.clone())
     }
 
@@ -242,64 +260,6 @@ export const taskRunner = exports;
         Err(JavascriptWasmCompilerError::FsError(
             "Could not find JavaScript SDK.".to_string(),
         ))
-    }
-
-    fn needs_rebuild(
-        &self,
-        source: &Path,
-        output: &Path,
-    ) -> Result<bool, JavascriptWasmCompilerError> {
-        if !output.exists() {
-            return Ok(true);
-        }
-
-        let output_time = fs::metadata(output).and_then(|m| m.modified())?;
-
-        let source_time = fs::metadata(source).and_then(|m| m.modified())?;
-        if source_time > output_time {
-            return Ok(true);
-        }
-
-        if let Some(source_dir) = source.parent()
-            && Self::check_dir_modified(source_dir, source, output_time)?
-        {
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-
-    fn check_dir_modified(
-        dir: &Path,
-        source: &Path,
-        wasm_time: std::time::SystemTime,
-    ) -> Result<bool, JavascriptWasmCompilerError> {
-        if let Ok(entries) = fs::read_dir(dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-
-                if path.is_dir() {
-                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-                    if dir_name.starts_with('.') || dir_name == "node_modules" {
-                        continue;
-                    }
-
-                    if Self::check_dir_modified(&path, source, wasm_time)? {
-                        return Ok(true);
-                    }
-                } else if let Some(ext) = path.extension()
-                    && (ext == "js" || ext == "ts")
-                    && path != source
-                    && let Ok(metadata) = fs::metadata(&path)
-                    && let Ok(modified) = metadata.modified()
-                    && modified > wasm_time
-                {
-                    return Ok(true);
-                }
-            }
-        }
-
-        Ok(false)
     }
 
     fn transpile_typescript(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {

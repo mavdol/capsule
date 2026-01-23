@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::process::Stdio;
 
+use crate::config::fingerprint::SourceFingerprint;
 use crate::wasm::utilities::introspection::python;
 use crate::wasm::utilities::wit_manager::WitManager;
 
@@ -90,7 +91,17 @@ impl PythonWasmCompiler {
     }
 
     pub fn compile_wasm(&self) -> Result<PathBuf, PythonWasmCompilerError> {
-        if !self.needs_rebuild(&self.source_path, &self.output_wasm)? {
+        let source_dir = self.source_path.parent().ok_or_else(|| {
+            PythonWasmCompilerError::FsError("Cannot determine source directory".to_string())
+        })?;
+
+        if !SourceFingerprint::needs_rebuild(
+            &self.cache_dir,
+            source_dir,
+            &self.output_wasm,
+            &["py", "toml"],
+            &["__pycache__"],
+        ) {
             return Ok(self.output_wasm.clone());
         }
 
@@ -177,64 +188,14 @@ from capsule.app import TaskRunner, exports
 
         self.cleanup_pycache(python_path);
 
+        let _ = SourceFingerprint::update_after_build(
+            &self.cache_dir,
+            source_dir,
+            &["py", "toml"],
+            &["__pycache__"],
+        );
+
         Ok(self.output_wasm.clone())
-    }
-
-    fn needs_rebuild(
-        &self,
-        source: &Path,
-        wasm_path: &Path,
-    ) -> Result<bool, PythonWasmCompilerError> {
-        if !wasm_path.exists() {
-            return Ok(true);
-        }
-
-        let wasm_time = fs::metadata(wasm_path).and_then(|m| m.modified())?;
-
-        let source_time = fs::metadata(source).and_then(|m| m.modified())?;
-        if source_time > wasm_time {
-            return Ok(true);
-        }
-
-        if let Some(source_dir) = source.parent()
-            && Self::check_dir_modified(source_dir, source, wasm_time)?
-        {
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-
-    fn check_dir_modified(
-        dir: &Path,
-        source: &Path,
-        wasm_time: std::time::SystemTime,
-    ) -> Result<bool, PythonWasmCompilerError> {
-        if let Ok(entries) = fs::read_dir(dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-
-                if path.is_dir() {
-                    let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-                    if dir_name.starts_with('.') || dir_name == "__pycache__" {
-                        continue;
-                    }
-
-                    if Self::check_dir_modified(&path, source, wasm_time)? {
-                        return Ok(true);
-                    }
-                } else if path.extension().is_some_and(|ext| ext == "py")
-                    && path != source
-                    && let Ok(metadata) = fs::metadata(&path)
-                    && let Ok(modified) = metadata.modified()
-                    && modified > wasm_time
-                {
-                    return Ok(true);
-                }
-            }
-        }
-
-        Ok(false)
     }
 
     fn get_wit_path(&self) -> Result<PathBuf, PythonWasmCompilerError> {

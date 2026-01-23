@@ -28,6 +28,7 @@ indicatif = "0.17"
 chrono = "0.4"
 colored = "2.1"
 toml = "0.9.11"
+blake3 = "1"
 
 rustpython-parser = "0.4"
 swc_ecma_parser = "33.0"
