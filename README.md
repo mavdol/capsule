@@ -72,7 +72,6 @@ export const main = task({
 > [!NOTE]
 > The runtime requires a task named `"main"` as the entry point. Python can define the main task itself, but it's recommended to set it manually.
 
-
 When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated sandbox to isolate tasks.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
