@@ -83,7 +83,7 @@ Every task returns a structured JSON envelope containing both the result and exe
 ```json
 {
   "success": true,
-  "result": "Hello from Capsule!",
+  "result": { "processed": 5, "status": "complete" },
   "error": null,
   "execution": {
     "task_name": "data_processor",
