@@ -25,7 +25,7 @@ impl Compute {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExecutionPolicy {
     pub name: String,
     pub compute: Compute,

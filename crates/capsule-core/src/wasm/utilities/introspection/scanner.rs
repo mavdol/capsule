@@ -159,6 +159,7 @@ def save_data():
 
         assert_eq!(tasks["heavy_compute"]["compute"], "HIGH");
         assert_eq!(tasks["fetch_data"]["timeout"], "30s");
+        assert_eq!(tasks["save_data"]["allowed_files"], serde_json::json!(["./data"]));
 
         fs::remove_dir_all(&temp_dir).ok();
     }

@@ -145,7 +145,6 @@ pub async fn execute(
             .unwrap_or_else(|| {
                 ExecutionPolicy::default()
                     .compute(Some(Compute::Custom(u64::MAX)))
-                    .allowed_files(vec![".".to_string()])
             });
 
     let runtime = Runtime::new(runtime_config, manifest.capsule_toml)?;
