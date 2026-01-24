@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "capsule-run"
-version = "0.4.0"
+version = "0.4.1"
 description = "Secure WASM runtime to isolate and manage AI agent tasks"
 readme = "docs/README-pypi.md"
 license = {text = "Apache-2.0"}
@@ -50,4 +50,6 @@ Repository = "https://github.com/mavdol/capsule"
 bindings = "bin"
 strip = true
 python-source = "../capsule-sdk/python/src"
+python-packages = ["capsule"]
+module-name = "capsule"
 

@@ -206,7 +206,17 @@ jobs:
       - name: Update python-source path
         shell: bash
         run: |
-          perl -i -pe 's|python-source = "../capsule-sdk/python/src"|python-source = "python_src"|g' crates/capsule-cli/pyproject.toml
+          python -c "
+          file_path = 'crates/capsule-cli/pyproject.toml'
+          with open(file_path, 'r') as f:
+            content = f.read()
+          content = content.replace(
+            'python-source = \"../capsule-sdk/python/src\"',
+            'python-source = \"python_src\"'
+          )
+          with open(file_path, 'w') as f:
+            f.write(content)
+          "
 
       - name: Build and publish
         working-directory: crates/capsule-cli
