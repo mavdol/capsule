@@ -102,9 +102,6 @@ export function task<TArgs extends any[], TReturn>(
 
     try {
       const result: TaskResult = JSON.parse(resultJson);
-      if (result.error) {
-        throw new Error(`Task ${taskName} failed: ${result.error}`);
-      }
       return result as TReturn;
     } catch (e) {
       if (e instanceof SyntaxError) {
