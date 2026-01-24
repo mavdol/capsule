@@ -50,4 +50,6 @@ Repository = "https://github.com/mavdol/capsule"
 bindings = "bin"
 strip = true
 python-source = "../capsule-sdk/python/src"
+python-packages = ["capsule"]
+module-name = "capsule"
 
