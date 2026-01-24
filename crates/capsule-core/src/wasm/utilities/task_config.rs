@@ -1,7 +1,29 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::config::manifest::CapsuleToml;
 use crate::wasm::execution_policy::{Compute, ExecutionPolicy};
+
+#[derive(Serialize, Deserialize)]
+pub struct TaskResult {
+    pub success: bool,
+    pub result: Option<serde_json::Value>,
+    pub error: Option<TaskError>,
+    pub execution: TaskExecution,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TaskError {
+    pub error_type: String,
+    pub message: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TaskExecution {
+    pub task_name: String,
+    pub duration_ms: u64,
+    pub retries: u64,
+    pub fuel_consumed: u64,
+}
 
 #[derive(Debug, Deserialize, Default)]
 pub struct TaskConfig {

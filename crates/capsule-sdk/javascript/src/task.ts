@@ -105,7 +105,7 @@ export function task<TArgs extends any[], TReturn>(
       if (result.error) {
         throw new Error(`Task ${taskName} failed: ${result.error}`);
       }
-      return result.result as TReturn;
+      return result as TReturn;
     } catch (e) {
       if (e instanceof SyntaxError) {
         return resultJson as unknown as TReturn;

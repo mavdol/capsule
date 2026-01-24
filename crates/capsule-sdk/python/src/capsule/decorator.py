@@ -57,9 +57,7 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, 
 
             try:
                 result = json.loads(result_json)
-                if "error" in result:
-                    raise RuntimeError(f"Task {task_name} failed: {result['error']}")
-                return result.get("result")
+                return result
             except json.JSONDecodeError:
                 return result_json
 

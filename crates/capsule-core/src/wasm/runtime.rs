@@ -15,6 +15,7 @@ pub enum WasmRuntimeError {
     LogError(LogError),
     ConfigError(String),
     FilesystemError(String),
+    SerializationError(String),
     Timeout,
 }
 
@@ -22,14 +23,17 @@ impl fmt::Display for WasmRuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             WasmRuntimeError::WasmtimeError(msg) => {
-                write!(f, "Runtime error > Wasmtime error > {}", msg)
+                write!(f, "{}", msg)
             }
-            WasmRuntimeError::LogError(msg) => write!(f, "Runtime error > {}", msg),
-            WasmRuntimeError::ConfigError(msg) => write!(f, "Runtime error > Config > {}", msg),
+            WasmRuntimeError::LogError(msg) => write!(f, "{}", msg),
+            WasmRuntimeError::ConfigError(msg) => write!(f, "{}", msg),
             WasmRuntimeError::FilesystemError(msg) => {
-                write!(f, "Runtime error > Filesystem > {}", msg)
+                write!(f, "{}", msg)
             }
-            WasmRuntimeError::Timeout => write!(f, "Timed out"),
+            WasmRuntimeError::SerializationError(msg) => {
+                write!(f, "{}", msg)
+            }
+            WasmRuntimeError::Timeout => write!(f, "Timeout"),
         }
     }
 }

@@ -42,6 +42,9 @@ Run it:
 capsule run hello.ts
 ```
 
+> [!TIP]
+> Use `--verbose` to display real-time task execution details.
+
 ## How It Works
 
 Simply use a wrapper function to define your tasks:
@@ -72,6 +75,33 @@ export const main = task({
 > The runtime requires a task named `"main"` as the entry point.
 
 When you run `capsule run main.ts`, your code is compiled into a WebAssembly module and executed in a dedicated sandbox.
+
+### Response Format
+
+Every task returns a structured JSON envelope containing both the result and execution metadata:
+```json
+{
+  "success": true,
+  "result": { "processed": 5, "status": "complete" },
+  "error": null,
+  "execution": {
+    "task_name": "data_processor",
+    "duration_ms": 1523,
+    "retries": 0,
+    "fuel_consumed": 45000
+  }
+}
+```
+
+**Response fields:**
+- `success` — Boolean indicating whether the task completed successfully
+- `result` — The actual return value from your task (json, string, null on failure etc..)
+- `error` — Error details if the task failed (`{ error_type: string, message: string }`)
+- `execution` — Performance metrics:
+  - `task_name` — Name of the executed task
+  - `duration_ms` — Execution time in milliseconds
+  - `retries` — Number of retry attempts that occurred
+  - `fuel_consumed` — CPU resources used (see [Compute Levels](#compute-levels))
 
 ## Documentation
 
