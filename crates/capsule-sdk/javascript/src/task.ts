@@ -27,10 +27,25 @@ export interface TaskOptions {
   allowedFiles?: string[];
 }
 
-interface TaskResult {
-  result?: any;
-  error?: string;
+interface TaskResult<T> {
+  success: boolean;
+  result: T;
+  error: string | null;
+  execution: TaskExecution;
 }
+
+interface TaskExecution {
+    task_name: string;
+    duration_ms: number;
+    retries: number;
+    fuel_consumed: number;
+}
+
+type Awaited<T> = T extends Promise<infer U> ? U : T;
+
+type TaskReturnType<T> = T extends Promise<infer U>
+  ? Promise<TaskResult<U>>
+  : TaskResult<T>;
 
 /**
  * Define a Capsule task with configuration.
@@ -80,7 +95,7 @@ function normalizeTimeout(timeout?: string | number): string | undefined {
 export function task<TArgs extends any[], TReturn>(
   options: TaskOptions,
   fn: (...args: TArgs) => TReturn
-): (...args: TArgs) => TReturn {
+): (...args: TArgs) => TaskReturnType<TReturn> {
   const taskName = options.name;
   let compute = options.compute?.toString().toUpperCase() ?? "MEDIUM";
 
@@ -93,19 +108,45 @@ export function task<TArgs extends any[], TReturn>(
     allowedFiles: options.allowedFiles,
   };
 
-  const wrapper = (...args: TArgs): TReturn => {
+  const wrapper = (...args: TArgs): TaskReturnType<TReturn> => {
     if (!isWasmMode()) {
-      return fn(...args);
+      const result = fn(...args);
+
+      if (result instanceof Promise) {
+        return result.then((value) => ({
+          success: true,
+          result: value,
+          error: null,
+          execution: {
+            task_name: taskName,
+            duration_ms: 0,
+            retries: 0,
+            fuel_consumed: 0,
+          },
+        })) as TaskReturnType<TReturn>;
+      }
+
+      return {
+        success: true,
+        result,
+        error: null,
+        execution: {
+          task_name: taskName,
+          duration_ms: 0,
+          retries: 0,
+          fuel_consumed: 0,
+        },
+      } as TaskReturnType<TReturn>;
     }
 
     const resultJson = callHost(taskName, args, taskConfig);
 
     try {
-      const result: TaskResult = JSON.parse(resultJson);
-      return result as TReturn;
+      const result: TaskResult<Awaited<TReturn>> = JSON.parse(resultJson);
+      return result as TaskReturnType<TReturn>;
     } catch (e) {
       if (e instanceof SyntaxError) {
-        return resultJson as unknown as TReturn;
+        return resultJson as unknown as TaskReturnType<TReturn>;
       }
       throw e;
     }
