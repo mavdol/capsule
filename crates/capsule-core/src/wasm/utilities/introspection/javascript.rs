@@ -36,9 +36,9 @@ pub fn extract_js_task_configs(
                     if let Some(init) = &decl.init
                         && let Some((task_name, config)) =
                             extract_task_with_binding(init, Some(&decl.name))
-                        {
-                            tasks.insert(task_name, serde_json::to_value(&config).unwrap());
-                        }
+                    {
+                        tasks.insert(task_name, serde_json::to_value(&config).unwrap());
+                    }
                 }
             }
 
@@ -48,18 +48,19 @@ pub fn extract_js_task_configs(
                         if let Some(init) = &decl.init
                             && let Some((task_name, config)) =
                                 extract_task_with_binding(init, Some(&decl.name))
-                            {
-                                tasks.insert(task_name, serde_json::to_value(&config).unwrap());
-                            }
+                        {
+                            tasks.insert(task_name, serde_json::to_value(&config).unwrap());
+                        }
                     }
                 }
             }
 
             ModuleItem::Stmt(Stmt::Expr(expr_stmt)) => {
                 if let Expr::Call(call) = expr_stmt.expr.as_ref()
-                    && let Some((task_name, config)) = extract_task_from_call(call, None) {
-                        tasks.insert(task_name, serde_json::to_value(&config).unwrap());
-                    }
+                    && let Some((task_name, config)) = extract_task_from_call(call, None)
+                {
+                    tasks.insert(task_name, serde_json::to_value(&config).unwrap());
+                }
             }
 
             _ => {}
