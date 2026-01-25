@@ -37,6 +37,9 @@ pub struct TaskConfig {
 
     #[serde(alias = "allowedFiles")]
     allowed_files: Option<Vec<String>>,
+
+    #[serde(alias = "envVariables")]
+    env_variables: Option<Vec<String>>,
 }
 
 impl TaskConfig {
@@ -82,6 +85,12 @@ impl TaskConfig {
             .or_else(|| default_policy.and_then(|p| p.default_allowed_files.clone()))
             .unwrap_or_default();
 
+        let env_variables = self
+            .env_variables
+            .clone()
+            .or_else(|| default_policy.and_then(|p| p.default_env_variables.clone()))
+            .unwrap_or_default();
+
         ExecutionPolicy::new()
             .name(self.name.clone())
             .compute(compute)
@@ -89,6 +98,7 @@ impl TaskConfig {
             .timeout(timeout)
             .max_retries(max_retries)
             .allowed_files(allowed_files)
+            .env_variables(env_variables)
     }
 
     pub fn parse_ram_string(s: &str) -> Option<u64> {
@@ -186,6 +196,7 @@ mod tests {
             timeout: Some("30s".to_string()),
             max_retries: Some(3),
             allowed_files: Some(vec!["./data".to_string()]),
+            env_variables: Some(vec!["FOO".to_string()]),
         };
 
         let policy = config.to_execution_policy(&CapsuleToml::default());
@@ -246,6 +257,7 @@ mod tests {
                 default_timeout: Some("60s".to_string()),
                 default_max_retries: Some(5),
                 default_allowed_files: Some(vec!["./default".to_string()]),
+                default_env_variables: Some(vec!["FOO".to_string()]),
             }),
         };
 
@@ -269,6 +281,7 @@ mod tests {
                 default_timeout: Some("30s".to_string()),
                 default_max_retries: Some(2),
                 default_allowed_files: Some(vec!["./default.txt".to_string()]),
+                default_env_variables: Some(vec!["FOO".to_string()]),
             }),
         };
 
@@ -279,6 +292,7 @@ mod tests {
             timeout: Some("120s".to_string()),
             max_retries: Some(10),
             allowed_files: Some(vec!["./custom".to_string()]),
+            env_variables: Some(vec!["BAR".to_string()]),
         };
 
         let policy = config.to_execution_policy(&capsule_toml);
@@ -289,6 +303,7 @@ mod tests {
         assert_eq!(policy.timeout, Some("120s".to_string()));
         assert_eq!(policy.max_retries, 10);
         assert_eq!(policy.allowed_files, vec!["./custom".to_string()]);
+        assert_eq!(policy.env_variables, vec!["BAR".to_string()]);
     }
 
     #[test]
@@ -301,6 +316,7 @@ mod tests {
                 default_timeout: Some("45s".to_string()),
                 default_max_retries: Some(3),
                 default_allowed_files: Some(vec!["./default".to_string()]),
+                default_env_variables: Some(vec!["FOO".to_string()]),
             }),
         };
 
@@ -311,6 +327,7 @@ mod tests {
             timeout: None,
             max_retries: Some(1),
             allowed_files: None,
+            env_variables: None,
         };
 
         let policy = config.to_execution_policy(&capsule_toml);
@@ -321,5 +338,6 @@ mod tests {
         assert_eq!(policy.timeout, Some("45s".to_string()));
         assert_eq!(policy.max_retries, 1);
         assert_eq!(policy.allowed_files, vec!["./default".to_string()]);
+        assert_eq!(policy.env_variables, vec!["FOO".to_string()]);
     }
 }

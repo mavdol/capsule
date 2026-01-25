@@ -93,10 +93,17 @@ impl RuntimeCommand for CreateInstance {
 
         capsule::host::api::add_to_linker(&mut linker, |state: &mut State| state)?;
 
+        let envs = std::env::vars()
+            .collect::<Vec<_>>()
+            .into_iter()
+            .filter(|(key, _)| self.policy.env_variables.contains(key))
+            .collect::<Vec<_>>();
+
         let mut wasi_builder = WasiCtxBuilder::new();
         wasi_builder
             .inherit_stdout()
             .inherit_stderr()
+            .envs(&envs)
             .args(&self.args);
 
         for path_spec in &self.policy.allowed_files {

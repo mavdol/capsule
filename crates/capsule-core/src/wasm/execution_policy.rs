@@ -32,8 +32,12 @@ pub struct ExecutionPolicy {
     pub ram: Option<u64>,
     pub timeout: Option<String>,
     pub max_retries: u64,
+
     #[serde(default)]
     pub allowed_files: Vec<String>,
+
+    #[serde(default)]
+    pub env_variables: Vec<String>,
 }
 
 impl Default for ExecutionPolicy {
@@ -45,6 +49,7 @@ impl Default for ExecutionPolicy {
             timeout: None,
             max_retries: 0,
             allowed_files: Vec::new(),
+            env_variables: Vec::new(),
         }
     }
 }
@@ -95,6 +100,11 @@ impl ExecutionPolicy {
         self.allowed_files = files;
         self
     }
+
+    pub fn env_variables(mut self, env_variables: Vec<String>) -> Self {
+        self.env_variables = env_variables;
+        self
+    }
 }
 
 #[cfg(test)]
@@ -109,7 +119,8 @@ mod tests {
             .ram(Some(128))
             .timeout(Some("60s".to_string()))
             .max_retries(Some(3))
-            .allowed_files(vec!["/etc/passwd".to_string()]);
+            .allowed_files(vec!["/etc/passwd".to_string()])
+            .env_variables(vec!["API_KEY".to_string()]);
 
         assert_eq!(policy.name, "test");
         assert_eq!(policy.compute, Compute::Medium);
@@ -117,5 +128,6 @@ mod tests {
         assert_eq!(policy.timeout, Some("60s".to_string()));
         assert_eq!(policy.max_retries, 3);
         assert_eq!(policy.allowed_files, vec!["/etc/passwd".to_string()]);
+        assert_eq!(policy.env_variables, vec!["API_KEY".to_string()]);
     }
 }
