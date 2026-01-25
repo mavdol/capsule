@@ -27,9 +27,18 @@ export interface TaskOptions {
   allowedFiles?: string[];
 }
 
-interface TaskResult {
-  result?: any;
-  error?: string;
+interface TaskResult<T> {
+  success: boolean;
+  result: T;
+  error: string | null;
+  execution: TaskExecution;
+}
+
+interface TaskExecution {
+    task_name: string;
+    duration_ms: number;
+    retries: number;
+    fuel_consumed: number;
 }
 
 /**
@@ -79,8 +88,8 @@ function normalizeTimeout(timeout?: string | number): string | undefined {
 
 export function task<TArgs extends any[], TReturn>(
   options: TaskOptions,
-  fn: (...args: TArgs) => TReturn
-): (...args: TArgs) => TReturn {
+  fn: (...args: TArgs) => TaskResult<TReturn>
+): (...args: TArgs) => TaskResult<TReturn> {
   const taskName = options.name;
   let compute = options.compute?.toString().toUpperCase() ?? "MEDIUM";
 
@@ -93,7 +102,7 @@ export function task<TArgs extends any[], TReturn>(
     allowedFiles: options.allowedFiles,
   };
 
-  const wrapper = (...args: TArgs): TReturn => {
+  const wrapper = (...args: TArgs): TaskResult<TReturn> => {
     if (!isWasmMode()) {
       return fn(...args);
     }
@@ -101,11 +110,11 @@ export function task<TArgs extends any[], TReturn>(
     const resultJson = callHost(taskName, args, taskConfig);
 
     try {
-      const result: TaskResult = JSON.parse(resultJson);
-      return result as TReturn;
+      const result: TaskResult<TReturn> = JSON.parse(resultJson);
+      return result;
     } catch (e) {
       if (e instanceof SyntaxError) {
-        return resultJson as unknown as TReturn;
+        return resultJson as unknown as TaskResult<TReturn>;
       }
       throw e;
     }
