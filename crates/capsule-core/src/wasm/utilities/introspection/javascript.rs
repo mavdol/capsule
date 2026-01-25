@@ -3,8 +3,8 @@ use swc_common::input::StringInput;
 use swc_common::sync::Lrc;
 use swc_common::{FileName, SourceMap};
 use swc_ecma_ast::{
-    Callee, Decl, Expr, Lit, ModuleDecl, ModuleItem, ObjectLit, Pat, Prop, PropName, PropOrSpread,
-    Stmt,
+    CallExpr, Callee, Decl, Expr, Lit, ModuleDecl, ModuleItem, ObjectLit, Pat, Prop, PropName,
+    PropOrSpread, Stmt,
 };
 use swc_ecma_parser::{EsSyntax, Parser, Syntax, TsSyntax};
 
@@ -30,64 +30,88 @@ pub fn extract_js_task_configs(
     let mut tasks = HashMap::new();
 
     for item in &module.body {
-        if let ModuleItem::Stmt(stmt) = item
-            && let Stmt::Decl(decl) = stmt
-            && let Decl::Var(var_decl) = decl
-        {
-            for decl in var_decl.decls.iter() {
-                if let Some(init) = &decl.init
-                    && let Some((var_name, config)) = extract_task_call(init, &decl.name)
-                {
-                    tasks.insert(var_name, serde_json::to_value(&config).unwrap());
+        match item {
+            ModuleItem::Stmt(Stmt::Decl(Decl::Var(var_decl))) => {
+                for decl in var_decl.decls.iter() {
+                    if let Some(init) = &decl.init {
+                        if let Some((task_name, config)) =
+                            extract_task_with_binding(init, Some(&decl.name))
+                        {
+                            tasks.insert(task_name, serde_json::to_value(&config).unwrap());
+                        }
+                    }
                 }
             }
-        }
 
-        if let ModuleItem::ModuleDecl(mod_decl) = item
-            && let ModuleDecl::ExportDecl(export) = mod_decl
-            && let Decl::Var(var_decl) = &export.decl
-        {
-            for decl in var_decl.decls.iter() {
-                if let Some(init) = &decl.init
-                    && let Some((var_name, config)) = extract_task_call(init, &decl.name)
-                {
-                    tasks.insert(var_name, serde_json::to_value(&config).unwrap());
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export)) => {
+                if let Decl::Var(var_decl) = &export.decl {
+                    for decl in var_decl.decls.iter() {
+                        if let Some(init) = &decl.init {
+                            if let Some((task_name, config)) =
+                                extract_task_with_binding(init, Some(&decl.name))
+                            {
+                                tasks.insert(task_name, serde_json::to_value(&config).unwrap());
+                            }
+                        }
+                    }
                 }
             }
+
+            ModuleItem::Stmt(Stmt::Expr(expr_stmt)) => {
+                if let Expr::Call(call) = expr_stmt.expr.as_ref() {
+                    if let Some((task_name, config)) = extract_task_from_call(call, None) {
+                        tasks.insert(task_name, serde_json::to_value(&config).unwrap());
+                    }
+                }
+            }
+
+            _ => {}
         }
     }
 
     if tasks.is_empty() { None } else { Some(tasks) }
 }
 
-fn extract_task_call(
+fn extract_task_with_binding(
     expr: &Expr,
-    binding_name: &Pat,
+    binding_name: Option<&Pat>,
 ) -> Option<(String, HashMap<String, serde_json::Value>)> {
-    let var_name = match binding_name {
-        Pat::Ident(ident) => ident.sym.as_str().to_string(),
-        _ => return None,
-    };
+    if let Expr::Call(call) = expr {
+        let fallback_name = binding_name.and_then(|pat| match pat {
+            Pat::Ident(ident) => Some(ident.sym.as_str().to_string()),
+            _ => None,
+        });
+        extract_task_from_call(call, fallback_name.as_deref())
+    } else {
+        None
+    }
+}
 
-    if let Expr::Call(call) = expr
-        && let Callee::Expr(callee) = &call.callee
+fn extract_task_from_call(
+    call: &CallExpr,
+    fallback_name: Option<&str>,
+) -> Option<(String, HashMap<String, serde_json::Value>)> {
+    if let Callee::Expr(callee) = &call.callee
         && let Expr::Ident(ident) = callee.as_ref()
         && ident.sym.as_ref() == "task"
         && let Some(first_arg) = call.args.first()
         && let Expr::Object(obj) = first_arg.expr.as_ref()
     {
-        let mut config = extract_object_literal(obj);
+        let config = extract_object_literal(obj);
+
         let task_name = config
             .get("name")
             .and_then(|v| v.as_str())
-            .unwrap_or(&var_name)
-            .to_string();
+            .map(|s| s.to_string())
+            .or_else(|| fallback_name.map(|s| s.to_string()))?;
 
-        config.insert(
+        let mut final_config = config;
+        final_config.insert(
             "name".to_string(),
             serde_json::Value::String(task_name.clone()),
         );
-        return Some((task_name, config));
+
+        return Some((task_name, final_config));
     }
 
     None
@@ -177,5 +201,29 @@ function main() {
 "#;
         let configs = extract_js_task_configs(source, false);
         assert!(configs.is_none());
+    }
+
+    #[test]
+    fn test_direct_task_call() {
+        let source = r#"
+task({ name: "directTask", compute: "HIGH" }, () => {
+    return "hello";
+});
+"#;
+        let configs = extract_js_task_configs(source, false).unwrap();
+        assert!(configs.contains_key("directTask"));
+        assert_eq!(configs["directTask"]["compute"], "HIGH");
+    }
+
+    #[test]
+    fn test_task_without_name_uses_variable() {
+        let source = r#"
+const myTask = task({ compute: "LOW" }, () => {
+    return "hello";
+});
+"#;
+        let configs = extract_js_task_configs(source, false).unwrap();
+        assert!(configs.contains_key("myTask"));
+        assert_eq!(configs["myTask"]["name"], "myTask");
     }
 }

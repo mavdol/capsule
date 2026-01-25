@@ -158,7 +158,7 @@ pub async fn execute(
 
     load_env_variables(&project_root)?;
 
-     let runtime_config = RuntimeConfig {
+    let runtime_config = RuntimeConfig {
         cache_dir: compile_result.cache_dir,
         verbose,
     };
