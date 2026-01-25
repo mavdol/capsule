@@ -94,7 +94,6 @@ pub const WASI_DEPS: &[(&str, &str, &str)] = &[
         "terminal.wit",
         include_str!("../../../../capsule-wit/deps/cli/terminal.wit"),
     ),
-
     // sockets deps (required by cli)
     (
         "sockets",
