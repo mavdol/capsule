@@ -14,6 +14,7 @@ export interface TaskConfig {
   timeout?: string;
   maxRetries?: number;
   allowedFiles?: string[];
+  envVariables?: string[];
 }
 
 const TASKS: Map<string, TaskInfo<any>> = new Map();
