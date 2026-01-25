@@ -1,5 +1,5 @@
 {
-  "name": "langchain-dialogue-evaluator",
+  "name": "dialogue-evaluator",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "openai": "^6.16.0",
-    "typescript": "^5.9.3"
+    "@capsule-run/sdk": "^0.4.2"
   }
 }

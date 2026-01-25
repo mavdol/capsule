@@ -28,13 +28,13 @@ const evaluateDialogueLine = task({
 }, async (prompt: string): Promise<string> => {
 
     const openai = new OpenAI({
-        baseURL: '',
+        baseURL: 'YOUR BASE URL',
         apiKey: env.get('OPENAI_API_KEY'),
     });
 
     const completion = await openai.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
-        model: "deepseek-chat",
+        model: "YOUR MODEL",
     });
 
     return completion.choices[0].message.content || "";
@@ -69,7 +69,6 @@ task({name: "main", compute: "HIGH"}, async () => {
     const getDialogueLinesResponse = await getDialogueLines();
     const lines = getDialogueLinesResponse.result.lines;
 
-
     const failedAttempts = [];
     let successfulAttempts = 0;
 
@@ -77,11 +76,20 @@ task({name: "main", compute: "HIGH"}, async () => {
         const agentResponse = await agent(line);
 
         if(!agentResponse.success) {
+            if(failedAttempts.length == 3) {
+                break;
+            }
+
             failedAttempts.push(line);
             continue;
         }
 
         successfulAttempts++;
+
+        if(successfulAttempts == 3) {
+            break;
+        }
+
         console.log(`Agent-${index} successfully evaluated line`);
     }
 
