@@ -58,6 +58,12 @@ pub const WASI_DEPS: &[(&str, &str, &str)] = &[
         "world.wit",
         include_str!("../../../../capsule-wit/deps/clocks/world.wit"),
     ),
+    // cli deps for environment variables
+    (
+        "cli",
+        "environment.wit",
+        include_str!("../../../../capsule-wit/deps/cli/environment.wit"),
+    ),
 ];
 
 pub struct WitManager {}
