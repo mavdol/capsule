@@ -316,12 +316,10 @@ Use Python's standard `os.environ` to access environment variables:
 from capsule import task
 import os
 
-@task(name="main", env_variables=["API_KEY", "NODE_ENV"])
+@task(name="main", env_variables=["API_KEY"])
 def main() -> dict:
     api_key = os.environ.get("API_KEY")
-    env = os.environ.get("NODE_ENV", "development")
-
-    return {"api_key_set": api_key is not None, "environment": env}
+    return {"api_key": api_key}
 ```
 
 #### TypeScript / JavaScript
@@ -336,12 +334,6 @@ export const main = task({
 }, () => {
     const apiKey = env.get("API_KEY");
     const environment = env.get("NODE_ENV") ?? "development";
-
-    // Check if a variable exists
-    const hasKey = env.has("API_KEY");
-
-    // Get all environment variables
-    const allVars = env.getAll();
 
     return { apiKeySet: apiKey !== undefined, environment };
 });

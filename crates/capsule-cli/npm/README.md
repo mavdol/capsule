@@ -42,7 +42,6 @@ Run it:
 capsule run hello.ts
 ```
 
-> [!TIP]
 > Use `--verbose` to display real-time task execution details.
 
 ## How It Works
@@ -71,7 +70,6 @@ export const main = task({
 });
 ```
 
-> [!NOTE]
 > The runtime requires a task named `"main"` as the entry point.
 
 When you run `capsule run main.ts`, your code is compiled into a WebAssembly module and executed in a dedicated sandbox.
@@ -115,6 +113,7 @@ Every task returns a structured JSON envelope containing both the result and exe
 | `timeout` | Maximum execution time | `string` or `number` | unlimited | `"30s"`, `"5m"`, `30000` (ms) |
 | `maxRetries` | Retry attempts on failure | `number` | `0` | `3` |
 | `allowedFiles` | Folders accessible in the sandbox | `string[]` | `[]` | `["./data", "./output"]` |
+| `envVariables` | Environment variables accessible in the sandbox | `string[]` | `[]` | `["API_KEY"]` |
 
 ### Compute Levels
 
@@ -170,6 +169,27 @@ Available methods:
 - `files.writeBytes(path, data)` — Write bytes to file
 - `files.list(path)` — List directory contents
 - `files.exists(path)` — Check if file exists
+
+### Environment Variables
+
+Tasks can access environment variables to read configuration, API keys, or other runtime settings. Use the `env` API provided by the SDK:
+
+```typescript
+import { task, env } from "@capsule-run/sdk";
+
+export const main = task({
+    name: "main",
+    envVariables: ["API_KEY"]
+}, () => {
+    const apiKey = env.get("API_KEY");
+    return { apiKeySet: apiKey !== undefined };
+});
+```
+
+Available methods:
+- `env.get(key)` — Get a specific environment variable (returns `undefined` if not found)
+- `env.has(key)` — Check if an environment variable exists
+- `env.getAll()` — Get all environment variables as an object
 
 ## Compatibility
 
