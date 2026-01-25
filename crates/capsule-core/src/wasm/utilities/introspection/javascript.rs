@@ -33,36 +33,33 @@ pub fn extract_js_task_configs(
         match item {
             ModuleItem::Stmt(Stmt::Decl(Decl::Var(var_decl))) => {
                 for decl in var_decl.decls.iter() {
-                    if let Some(init) = &decl.init {
-                        if let Some((task_name, config)) =
+                    if let Some(init) = &decl.init
+                        && let Some((task_name, config)) =
                             extract_task_with_binding(init, Some(&decl.name))
                         {
                             tasks.insert(task_name, serde_json::to_value(&config).unwrap());
                         }
-                    }
                 }
             }
 
             ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export)) => {
                 if let Decl::Var(var_decl) = &export.decl {
                     for decl in var_decl.decls.iter() {
-                        if let Some(init) = &decl.init {
-                            if let Some((task_name, config)) =
+                        if let Some(init) = &decl.init
+                            && let Some((task_name, config)) =
                                 extract_task_with_binding(init, Some(&decl.name))
                             {
                                 tasks.insert(task_name, serde_json::to_value(&config).unwrap());
                             }
-                        }
                     }
                 }
             }
 
             ModuleItem::Stmt(Stmt::Expr(expr_stmt)) => {
-                if let Expr::Call(call) = expr_stmt.expr.as_ref() {
-                    if let Some((task_name, config)) = extract_task_from_call(call, None) {
+                if let Expr::Call(call) = expr_stmt.expr.as_ref()
+                    && let Some((task_name, config)) = extract_task_from_call(call, None) {
                         tasks.insert(task_name, serde_json::to_value(&config).unwrap());
                     }
-                }
             }
 
             _ => {}
