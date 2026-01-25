@@ -8,5 +8,9 @@
   "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "openai": "^6.16.0",
+    "typescript": "^5.9.3"
   }
 }
