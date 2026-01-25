@@ -171,6 +171,7 @@ Configure your tasks with these parameters:
 | `timeout` | Maximum execution time | `str` | unlimited | `"30s"`, `"5m"`, `"1h"` |
 | `max_retries` / `maxRetries` | Number of retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` / `allowedFiles` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
+| `env_variables` / `envVariables` | Environment variables accessible in the sandbox | `list` | `[]` | `["API_KEY", "NODE_ENV"]` |
 
 ### Compute Levels
 
@@ -303,6 +304,53 @@ Available methods:
 - `files.writeBytes(path, data)` — Write bytes to file
 - `files.list(path)` — List directory contents
 - `files.exists(path)` — Check if file exists
+
+### Environment Variables
+
+Tasks can access environment variables to read configuration, API keys, or other runtime settings.
+
+#### Python
+
+Use Python's standard `os.environ` to access environment variables:
+```python
+from capsule import task
+import os
+
+@task(name="main", env_variables=["API_KEY", "NODE_ENV"])
+def main() -> dict:
+    api_key = os.environ.get("API_KEY")
+    env = os.environ.get("NODE_ENV", "development")
+
+    return {"api_key_set": api_key is not None, "environment": env}
+```
+
+#### TypeScript / JavaScript
+
+Use the `env` API provided by the SDK:
+```typescript
+import { task, env } from "@capsule-run/sdk";
+
+export const main = task({
+    name: "main",
+    envVariables: ["API_KEY", "NODE_ENV"]
+}, () => {
+    const apiKey = env.get("API_KEY");
+    const environment = env.get("NODE_ENV") ?? "development";
+
+    // Check if a variable exists
+    const hasKey = env.has("API_KEY");
+
+    // Get all environment variables
+    const allVars = env.getAll();
+
+    return { apiKeySet: apiKey !== undefined, environment };
+});
+```
+
+Available methods:
+- `env.get(key)` — Get a specific environment variable (returns `undefined` if not found)
+- `env.has(key)` — Check if an environment variable exists
+- `env.getAll()` — Get all environment variables as an object
 
 
 ## Compatibility
