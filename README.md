@@ -171,7 +171,7 @@ Configure your tasks with these parameters:
 | `timeout` | Maximum execution time | `str` | unlimited | `"30s"`, `"5m"`, `"1h"` |
 | `max_retries` / `maxRetries` | Number of retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` / `allowedFiles` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
-| `env_variables` / `envVariables` | Environment variables accessible in the sandbox | `list` | `[]` | `["API_KEY", "NODE_ENV"]` |
+| `env_variables` / `envVariables` | Environment variables accessible in the sandbox | `list` | `[]` | `["API_KEY"]` |
 
 ### Compute Levels
 
@@ -330,11 +330,9 @@ import { task, env } from "@capsule-run/sdk";
 
 export const main = task({
     name: "main",
-    envVariables: ["API_KEY", "NODE_ENV"]
+    envVariables: ["API_KEY"]
 }, () => {
     const apiKey = env.get("API_KEY");
-    const environment = env.get("NODE_ENV") ?? "development";
-
     return { apiKeySet: apiKey !== undefined, environment };
 });
 ```

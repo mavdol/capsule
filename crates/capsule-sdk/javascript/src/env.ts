@@ -25,7 +25,7 @@ function getEnvBindings() {
 /**
  * Returns all environment variables as an object.
  * * @returns An object where keys are variable names and values are their values.
- * @example { "NODE_ENV": "production", "PORT": "8080" }
+ * @example { "PORT": "8080" }
  */
 export function getAll(): Record<string, string> {
   const bindings = getEnvBindings();
