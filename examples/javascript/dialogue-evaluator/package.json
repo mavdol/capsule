@@ -1,5 +1,5 @@
 {
-  "name": "langchain-dialogue-evaluator",
+  "name": "dialogue-evaluator",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -8,5 +8,9 @@
   "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "openai": "^6.16.0",
+    "@capsule-run/sdk": "^0.4.2"
   }
 }

@@ -1,0 +1,7 @@
+[workflow]
+name = "dialogue-evaluator"
+version = "0.1.0"
+entrypoint = "main.ts"
+
+[tasks]
+default_ram = "main"

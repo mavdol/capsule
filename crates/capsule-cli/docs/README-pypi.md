@@ -37,7 +37,6 @@ Run it:
 capsule run hello.py
 ```
 
-> [!TIP]
 > Use `--verbose` to display real-time task execution details.
 
 ## How It Works
@@ -53,7 +52,6 @@ def analyze_data(dataset: list) -> dict:
     return {"processed": len(dataset), "status": "complete"}
 ```
 
-> [!NOTE]
 > The runtime requires a task named `"main"` as the entry point. Python can define the main task itself, but it's recommended to set it manually.
 
 When you run `capsule run main.py`, your code is compiled into a WebAssembly module and executed in a dedicated sandbox.
@@ -97,6 +95,7 @@ Every task returns a structured JSON envelope containing both the result and exe
 | `timeout` | Maximum execution time | `str` | unlimited | `"30s"`, `"5m"` |
 | `max_retries` | Retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` | Folders accessible in the sandbox | `list` | `[]` | `["./data", "./output"]` |
+| `env_variables` | Environment variables accessible in the sandbox | `list` | `[]` | `["API_KEY"]` |
 
 ### Compute Levels
 
@@ -152,6 +151,20 @@ def restricted_writer() -> None:
 @task(name="main")
 def main() -> str:
     restricted_writer()
+```
+
+### Environment Variables
+
+Tasks can access environment variables to read configuration, API keys, or other runtime settings. Use Python's standard `os.environ` to access environment variables:
+
+```python
+from capsule import task
+import os
+
+@task(name="main", env_variables=["API_KEY"])
+def main() -> dict:
+    api_key = os.environ.get("API_KEY")
+    return {"api_key": api_key}
 ```
 
 ## Compatibility

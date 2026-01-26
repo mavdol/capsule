@@ -117,6 +117,20 @@ fn extract_main_execution_policy(
     Some(task_config.to_execution_policy(capsule_toml))
 }
 
+fn load_env_variables(project_root: &Path) -> Result<(), RunError> {
+    let env_files = vec![".env", ".env.local", ".env.development", ".env.production"];
+
+    for file_name in env_files {
+        let file_path = project_root.join(file_name);
+
+        if file_path.exists() {
+            dotenvy::from_path(&file_path).map_err(|e| RunError::IoError(e.to_string()))?;
+        }
+    }
+
+    Ok(())
+}
+
 pub async fn execute(
     file_path: Option<&Path>,
     args: Vec<String>,
@@ -135,6 +149,15 @@ pub async fn execute(
     reporter.finish_progress(Some("Environment ready"));
 
     reporter.start_progress("Initializing runtime");
+
+    let project_root = file_path
+        .canonicalize()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+
+    load_env_variables(&project_root)?;
+
     let runtime_config = RuntimeConfig {
         cache_dir: compile_result.cache_dir,
         verbose,
@@ -145,12 +168,6 @@ pub async fn execute(
             .unwrap_or_else(|| ExecutionPolicy::default().compute(Some(Compute::Custom(u64::MAX))));
 
     let runtime = Runtime::new(runtime_config, manifest.capsule_toml)?;
-
-    let project_root = file_path
-        .canonicalize()
-        .ok()
-        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
-        .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
 
     let create_instance_command = CreateInstance::new(execution_policy.clone(), args.clone())
         .wasm_path(compile_result.wasm_path)

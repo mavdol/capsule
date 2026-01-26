@@ -139,9 +139,11 @@ impl JavascriptWasmCompiler {
 import * as hostApi from 'capsule:host/api';
 import * as fsTypes from 'wasi:filesystem/types@0.2.0';
 import * as fsPreopens from 'wasi:filesystem/preopens@0.2.0';
+import * as environment from 'wasi:cli/environment@0.2.0';
 globalThis['capsule:host/api'] = hostApi;
 globalThis['wasi:filesystem/types'] = fsTypes;
 globalThis['wasi:filesystem/preopens'] = fsPreopens;
+globalThis['wasi:cli/environment'] = environment;
 import '{}';
 import {{ exports }} from '{}/dist/app.js';
 export const taskRunner = exports;
@@ -165,6 +167,7 @@ export const taskRunner = exports;
             .arg("--platform=neutral")
             .arg("--external:capsule:host/api")
             .arg("--external:wasi:filesystem/*")
+            .arg("--external:wasi:cli/*")
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())
@@ -293,9 +296,7 @@ export const taskRunner = exports;
         if !output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
             let stderr = String::from_utf8_lossy(&output.stderr);
-            eprintln!("TypeScript compilation failed!");
-            eprintln!("stdout: {}", stdout);
-            eprintln!("stderr: {}", stderr);
+
             return Err(JavascriptWasmCompilerError::CompileFailed(format!(
                 "TypeScript compilation failed: {}{}",
                 stderr.trim(),

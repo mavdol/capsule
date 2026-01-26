@@ -25,6 +25,8 @@ export interface TaskOptions {
   maxRetries?: number;
   /** Files/folders accessible in the sandbox, e.g., ["./data"] */
   allowedFiles?: string[];
+  /** Environment variables available from your .env file for the task */
+  envVariables?: string[];
 }
 
 interface TaskResult<T> {
@@ -106,6 +108,7 @@ export function task<TArgs extends any[], TReturn>(
     timeout: normalizeTimeout(options.timeout),
     maxRetries: options.maxRetries,
     allowedFiles: options.allowedFiles,
+    envVariables: options.envVariables,
   };
 
   const wrapper = (...args: TArgs): TaskReturnType<TReturn> => {

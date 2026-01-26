@@ -58,6 +58,104 @@ pub const WASI_DEPS: &[(&str, &str, &str)] = &[
         "world.wit",
         include_str!("../../../../capsule-wit/deps/clocks/world.wit"),
     ),
+    // cli deps for environment variables
+    (
+        "cli",
+        "command.wit",
+        include_str!("../../../../capsule-wit/deps/cli/command.wit"),
+    ),
+    (
+        "cli",
+        "environment.wit",
+        include_str!("../../../../capsule-wit/deps/cli/environment.wit"),
+    ),
+    (
+        "cli",
+        "exit.wit",
+        include_str!("../../../../capsule-wit/deps/cli/exit.wit"),
+    ),
+    (
+        "cli",
+        "imports.wit",
+        include_str!("../../../../capsule-wit/deps/cli/imports.wit"),
+    ),
+    (
+        "cli",
+        "run.wit",
+        include_str!("../../../../capsule-wit/deps/cli/run.wit"),
+    ),
+    (
+        "cli",
+        "stdio.wit",
+        include_str!("../../../../capsule-wit/deps/cli/stdio.wit"),
+    ),
+    (
+        "cli",
+        "terminal.wit",
+        include_str!("../../../../capsule-wit/deps/cli/terminal.wit"),
+    ),
+    // sockets deps (required by cli)
+    (
+        "sockets",
+        "instance-network.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/instance-network.wit"),
+    ),
+    (
+        "sockets",
+        "ip-name-lookup.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/ip-name-lookup.wit"),
+    ),
+    (
+        "sockets",
+        "network.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/network.wit"),
+    ),
+    (
+        "sockets",
+        "tcp-create-socket.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/tcp-create-socket.wit"),
+    ),
+    (
+        "sockets",
+        "tcp.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/tcp.wit"),
+    ),
+    (
+        "sockets",
+        "udp-create-socket.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/udp-create-socket.wit"),
+    ),
+    (
+        "sockets",
+        "udp.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/udp.wit"),
+    ),
+    (
+        "sockets",
+        "world.wit",
+        include_str!("../../../../capsule-wit/deps/sockets/world.wit"),
+    ),
+    // random deps (required by cli)
+    (
+        "random",
+        "insecure-seed.wit",
+        include_str!("../../../../capsule-wit/deps/random/insecure-seed.wit"),
+    ),
+    (
+        "random",
+        "insecure.wit",
+        include_str!("../../../../capsule-wit/deps/random/insecure.wit"),
+    ),
+    (
+        "random",
+        "random.wit",
+        include_str!("../../../../capsule-wit/deps/random/random.wit"),
+    ),
+    (
+        "random",
+        "world.wit",
+        include_str!("../../../../capsule-wit/deps/random/world.wit"),
+    ),
 ];
 
 pub struct WitManager {}
