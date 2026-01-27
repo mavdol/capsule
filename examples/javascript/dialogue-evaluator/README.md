@@ -40,7 +40,7 @@ capsule run main.ts --verbose
 
 ## Detailed Workflow Logic
 
-```Mermaid
+```mermaid
 ---
 config:
   theme: mc
@@ -103,4 +103,8 @@ Line,Emotion
 "You're out of your mind.",angry
 "I'll buy it off you.",happy
 ```
+
+---
+Github : https://github.com/mavdol/capsule
+
 
