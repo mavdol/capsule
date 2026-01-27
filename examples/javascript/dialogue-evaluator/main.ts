@@ -2,7 +2,7 @@ import { task, files, env } from "@capsule-run/sdk";
 import OpenAI from "openai";
 
 const getDialogueLines = task({
-    name: "getDialogueLines",
+    name: "Get Dialogue Lines",
     compute: "LOW",
     allowedFiles: ["source"]
 }, async (): Promise<{lines: string[]}> => {
@@ -11,7 +11,7 @@ const getDialogueLines = task({
 })
 
 const insertDialogueLine = task({
-    name: "insertDialogueLine",
+    name: "Save Dialogue Line",
     allowedFiles: ["output"]
 }, async (line: string, evaluation: string): Promise<void> => {
     const output = await files.readText('output/evaluated-dialogue-lines.csv')
@@ -23,28 +23,28 @@ const insertDialogueLine = task({
 })
 
 const evaluateDialogueLine = task({
-    name: "evaluateDialogueLine",
-    envVariables: ["OPENAI_API_KEY"]
+    name: "Evaluate Dialogue Line",
+    envVariables: ["OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_MODEL"]
 }, async (prompt: string): Promise<string> => {
 
     const openai = new OpenAI({
-        baseURL: 'YOUR BASE URL',
+        baseURL: env.get('OPENAI_BASE_URL'),
         apiKey: env.get('OPENAI_API_KEY'),
     });
 
     const completion = await openai.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
-        model: "YOUR MODEL",
+        model: env.get('OPENAI_MODEL'),
     });
 
     return completion.choices[0].message.content || "";
 })
 
 const agent = task({
-    name: "agent",
-    compute: "HIGH",
-    maxRetries: 2,
-    envVariables: ["OPENAI_API_KEY"]
+    name: "Agent Evaluator",
+    compute: "MEDIUM",
+    maxRetries: 1,
+    timeout: "1.8s"
 }, async (line: string) => {
     const prompt = `
         Analyze the emotional tone of the following dialogue line: "${line}"
@@ -63,41 +63,30 @@ const agent = task({
     return;
 })
 
-// entrypoint
 task({name: "main", compute: "HIGH"}, async () => {
 
     const getDialogueLinesResponse = await getDialogueLines();
     const lines = getDialogueLinesResponse.result.lines;
 
-    const failedAttempts = [];
+    let failedAttempts = 0;
     let successfulAttempts = 0;
 
     for (const [index, line] of lines.entries()) {
+        console.log(`\n💬 [${index + 1}/${lines.length}] Analyzing: "${line}"`);
         const agentResponse = await agent(line);
 
         if(!agentResponse.success) {
-            if(failedAttempts.length == 3) {
-                break;
-            }
-
-            failedAttempts.push(line);
+            failedAttempts++;
             continue;
         }
 
         successfulAttempts++;
-
-        if(successfulAttempts == 3) {
-            break;
-        }
-
-        console.log(`Agent-${index} successfully evaluated line`);
     }
 
     console.log(
         "\n ----------\n",
-        `Agent created: ${lines.length}\n`,
         `Successful attempts: ${successfulAttempts}\n`,
-        `Failed attempts: ${failedAttempts.length}\n`,
+        `Failed attempts: ${failedAttempts}\n`,
         "----------\n"
     )
 
