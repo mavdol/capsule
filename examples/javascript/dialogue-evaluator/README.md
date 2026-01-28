@@ -87,20 +87,14 @@ flowchart LR
     K -- No --> L
     L --> N["End"]
 
-    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    style B fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    style E fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    style G fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style I fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    style L fill:#e0f2f1,stroke:#00796b,stroke-width:2px
-    style M fill:#ffebee,stroke:#c62828,stroke-width:2px
+
 ```
 
 ## Output
 
 After running, check the results in `output/evaluated-dialogue-lines.csv`:
 ```csv
-Line,Emotion
+dialogue,emotion
 "What's in the suitcase?",neutral
 "You're out of your mind.",angry
 "I'll buy it off you.",happy
