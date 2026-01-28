@@ -2,7 +2,8 @@
 
 GitHub Repository: https://github.com/mavdol/capsule
 
-This example demonstrates how to build a multi-task workflow in Capsule that processes data, interacts with an external LLM (Language Model), and manages file I/O.
+This example demonstrates how to build a multi-task workflow in that processes data, interacts with an external LLM, and manages file I/O.
+We're creating many tiny agents that evaluate video game dialogue emotions and save them in a CSV.
 
 https://github.com/user-attachments/assets/96b6c58a-a4c3-4e5d-91b2-5366849273de
 
