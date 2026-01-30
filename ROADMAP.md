@@ -87,7 +87,7 @@ On failure:
 
 ---
 
-## v0.5.0: Node.js Ecosystem Compatibility
+## v0.5.0: Node.js Ecosystem Compatibility Extended
 
 **Status:** 🗓️ Planned
 
