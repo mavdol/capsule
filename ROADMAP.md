@@ -89,7 +89,7 @@ On failure:
 
 ## v0.5.0: Node.js Ecosystem Compatibility Extended
 
-**Status:** 🗓️ Planned
+**Status:** 🗓️ In Progress
 
 **Goal:** Enable natural Node.js development patterns and improve npm package compatibility in WASM.
 
@@ -106,5 +106,4 @@ On failure:
   - `fs.readFile()` → Capsule's `readText()`/`readBytes()`
   - `fs.writeFile()` → Capsule's `writeText()`/`writeBytes()`
   - `fs.readdir()` → Capsule's `list()`
-  - Document supported subset vs. full Node.js `fs` API
 ---
