@@ -159,6 +159,9 @@ export const taskRunner = exports;
         let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
         let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
+        let sdk_node_modules = sdk_path_normalized.join("node_modules");
+        let path_browserify_path = sdk_node_modules.join("path-browserify");
+
         let esbuild_output = Self::npx_command()
             .arg("esbuild")
             .arg(&wrapper_path_normalized)
@@ -168,6 +171,8 @@ export const taskRunner = exports;
             .arg("--external:capsule:host/api")
             .arg("--external:wasi:filesystem/*")
             .arg("--external:wasi:cli/*")
+            .arg(format!("--alias:path={}", path_browserify_path.display()))
+            .arg(format!("--alias:node:path={}", path_browserify_path.display()))
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())
