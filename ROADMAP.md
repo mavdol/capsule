@@ -95,8 +95,8 @@ On failure:
 
 **Polyfills needed:**
 
-- [ ] **path:** Use `path-browserify` and alias `import path from 'path'`.
-- [ ] **os:** Custom minimal polyfill for `import os from 'os'`.
+- [x] **path:** Use `path-browserify` and alias `import path from 'path'`.
+- [x] **os:** Custom minimal polyfill for `import os from 'os'`.
 - [ ] **Global process:** Comprehensive `process` polyfill (env, argv, cwd, exit, nextTick) injected as a global via esbuild.
 - [ ] **url:** Alias Node's `import { URL } from 'url'` to native Web `URL` class.
 - [ ] **buffer:** Use `buffer` package to polyfill Node.js `Buffer` class → `Uint8Array`.
