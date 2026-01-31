@@ -17,8 +17,8 @@
 export { task, type TaskOptions } from "./task.js";
 export { TaskRunner, exports, type TaskConfig } from "./app.js";
 export * as files from "./files.js";
-export * as env from "./env.js";
 export { isWasmMode } from "./hostApi.js";
 export { default as path } from "./polyfills/path.js";
 export { default as os } from "./polyfills/os.js";
+export { default as process } from "./polyfills/process.js";
 

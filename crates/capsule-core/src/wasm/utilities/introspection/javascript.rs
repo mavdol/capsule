@@ -208,8 +208,6 @@ export default task({ name: "main", compute: "HIGH" }, () => {
         assert_eq!(configs["main"]["compute"], "HIGH");
     }
 
-
-
     #[test]
     fn test_no_task() {
         let source = r#"
@@ -244,6 +242,4 @@ const myTask = task({ compute: "LOW" }, () => {
         assert!(configs.contains_key("myTask"));
         assert_eq!(configs["myTask"]["name"], "myTask");
     }
-
-
 }

@@ -162,6 +162,7 @@ export const taskRunner = exports;
         let sdk_node_modules = sdk_path_normalized.join("node_modules");
         let path_browserify_path = sdk_node_modules.join("path-browserify");
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
+        let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
 
         let esbuild_output = Self::npx_command()
             .arg("esbuild")
@@ -172,6 +173,7 @@ export const taskRunner = exports;
             .arg("--external:capsule:host/api")
             .arg("--external:wasi:filesystem/*")
             .arg("--external:wasi:cli/*")
+            .arg(format!("--inject:{}", process_polyfill_path.display()))
             .arg(format!("--alias:path={}", path_browserify_path.display()))
             .arg(format!(
                 "--alias:node:path={}",
@@ -179,6 +181,14 @@ export const taskRunner = exports;
             ))
             .arg(format!("--alias:os={}", os_polyfill_path.display()))
             .arg(format!("--alias:node:os={}", os_polyfill_path.display()))
+            .arg(format!(
+                "--alias:process={}",
+                process_polyfill_path.display()
+            ))
+            .arg(format!(
+                "--alias:node:process={}",
+                process_polyfill_path.display()
+            ))
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())
