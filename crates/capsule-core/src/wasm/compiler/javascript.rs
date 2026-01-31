@@ -172,7 +172,10 @@ export const taskRunner = exports;
             .arg("--external:wasi:filesystem/*")
             .arg("--external:wasi:cli/*")
             .arg(format!("--alias:path={}", path_browserify_path.display()))
-            .arg(format!("--alias:node:path={}", path_browserify_path.display()))
+            .arg(format!(
+                "--alias:node:path={}",
+                path_browserify_path.display()
+            ))
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())
