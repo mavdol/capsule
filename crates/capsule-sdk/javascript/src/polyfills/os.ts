@@ -1,3 +1,8 @@
+/**
+ * OS polyfill
+ * Provides Node.js-compatible os object
+ */
+
 interface CpuInfo {
     model: string;
     speed: number;
