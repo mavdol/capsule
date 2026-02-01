@@ -102,6 +102,7 @@ On failure:
 - [x] **buffer:** Use `buffer` package to polyfill Node.js `Buffer` class → `Uint8Array`.
 - [x] **events:** Use `events` package to polyfill `EventEmitter`.
 - [x] **stream:** Use `readable-stream` for Node.js stream compatibility.
+- [x] **stream-web:** Use `stream-web` for Node.js stream/web compatibility.
 - [x] **fs:** Map `import fs from 'fs'` to WASI file operations:
   - `fs.readFile()` → Capsule's `readText()`/`readBytes()`
   - `fs.writeFile()` → Capsule's `writeText()`/`writeBytes()`
