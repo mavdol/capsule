@@ -197,7 +197,6 @@ const os = {
 
 export default os;
 
-// Named exports for destructuring
 export const {
     platform,
     arch,

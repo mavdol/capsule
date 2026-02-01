@@ -99,7 +99,7 @@ On failure:
 - [x] **os:** Custom minimal polyfill for `import os from 'os'`.
 - [x] **Global process:** Comprehensive `process` polyfill (env, argv, cwd, exit, nextTick) injected as a global via esbuild.
 - [x] **url:** Alias Node's `import { URL } from 'url'` to native Web `URL` class.
-- [ ] **buffer:** Use `buffer` package to polyfill Node.js `Buffer` class → `Uint8Array`.
+- [x] **buffer:** Use `buffer` package to polyfill Node.js `Buffer` class → `Uint8Array`.
 - [ ] **events:** Use `events` package to polyfill `EventEmitter`.
 - [ ] **stream:** Use `readable-stream` for Node.js stream compatibility.
 - [ ] **fs:** Map `import fs from 'fs'` to WASI file operations:
