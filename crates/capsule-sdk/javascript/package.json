@@ -39,12 +39,17 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@bytecodealliance/jco": "^1.0.0",
+    "buffer": "^6.0.3",
     "esbuild": "^0.27.2",
+    "events": "^3.3.0",
     "path-browserify": "^1.0.1",
+    "readable-stream": "^4.7.0",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/path-browserify": "^1.0.3"
+    "@types/events": "^3.0.3",
+    "@types/path-browserify": "^1.0.3",
+    "@types/readable-stream": "^4.0.18"
   },
   "peerDependencies": {
     "@types/node": ">=18"

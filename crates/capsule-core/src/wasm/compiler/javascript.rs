@@ -164,6 +164,9 @@ export const taskRunner = exports;
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
         let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
         let url_polyfill_path = sdk_path_normalized.join("dist/polyfills/url.js");
+        let buffer_polyfill_path = sdk_path_normalized.join("dist/polyfills/buffer.js");
+        let events_polyfill_path = sdk_path_normalized.join("dist/polyfills/events.js");
+        let stream_polyfill_path = sdk_path_normalized.join("dist/polyfills/stream.js");
 
         let esbuild_output = Self::npx_command()
             .arg("esbuild")
@@ -171,10 +174,13 @@ export const taskRunner = exports;
             .arg("--bundle")
             .arg("--format=esm")
             .arg("--platform=neutral")
+            .arg("--main-fields=main,module")
             .arg("--external:capsule:host/api")
             .arg("--external:wasi:filesystem/*")
             .arg("--external:wasi:cli/*")
             .arg(format!("--inject:{}", process_polyfill_path.display()))
+            .arg(format!("--inject:{}", buffer_polyfill_path.display()))
+            .arg(format!("--inject:{}", events_polyfill_path.display()))
             .arg(format!("--alias:path={}", path_browserify_path.display()))
             .arg(format!(
                 "--alias:node:path={}",
@@ -192,6 +198,27 @@ export const taskRunner = exports;
             ))
             .arg(format!("--alias:url={}", url_polyfill_path.display()))
             .arg(format!("--alias:node:url={}", url_polyfill_path.display()))
+            .arg(format!(
+                "--alias:buffer={}",
+                sdk_node_modules.join("buffer").display()
+            ))
+            .arg(format!(
+                "--alias:node:buffer={}",
+                sdk_node_modules.join("buffer").display()
+            ))
+            .arg(format!(
+                "--alias:events={}",
+                sdk_node_modules.join("events").display()
+            ))
+            .arg(format!(
+                "--alias:node:events={}",
+                sdk_node_modules.join("events").display()
+            ))
+            .arg(format!("--alias:stream={}", stream_polyfill_path.display()))
+            .arg(format!(
+                "--alias:node:stream={}",
+                stream_polyfill_path.display()
+            ))
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())
