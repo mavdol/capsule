@@ -224,11 +224,15 @@ export const taskRunner = exports;
             .arg(format!("--alias:node:fs={}", fs_polyfill_path.display()))
             .arg(format!(
                 "--alias:fs/promises={}",
-                sdk_path_normalized.join("dist/polyfills/fs-promises.js").display()
+                sdk_path_normalized
+                    .join("dist/polyfills/fs-promises.js")
+                    .display()
             ))
             .arg(format!(
                 "--alias:node:fs/promises={}",
-                sdk_path_normalized.join("dist/polyfills/fs-promises.js").display()
+                sdk_path_normalized
+                    .join("dist/polyfills/fs-promises.js")
+                    .display()
             ))
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
