@@ -157,7 +157,7 @@ capsule run hello.ts
 > [!TIP]
 > Use `--verbose` to display real-time task execution details.
 
-## Documentation
+## Documentation (v0.4.2)
 
 ### Task Configuration Options
 

@@ -55,6 +55,12 @@ pub fn extract_js_task_configs(
                 }
             }
 
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(export)) => {
+                if let Some((task_name, config)) = extract_task_with_binding(&export.expr, None) {
+                    tasks.insert(task_name, serde_json::to_value(&config).unwrap());
+                }
+            }
+
             ModuleItem::Stmt(Stmt::Expr(expr_stmt)) => {
                 if let Expr::Call(call) = expr_stmt.expr.as_ref()
                     && let Some((task_name, config)) = extract_task_from_call(call, None)
@@ -188,6 +194,18 @@ export const main = task({ name: "main", timeout: "30s" }, (): string => {
         let configs = extract_js_task_configs(source, true).unwrap();
         assert!(configs.contains_key("main"));
         assert_eq!(configs["main"]["timeout"], "30s");
+    }
+
+    #[test]
+    fn test_js_task_with_config_default_export() {
+        let source = r#"
+export default task({ name: "main", compute: "HIGH" }, () => {
+    return "hello";
+});
+"#;
+        let configs = extract_js_task_configs(source, false).unwrap();
+        assert!(configs.contains_key("main"));
+        assert_eq!(configs["main"]["compute"], "HIGH");
     }
 
     #[test]

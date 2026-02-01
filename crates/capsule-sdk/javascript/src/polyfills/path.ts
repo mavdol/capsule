@@ -1,3 +1,8 @@
+/**
+ * Path polyfill
+ * Provides Node.js-compatible path object
+ */
+
 import path from 'path-browserify';
 
 export default path;
