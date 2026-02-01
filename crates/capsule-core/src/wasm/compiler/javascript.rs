@@ -198,12 +198,18 @@ export const taskRunner = exports;
             ))
             .arg(format!("--alias:url={}", url_polyfill_path.display()))
             .arg(format!("--alias:node:url={}", url_polyfill_path.display()))
-            .arg(format!("--alias:buffer={}", sdk_node_modules.join("buffer").display()))
+            .arg(format!(
+                "--alias:buffer={}",
+                sdk_node_modules.join("buffer").display()
+            ))
             .arg(format!(
                 "--alias:node:buffer={}",
                 sdk_node_modules.join("buffer").display()
             ))
-            .arg(format!("--alias:events={}", sdk_node_modules.join("events").display()))
+            .arg(format!(
+                "--alias:events={}",
+                sdk_node_modules.join("events").display()
+            ))
             .arg(format!(
                 "--alias:node:events={}",
                 sdk_node_modules.join("events").display()
