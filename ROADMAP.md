@@ -100,8 +100,8 @@ On failure:
 - [x] **Global process:** Comprehensive `process` polyfill (env, argv, cwd, exit, nextTick) injected as a global via esbuild.
 - [x] **url:** Alias Node's `import { URL } from 'url'` to native Web `URL` class.
 - [x] **buffer:** Use `buffer` package to polyfill Node.js `Buffer` class → `Uint8Array`.
-- [ ] **events:** Use `events` package to polyfill `EventEmitter`.
-- [ ] **stream:** Use `readable-stream` for Node.js stream compatibility.
+- [x] **events:** Use `events` package to polyfill `EventEmitter`.
+- [x] **stream:** Use `readable-stream` for Node.js stream compatibility.
 - [ ] **fs:** Map `import fs from 'fs'` to WASI file operations:
   - `fs.readFile()` → Capsule's `readText()`/`readBytes()`
   - `fs.writeFile()` → Capsule's `writeText()`/`writeBytes()`
