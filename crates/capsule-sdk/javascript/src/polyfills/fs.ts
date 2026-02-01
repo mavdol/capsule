@@ -331,12 +331,6 @@ const fs = {
     readdir,
     existsSync,
     promises,
-    readText,
-    readBytes,
-    writeText,
-    writeBytes,
-    list,
-    exists,
 };
 
 export default fs;
