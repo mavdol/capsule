@@ -1,4 +1,5 @@
-import { task, files } from "@capsule-run/sdk";
+import { task } from "@capsule-run/sdk";
+import fs from "fs/promises";
 
 /**
  * Sub-task with restricted file access.
@@ -8,15 +9,15 @@ export const restrictedWriter = task({
     name: "restricted_writer",
     allowedFiles: ["./data"]
 }, async (content: string) => {
-    await files.writeText("./data/output.txt", content);
+    await fs.writeFile("./data/output.txt", content);
     return { written: true };
 });
 
 /**
  * Main task has full project access by default.
  */
-export const main = task({ name: "main" }, async () => {
-    const content = await files.readText("./data/input.txt");
+export const main = task({ name: "main", allowedFiles: ["./data"] }, async () => {
+    const content = await fs.readFile("./data/input.txt", "utf8") as string;
     const lines = content.trim().split("\n");
     const lineCount = lines.length;
 
