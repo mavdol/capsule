@@ -234,6 +234,18 @@ export const taskRunner = exports;
                     .join("dist/polyfills/fs-promises.js")
                     .display()
             ))
+            .arg(format!(
+                "--alias:stream/web={}",
+                sdk_path_normalized
+                    .join("dist/polyfills/stream-web.js")
+                    .display()
+            ))
+            .arg(format!(
+                "--alias:node:stream/web={}",
+                sdk_path_normalized
+                    .join("dist/polyfills/stream-web.js")
+                    .display()
+            ))
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())
@@ -353,8 +365,9 @@ export const taskRunner = exports;
             .arg("--target")
             .arg("esnext")
             .arg("--moduleResolution")
-            .arg("node")
+            .arg("bundler")
             .arg("--esModuleInterop")
+            .arg("--skipLibCheck")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()?;
