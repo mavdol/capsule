@@ -163,6 +163,7 @@ export const taskRunner = exports;
         let path_browserify_path = sdk_node_modules.join("path-browserify");
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
         let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
+        let url_polyfill_path = sdk_path_normalized.join("dist/polyfills/url.js");
 
         let esbuild_output = Self::npx_command()
             .arg("esbuild")
@@ -189,6 +190,8 @@ export const taskRunner = exports;
                 "--alias:node:process={}",
                 process_polyfill_path.display()
             ))
+            .arg(format!("--alias:url={}", url_polyfill_path.display()))
+            .arg(format!("--alias:node:url={}", url_polyfill_path.display()))
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())
