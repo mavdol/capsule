@@ -89,7 +89,7 @@ On failure:
 
 ## v0.5.0: Node.js Ecosystem Compatibility Extended
 
-**Status:** 🗓️ In Progress
+**Status:** ✅ Done
 
 **Goal:** Enable natural Node.js development patterns and improve npm package compatibility in WASM.
 
@@ -102,7 +102,7 @@ On failure:
 - [x] **buffer:** Use `buffer` package to polyfill Node.js `Buffer` class → `Uint8Array`.
 - [x] **events:** Use `events` package to polyfill `EventEmitter`.
 - [x] **stream:** Use `readable-stream` for Node.js stream compatibility.
-- [ ] **fs:** Map `import fs from 'fs'` to WASI file operations:
+- [x] **fs:** Map `import fs from 'fs'` to WASI file operations:
   - `fs.readFile()` → Capsule's `readText()`/`readBytes()`
   - `fs.writeFile()` → Capsule's `writeText()`/`writeBytes()`
   - `fs.readdir()` → Capsule's `list()`
