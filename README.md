@@ -279,7 +279,7 @@ def main() -> str:
 
 #### TypeScript / JavaScript
 
-Capsule provides polyfills for Node.js built-ins. Use the standard `fs` module:
+Common Node.js built-ins are available. Use the standard `fs` module:
 
 ```typescript
 import { task } from "@capsule-run/sdk";
@@ -338,7 +338,7 @@ export const main = task({
 
 **Python:** Pure Python packages and standard library modules work. Packages with C extensions (`numpy`, `pandas`) are not yet supported.
 
-**TypeScript/JavaScript:** npm packages and ES modules work. Common Node.js built-ins are polyfilled.
+**TypeScript/JavaScript:** npm packages and ES modules work. Common Node.js built-ins are available. If you have any trouble with a built-in do not hesitate to open an issue.
 
 ## Contributing
 

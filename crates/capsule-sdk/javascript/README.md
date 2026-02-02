@@ -144,7 +144,7 @@ Task-level options always override these defaults.
 
 Tasks can read and write files within directories specified in `allowedFiles`. Any attempt to access files outside these directories is not possible.
 
-Capsule provides polyfills for Node.js built-ins. Use the standard `fs` module:
+Common Node.js built-ins are available. Use the standard `fs` module:
 
 ```typescript
 import { task } from "@capsule-run/sdk";
@@ -165,7 +165,7 @@ export const main = task({ name: "main", allowedFiles: ["./data"] }, async () =>
 
 ### Environment Variables
 
-Tasks can access environment variables to read configuration, API keys, or other runtime settings. Use the standard `process.env` (available globally via polyfill):
+Tasks can access environment variables to read configuration, API keys, or other runtime settings. Use the standard `process.env`:
 
 ```typescript
 import { task } from "@capsule-run/sdk";
@@ -183,7 +183,7 @@ export const main = task({
 
 ✅ **Supported:**
 - npm packages and ES modules
-- Common Node.js built-ins are polyfilled
+- Common Node.js built-ins. If you have any trouble with a built-in do not hesitate to open an issue.
 
 ⚠️ **Not supported:**
 - Native Node.js addons (C++ bindings)
