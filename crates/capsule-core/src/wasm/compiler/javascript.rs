@@ -98,6 +98,19 @@ impl JavascriptWasmCompiler {
             .replace('\\', "/")
     }
 
+    fn find_node_modules(start_dir: &Path) -> Option<PathBuf> {
+        let mut current = start_dir.to_path_buf();
+        loop {
+            let node_modules = current.join("node_modules");
+            if node_modules.exists() && node_modules.is_dir() {
+                return Some(node_modules);
+            }
+            if !current.pop() {
+                return None;
+            }
+        }
+    }
+
     pub fn compile_wasm(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
         let source_dir = self.source_path.parent().ok_or_else(|| {
             JavascriptWasmCompilerError::FsError("Cannot determine source directory".to_string())
@@ -159,8 +172,10 @@ export const taskRunner = exports;
         let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
         let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
-        let sdk_node_modules = sdk_path_normalized.join("node_modules");
-        let path_browserify_path = sdk_node_modules.join("path-browserify");
+        let project_node_modules = Self::find_node_modules(source_dir)
+            .map(|p| Self::normalize_path_for_command(&p))
+            .unwrap_or_else(|| Self::normalize_path_for_command(&source_dir.join("node_modules")));
+        let path_browserify_path = project_node_modules.join("path-browserify");
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
         let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
         let url_polyfill_path = sdk_path_normalized.join("dist/polyfills/url.js");
@@ -201,19 +216,19 @@ export const taskRunner = exports;
             .arg(format!("--alias:node:url={}", url_polyfill_path.display()))
             .arg(format!(
                 "--alias:buffer={}",
-                sdk_node_modules.join("buffer").display()
+                project_node_modules.join("buffer").display()
             ))
             .arg(format!(
                 "--alias:node:buffer={}",
-                sdk_node_modules.join("buffer").display()
+                project_node_modules.join("buffer").display()
             ))
             .arg(format!(
                 "--alias:events={}",
-                sdk_node_modules.join("events").display()
+                project_node_modules.join("events").display()
             ))
             .arg(format!(
                 "--alias:node:events={}",
-                sdk_node_modules.join("events").display()
+                project_node_modules.join("events").display()
             ))
             .arg(format!("--alias:stream={}", stream_polyfill_path.display()))
             .arg(format!(
