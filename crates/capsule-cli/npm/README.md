@@ -144,60 +144,49 @@ Task-level options always override these defaults.
 
 Tasks can read and write files within directories specified in `allowedFiles`. Any attempt to access files outside these directories is not possible.
 
-Node.js built-ins like `fs` are not available in the WebAssembly sandbox. Instead, use the `files` API provided by the SDK:
+Capsule provides polyfills for Node.js built-ins. Use the standard `fs` module:
 
 ```typescript
-import { task, files } from "@capsule-run/sdk";
+import { task } from "@capsule-run/sdk";
+import fs from "fs/promises";
 
 export const restrictedWriter = task({
     name: "restricted_writer",
     allowedFiles: ["./output"]
 }, async () => {
-    await files.writeText("./output/result.txt", "result");
+    await fs.writeFile("./output/result.txt", "result");
 });
 
-export const main = task({ name: "main" }, async () => {
+export const main = task({ name: "main", allowedFiles: ["./data"] }, async () => {
     await restrictedWriter();
-    return await files.readText("./data/input.txt");
+    return await fs.readFile("./data/input.txt", "utf8");
 });
 ```
 
-Available methods:
-- `files.readText(path)` — Read file as string
-- `files.readBytes(path)` — Read file as `Uint8Array`
-- `files.writeText(path, content)` — Write string to file
-- `files.writeBytes(path, data)` — Write bytes to file
-- `files.list(path)` — List directory contents
-- `files.exists(path)` — Check if file exists
-
 ### Environment Variables
 
-Tasks can access environment variables to read configuration, API keys, or other runtime settings. Use the `env` API provided by the SDK:
+Tasks can access environment variables to read configuration, API keys, or other runtime settings. Use the standard `process.env` (available globally via polyfill):
 
 ```typescript
-import { task, env } from "@capsule-run/sdk";
+import { task } from "@capsule-run/sdk";
 
 export const main = task({
     name: "main",
     envVariables: ["API_KEY"]
 }, () => {
-    const apiKey = env.get("API_KEY");
+    const apiKey = process.env.API_KEY;
     return { apiKeySet: apiKey !== undefined };
 });
 ```
 
-Available methods:
-- `env.get(key)` — Get a specific environment variable (returns `undefined` if not found)
-- `env.has(key)` — Check if an environment variable exists
-- `env.getAll()` — Get all environment variables as an object
-
 ## Compatibility
 
 ✅ **Supported:**
-- npm packages and ES modules work
+- npm packages and ES modules
+- Common Node.js built-ins are polyfilled
 
-⚠️ **Not yet supported:**
-- Node.js built-ins (`fs`, `path`, `os`) are not available in the sandbox
+⚠️ **Not supported:**
+- Native Node.js addons (C++ bindings)
 
 ## Links
 
