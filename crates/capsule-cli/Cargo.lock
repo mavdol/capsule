@@ -322,7 +322,7 @@ dependencies = [
 
 [[package]]
 name = "capsule-core"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "blake3",
@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "capsule-run"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "capsule-core",
  "clap",
