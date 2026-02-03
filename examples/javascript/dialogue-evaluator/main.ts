@@ -1,4 +1,5 @@
-import { task, files, env } from "@capsule-run/sdk";
+import { task } from "@capsule-run/sdk";
+import fs from "fs/promises";
 import OpenAI from "openai";
 
 const getDialogueLines = task({
@@ -6,7 +7,7 @@ const getDialogueLines = task({
     compute: "LOW",
     allowedFiles: ["source"]
 }, async (): Promise<{lines: string[]}> => {
-    const dialogues = await files.readText('source/dialogue-lines.json')
+    const dialogues = await fs.readFile('source/dialogue-lines.json', 'utf-8');
     return JSON.parse(dialogues);
 })
 
@@ -14,12 +15,12 @@ const insertDialogueLine = task({
     name: "Save Dialogue Line",
     allowedFiles: ["output"]
 }, async (line: string, evaluation: string): Promise<void> => {
-    const output = await files.readText('output/evaluated-dialogue-lines.csv')
+    const output = await fs.readFile('output/evaluated-dialogue-lines.csv', 'utf-8');
     const outputCsv = output.trim().split('\n');
 
     outputCsv.push(`"${line}",${evaluation}`);
 
-    await files.writeText('output/evaluated-dialogue-lines.csv', outputCsv.join('\n'));
+    await fs.writeFile('output/evaluated-dialogue-lines.csv', outputCsv.join('\n'));
 })
 
 const evaluateDialogueLine = task({
@@ -28,13 +29,13 @@ const evaluateDialogueLine = task({
 }, async (prompt: string): Promise<string> => {
 
     const openai = new OpenAI({
-        baseURL: env.get('OPENAI_BASE_URL'),
-        apiKey: env.get('OPENAI_API_KEY'),
+        baseURL: process.env.OPENAI_BASE_URL,
+        apiKey: process.env.OPENAI_API_KEY,
     });
 
     const completion = await openai.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
-        model: env.get('OPENAI_MODEL'),
+        model: process.env.OPENAI_MODEL as string,
     });
 
     return completion.choices[0].message.content || "";
