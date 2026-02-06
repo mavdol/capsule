@@ -334,11 +334,14 @@ export const taskRunner = exports;
         }
 
         if let Some(source_dir) = self.source_path.parent() {
-            let node_modules_sdk = source_dir.join("node_modules/@capsule-run/sdk");
-            if node_modules_sdk.exists() {
-                return Ok(node_modules_sdk);
+            if let Some(node_modules) = Self::find_node_modules(source_dir) {
+                let sdk_path = node_modules.join("@capsule-run/sdk");
+                if sdk_path.exists() {
+                    return Ok(sdk_path);
+                }
             }
         }
+
 
         if let Ok(exe_path) = std::env::current_exe()
             && let Some(project_root) = exe_path
