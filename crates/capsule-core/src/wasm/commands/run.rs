@@ -38,6 +38,8 @@ impl RuntimeCommand for RunInstance {
     type Output = String;
 
     async fn execute(mut self, runtime: Arc<Runtime>) -> Result<Self::Output, WasmRuntimeError> {
+        let start_time = std::time::Instant::now();
+
         runtime
             .log
             .update_log(UpdateInstanceLog {
@@ -71,7 +73,7 @@ impl RuntimeCommand for RunInstance {
                                 error: None,
                                 execution: TaskExecution {
                                     task_name: self.policy.name.clone(),
-                                    duration_ms: duration.as_millis() as u64,
+                                    duration_ms: start_time.elapsed().as_millis() as u64,
                                     retries: self.policy.max_retries,
                                     fuel_consumed: self.policy.compute.as_fuel()
                                         - self.store.get_fuel().unwrap_or(0),
@@ -87,7 +89,7 @@ impl RuntimeCommand for RunInstance {
                             }),
                             execution: TaskExecution {
                                 task_name: self.policy.name.clone(),
-                                duration_ms: duration.as_millis() as u64,
+                                duration_ms: start_time.elapsed().as_millis() as u64,
                                 retries: self.policy.max_retries,
                                 fuel_consumed: self.policy.compute.as_fuel()
                                     - self.store.get_fuel().unwrap_or(0),
@@ -103,7 +105,7 @@ impl RuntimeCommand for RunInstance {
                         }),
                         execution: TaskExecution {
                             task_name: self.policy.name.clone(),
-                            duration_ms: duration.as_millis() as u64,
+                            duration_ms: start_time.elapsed().as_millis() as u64,
                             retries: self.policy.max_retries,
                             fuel_consumed: self.policy.compute.as_fuel()
                                 - self.store.get_fuel().unwrap_or(0),
@@ -119,7 +121,7 @@ impl RuntimeCommand for RunInstance {
                     }),
                     execution: TaskExecution {
                         task_name: self.policy.name.clone(),
-                        duration_ms: duration.as_millis() as u64,
+                        duration_ms: start_time.elapsed().as_millis() as u64,
                         retries: self.policy.max_retries,
                         fuel_consumed: self.policy.compute.as_fuel()
                             - self.store.get_fuel().unwrap_or(0),
@@ -143,7 +145,7 @@ impl RuntimeCommand for RunInstance {
                             error: None,
                             execution: TaskExecution {
                                 task_name: self.policy.name.clone(),
-                                duration_ms: 0,
+                                duration_ms: start_time.elapsed().as_millis() as u64,
                                 retries: self.policy.max_retries,
                                 fuel_consumed: self.policy.compute.as_fuel()
                                     - self.store.get_fuel().unwrap_or(0),
@@ -159,7 +161,7 @@ impl RuntimeCommand for RunInstance {
                         }),
                         execution: TaskExecution {
                             task_name: self.policy.name.clone(),
-                            duration_ms: 0,
+                            duration_ms: start_time.elapsed().as_millis() as u64,
                             retries: self.policy.max_retries,
                             fuel_consumed: self.policy.compute.as_fuel()
                                 - self.store.get_fuel().unwrap_or(0),
@@ -175,7 +177,7 @@ impl RuntimeCommand for RunInstance {
                     }),
                     execution: TaskExecution {
                         task_name: self.policy.name.clone(),
-                        duration_ms: 0,
+                        duration_ms: start_time.elapsed().as_millis() as u64,
                         retries: self.policy.max_retries,
                         fuel_consumed: self.policy.compute.as_fuel()
                             - self.store.get_fuel().unwrap_or(0),
