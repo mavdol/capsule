@@ -1,0 +1,16 @@
+{
+  "name": "eval-security-test",
+  "version": "1.0.0",
+  "description": "Comprehensive JavaScript eval() security testing in Capsule WASM sandbox",
+  "main": "eval-test.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["security", "eval", "sandbox", "wasm"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capsule-run/sdk": "^0.5.1"
+  }
+}

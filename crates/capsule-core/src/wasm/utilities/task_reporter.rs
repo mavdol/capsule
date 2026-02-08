@@ -40,7 +40,7 @@ impl TaskReporter {
         self.finish_spinner();
         self.start_time = Instant::now();
         if self.verbose {
-            println!(
+            eprintln!(
                 "{} {} [{}] task execution started",
                 Self::timestamp(),
                 "INFO".cyan(),
@@ -54,7 +54,7 @@ impl TaskReporter {
         if self.verbose {
             let elapsed = self.start_time.elapsed();
             let time_str = self.format_duration(elapsed);
-            println!(
+            eprintln!(
                 "{} {} [{}] Completed in {}",
                 Self::timestamp(),
                 "SUCCESS".green(),
@@ -68,7 +68,7 @@ impl TaskReporter {
         self.finish_spinner();
         if self.verbose {
             let time_str = self.format_duration(elapsed);
-            println!(
+            eprintln!(
                 "{} {} [{}] Completed in {}",
                 Self::timestamp(),
                 "SUCCESS".green(),
@@ -81,7 +81,7 @@ impl TaskReporter {
     pub fn task_failed(&mut self, task_name: &str, error: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!(
+            eprintln!(
                 "{} {} [{}] {}",
                 Self::timestamp(),
                 "ERROR".red(),
@@ -96,7 +96,7 @@ impl TaskReporter {
     pub fn task_timeout(&mut self, task_name: &str) {
         self.finish_spinner();
         if self.verbose {
-            println!(
+            eprintln!(
                 "{} {} [{}] Timed out",
                 Self::timestamp(),
                 "ERROR".red(),
@@ -129,18 +129,18 @@ impl TaskReporter {
         if let Some(msg) = completion_message
             && self.verbose
         {
-            println!("{} {} ({})", "✓".green(), msg.green(), time_str);
+            eprintln!("{} {} ({})", "✓".green(), msg.green(), time_str);
         }
     }
 
     pub fn info(&self, message: &str) {
         if self.verbose {
-            println!("{}", message);
+            eprintln!("{}", message);
         }
     }
 
     pub fn success(&self, message: &str) {
-        println!("{}", message);
+        eprintln!("{}", message);
     }
 
     pub fn error(&self, message: &str) {

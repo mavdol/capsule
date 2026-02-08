@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
-[Getting Started](#quick-start) • [Documentation](#documentation-v051) • [Contributing](#contributing)
+[Getting Started](#quick-start) • [Documentation](#documentation-v052) • [Contributing](#contributing)
 
 </div>
 
@@ -157,7 +157,7 @@ capsule run hello.ts
 > [!TIP]
 > Use `--verbose` to display real-time task execution details.
 
-## Documentation (v0.5.1)
+## Documentation (v0.5.2)
 
 ### Task Configuration Options
 

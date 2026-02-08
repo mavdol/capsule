@@ -38,7 +38,13 @@ async fn main() -> Result<(), CliError> {
             args,
         } => {
             let file_path = file.as_deref().map(Path::new);
-            run::execute(file_path, args, verbose).await?;
+            let result = run::execute(file_path, args, verbose).await?;
+
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&result)
+                && !json.get("result").is_none_or(|r| r.is_null())
+            {
+                println!("{}", result);
+            }
         }
     }
 
