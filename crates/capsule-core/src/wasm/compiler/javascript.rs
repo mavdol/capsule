@@ -98,8 +98,8 @@ impl JavascriptWasmCompiler {
             .replace('\\', "/")
     }
 
-    fn find_node_modules(start_dir: &Path) -> Option<PathBuf> {
-        let mut current = start_dir.to_path_buf();
+    fn find_node_modules(root_dir: &Path) -> Option<PathBuf> {
+        let mut current = root_dir.to_path_buf();
         loop {
             let node_modules = current.join("node_modules");
             if node_modules.exists() && node_modules.is_dir() {
@@ -127,7 +127,6 @@ impl JavascriptWasmCompiler {
         }
 
         let wit_path = self.get_wit_path()?;
-
         let sdk_path = self.get_sdk_path()?;
 
         let source_for_import = if self.source_path.extension().is_some_and(|ext| ext == "ts") {
@@ -309,13 +308,6 @@ export const taskRunner = exports;
     }
 
     fn get_wit_path(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
-        if let Ok(path) = std::env::var("CAPSULE_WIT_PATH") {
-            let wit_path = PathBuf::from(path);
-            if wit_path.exists() {
-                return Ok(wit_path);
-            }
-        }
-
         let wit_dir = self.cache_dir.join("wit");
 
         if !wit_dir.join("capsule.wit").exists() {
@@ -326,13 +318,6 @@ export const taskRunner = exports;
     }
 
     fn get_sdk_path(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
-        if let Ok(path) = std::env::var("CAPSULE_JS_SDK_PATH") {
-            let sdk_path = PathBuf::from(path);
-            if sdk_path.exists() {
-                return Ok(sdk_path);
-            }
-        }
-
         if let Some(source_dir) = self.source_path.parent() {
             if let Some(node_modules) = Self::find_node_modules(source_dir) {
                 let sdk_path = node_modules.join("@capsule-run/sdk");
@@ -341,7 +326,6 @@ export const taskRunner = exports;
                 }
             }
         }
-
 
         if let Ok(exe_path) = std::env::current_exe()
             && let Some(project_root) = exe_path
