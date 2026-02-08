@@ -82,7 +82,7 @@ impl PythonWasmCompiler {
         }
     }
 
-    fn normalize_path_for_command(path: &Path) -> PathBuf {
+    fn normalize_path(path: &Path) -> PathBuf {
         let path_str = path.to_string_lossy();
         if let Some(stripped) = path_str.strip_prefix(r"\\?\") {
             return PathBuf::from(stripped);
@@ -124,7 +124,6 @@ impl PythonWasmCompiler {
             ))?;
 
         let wit_path = self.get_wit_path()?;
-
         let sdk_path = self.get_sdk_path()?;
 
         if !sdk_path.exists() {
@@ -154,11 +153,11 @@ from capsule.app import TaskRunner, exports
 
         fs::write(&bootloader_path, bootloader_content)?;
 
-        let wit_path_normalized = Self::normalize_path_for_command(&wit_path);
-        let cache_dir_normalized = Self::normalize_path_for_command(&self.cache_dir);
-        let python_path_normalized = Self::normalize_path_for_command(python_path);
-        let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
-        let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
+        let wit_path_normalized = Self::normalize_path(&wit_path);
+        let cache_dir_normalized = Self::normalize_path(&self.cache_dir);
+        let python_path_normalized = Self::normalize_path(python_path);
+        let sdk_path_normalized = Self::normalize_path(&sdk_path);
+        let output_wasm_normalized = Self::normalize_path(&self.output_wasm);
 
         let output = Command::new("componentize-py")
             .arg("-d")
@@ -199,13 +198,6 @@ from capsule.app import TaskRunner, exports
     }
 
     fn get_wit_path(&self) -> Result<PathBuf, PythonWasmCompilerError> {
-        if let Ok(path) = std::env::var("CAPSULE_WIT_PATH") {
-            let wit_path = PathBuf::from(path);
-            if wit_path.exists() {
-                return Ok(wit_path);
-            }
-        }
-
         let wit_dir = self.cache_dir.join("wit");
 
         if !wit_dir.join("capsule.wit").exists() {
@@ -216,14 +208,7 @@ from capsule.app import TaskRunner, exports
     }
 
     fn get_sdk_path(&self) -> Result<PathBuf, PythonWasmCompilerError> {
-        if let Ok(path) = std::env::var("CAPSULE_SDK_PATH") {
-            let sdk_path = PathBuf::from(path);
-            if sdk_path.exists() {
-                return Ok(sdk_path);
-            }
-        }
-
-        if let Ok(sdk_path) = self.find_sdk_via_python() {
+        if let Ok(sdk_path) = self.find_python_sdk_path() {
             return Ok(sdk_path);
         }
 
@@ -246,7 +231,7 @@ from capsule.app import TaskRunner, exports
         ))
     }
 
-    fn find_sdk_via_python(&self) -> Result<PathBuf, PythonWasmCompilerError> {
+    fn find_python_sdk_path(&self) -> Result<PathBuf, PythonWasmCompilerError> {
         let python_cmd = Self::python_command();
         let output = Command::new(python_cmd)
             .arg("-c")
