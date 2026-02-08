@@ -318,12 +318,12 @@ export const taskRunner = exports;
     }
 
     fn get_sdk_path(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
-        if let Some(source_dir) = self.source_path.parent() {
-            if let Some(node_modules) = Self::find_node_modules(source_dir) {
-                let sdk_path = node_modules.join("@capsule-run/sdk");
-                if sdk_path.exists() {
-                    return Ok(sdk_path);
-                }
+        if let Some(source_dir) = self.source_path.parent()
+            && let Some(node_modules) = Self::find_node_modules(source_dir)
+        {
+            let sdk_path = node_modules.join("@capsule-run/sdk");
+            if sdk_path.exists() {
+                return Ok(sdk_path);
             }
         }
 
