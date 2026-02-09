@@ -49,13 +49,13 @@ function getEnv(): Record<string, string> {
 function getArgv(): string[] {
     const bindings = getEnvBindings();
     if (!bindings || typeof bindings.getArguments !== 'function') {
-        return ['capsule'];
+        return ['capsule', '/main.wasm'];
     }
 
     try {
-        return bindings.getArguments();
+        return ['capsule', '/main.wasm', ...bindings.getArguments()];
     } catch {
-        return ['capsule'];
+        return ['capsule', '/main.wasm'];
     }
 }
 
