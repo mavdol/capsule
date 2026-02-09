@@ -2,6 +2,10 @@
 
 This example demonstrates how to integrate [Capsule](https://github.com/mavdol/capsule) with [Mastra](https://mastra.ai/) to safely execute AI-generated code in a sandboxed environment.
 
+
+https://github.com/user-attachments/assets/8a2a3c5d-e1e9-43eb-95b7-44386880836e
+
+
 ## How it works
 
 1. The Mastra agent receives a task from the user
