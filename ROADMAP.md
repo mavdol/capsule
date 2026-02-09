@@ -123,8 +123,7 @@ import { run } from '@capsule-run/sdk';
 
 const result = await run({
   file: './capsule.ts',
-  args: ['code to execute'],
-  json: true,
+  args: ['code to execute']
 });
 ```
 
@@ -134,8 +133,7 @@ from capsule import run
 
 result = await run(
     file="./capsule.py",
-    args=["code to execute"],
-    json=True,
+    args=["code to execute"]
 )
 ```
 - [ ] **Allowed Hosts:** Restrict outgoing HTTP requests to a whitelist of domains.
