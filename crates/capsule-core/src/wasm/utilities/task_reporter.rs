@@ -140,7 +140,9 @@ impl TaskReporter {
     }
 
     pub fn success(&self, message: &str) {
-        eprintln!("{}", message);
+        if self.verbose {
+            eprintln!("{}", message.green());
+        }
     }
 
     pub fn error(&self, message: &str) {
