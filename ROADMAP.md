@@ -107,4 +107,34 @@ On failure:
   - `fs.readFile()` → Capsule's `readText()`/`readBytes()`
   - `fs.writeFile()` → Capsule's `writeText()`/`writeBytes()`
   - `fs.readdir()` → Capsule's `list()`
+
+---
+
+## v0.6.0: SDK Runner & Network Controls
+
+**Status:** 📅 Planned
+
+**Goal:** Enable seamless third-party integration and basic network security.
+
+- [ ] **SDK Runner:** Add `run()` function to SDK for async subprocess execution from Node.js apps.
+```typescript
+// SDK Runner
+import { run } from '@capsule-run/sdk';
+
+const result = await run({
+  file: './capsule.ts',
+  args: ['code to execute'],
+  json: true,
+});
+```
+- [ ] **Allowed Hosts:** Restrict outgoing HTTP requests to a whitelist of domains.
+
+```typescript
+// Allowed Hosts
+export const main = task({
+  name: "main",
+  allowedHosts: ["api.openai.com", "*.anthropic.com"],
+}, () => { ... });
+```
+
 ---
