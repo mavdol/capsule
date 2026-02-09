@@ -116,9 +116,9 @@ On failure:
 
 **Goal:** Enable seamless third-party integration and basic network security.
 
-- [ ] **SDK Runner:** Add `run()` function to SDK for async subprocess execution from Node.js apps.
+- [ ] **SDK Runner:** Add `run()` function to both SDKs for async subprocess execution.
 ```typescript
-// SDK Runner
+// JavaScript/TypeScript
 import { run } from '@capsule-run/sdk';
 
 const result = await run({
@@ -126,6 +126,17 @@ const result = await run({
   args: ['code to execute'],
   json: true,
 });
+```
+
+```python
+# Python
+from capsule import run
+
+result = await run(
+    file="./capsule.py",
+    args=["code to execute"],
+    json=True,
+)
 ```
 - [ ] **Allowed Hosts:** Restrict outgoing HTTP requests to a whitelist of domains.
 
