@@ -34,9 +34,10 @@ export const executeCode = createTool({
   }),
   execute: async ({ code }: { code: string }) => {
     try {
+      const escapedCode = code.replace(/'/g, "'\\''");
       const capsulePath = resolve(PROJECT_ROOT, 'capsule.ts');
 
-      const result = execSync(`capsule run "${capsulePath}" "${code}" --json`, {
+      const result = execSync(`capsule run "${capsulePath}" --json '${escapedCode}'`, {
         encoding: 'utf-8'
       }).toString();
 
