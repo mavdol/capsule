@@ -134,10 +134,11 @@ fn load_env_variables(project_root: &Path) -> Result<(), RunError> {
 pub async fn execute(
     file_path: Option<&Path>,
     args: Vec<String>,
+    json: bool,
     verbose: bool,
 ) -> Result<String, RunError> {
     let manifest = Manifest::new()?;
-    let mut reporter = TaskReporter::new(true);
+    let mut reporter = TaskReporter::new(!json);
 
     let file_path: PathBuf = match file_path {
         Some(path) => path.to_path_buf(),

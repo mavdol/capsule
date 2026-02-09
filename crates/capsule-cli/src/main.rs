@@ -34,14 +34,17 @@ async fn main() -> Result<(), CliError> {
     match cli.command {
         Commands::Run {
             file,
+            json,
             verbose,
             args,
         } => {
             let file_path = file.as_deref().map(Path::new);
-            let result = run::execute(file_path, args, verbose).await?;
+            let result = run::execute(file_path, args, json, verbose).await?;
 
-            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&result)
-                && !json.get("result").is_none_or(|r| r.is_null())
+            if json {
+                println!("{}", result);
+            } else if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&result)
+                && !parsed.get("result").is_none_or(|r| r.is_null())
             {
                 println!("{}", result);
             }
