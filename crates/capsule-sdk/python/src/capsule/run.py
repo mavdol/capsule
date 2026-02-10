@@ -59,6 +59,9 @@ async def run(
 
     resolved_file = os.path.abspath(os.path.join(cwd or os.getcwd(), file))
 
+    if not os.path.exists(resolved_file):
+        raise FileNotFoundError(f"File not found: {resolved_file}")
+
     cmd = [capsule_path, "run", resolved_file, "--json", *args]
 
     try:
@@ -76,8 +79,9 @@ async def run(
             raise RuntimeError(error_msg)
 
         try:
-            return json.loads(stdout.decode("utf-8"))
-        except json.JSONDecodeError:
+            lines = stdout.decode("utf-8").strip().split("\n")
+            return json.loads(lines[-1])
+        except (json.JSONDecodeError, IndexError):
             raise ValueError(
                 f"Failed to parse Capsule output: {stdout.decode('utf-8')}"
             )

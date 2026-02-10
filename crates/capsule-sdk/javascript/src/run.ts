@@ -7,6 +7,7 @@
 
 import { execFile } from 'child_process';
 import { resolve } from 'path';
+import { existsSync } from 'fs';
 
 export interface RunnerOptions {
   file: string;
@@ -38,6 +39,10 @@ export function run(options: RunnerOptions): Promise<RunnerResult> {
 
   const resolvedFile = resolve(cwd || process.cwd(), file);
 
+  if (!existsSync(resolvedFile)) {
+    return Promise.reject(new Error(`File not found: ${resolvedFile}`));
+  }
+
   return new Promise((resolve, reject) => {
     const cmdArgs = ['run', resolvedFile, '--json', ...args];
 
@@ -54,7 +59,9 @@ export function run(options: RunnerOptions): Promise<RunnerResult> {
       }
 
       try {
-        resolve(JSON.parse(stdout));
+        const lines = stdout.trim().split('\n');
+        const jsonLine = lines[lines.length - 1];
+        resolve(JSON.parse(jsonLine));
       } catch {
         reject(new Error(`Failed to parse Capsule output: ${stdout}`));
       }
