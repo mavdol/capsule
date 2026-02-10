@@ -7,6 +7,7 @@ from third party applications.
 
 import asyncio
 import json
+import os
 from typing import Any, Optional, TypedDict
 
 
@@ -55,7 +56,10 @@ async def run(
         RunnerResult with task result and execution metadata
     """
     args = args or []
-    cmd = [capsule_path, "run", file, "--json", *args]
+
+    resolved_file = os.path.abspath(os.path.join(cwd or os.getcwd(), file))
+
+    cmd = [capsule_path, "run", resolved_file, "--json", *args]
 
     try:
         process = await asyncio.create_subprocess_exec(
@@ -80,5 +84,5 @@ async def run(
 
     except FileNotFoundError:
         raise FileNotFoundError(
-            "Capsule CLI not found. Use 'pip install capsule' to install it."
+            "Capsule CLI not found. Use 'pip install capsule-run' to install it."
         )
