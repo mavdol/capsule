@@ -21,4 +21,5 @@ export { isWasmMode } from "./hostApi.js";
 export { default as path } from "./polyfills/path.js";
 export { default as os } from "./polyfills/os.js";
 export { default as process } from "./polyfills/process.js";
+export { run, type RunnerOptions, type RunnerResult } from "./run.js";
 
