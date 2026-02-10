@@ -111,11 +111,7 @@ impl JavascriptWasmCompiler {
         }
     }
 
-    fn find_package(
-        package_name: &str,
-        source_dir: &Path,
-        sdk_path: &Path,
-    ) -> PathBuf {
+    fn find_package(package_name: &str, source_dir: &Path, sdk_path: &Path) -> PathBuf {
         if let Some(project_node_modules) = Self::find_node_modules(source_dir) {
             let project_path = project_node_modules.join(package_name);
             if project_path.exists() {
@@ -191,21 +187,10 @@ export const taskRunner = exports;
         let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
         let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
-        let path_browserify_path = Self::find_package(
-            "path-browserify",
-            source_dir,
-            &sdk_path_normalized,
-        );
-        let buffer_package_path = Self::find_package(
-            "buffer",
-            source_dir,
-            &sdk_path_normalized,
-        );
-        let events_package_path = Self::find_package(
-            "events",
-            source_dir,
-            &sdk_path_normalized,
-        );
+        let path_browserify_path =
+            Self::find_package("path-browserify", source_dir, &sdk_path_normalized);
+        let buffer_package_path = Self::find_package("buffer", source_dir, &sdk_path_normalized);
+        let events_package_path = Self::find_package("events", source_dir, &sdk_path_normalized);
 
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
         let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
@@ -245,18 +230,12 @@ export const taskRunner = exports;
             ))
             .arg(format!("--alias:url={}", url_polyfill_path.display()))
             .arg(format!("--alias:node:url={}", url_polyfill_path.display()))
-            .arg(format!(
-                "--alias:buffer={}",
-                buffer_package_path.display()
-            ))
+            .arg(format!("--alias:buffer={}", buffer_package_path.display()))
             .arg(format!(
                 "--alias:node:buffer={}",
                 buffer_package_path.display()
             ))
-            .arg(format!(
-                "--alias:events={}",
-                events_package_path.display()
-            ))
+            .arg(format!("--alias:events={}", events_package_path.display()))
             .arg(format!(
                 "--alias:node:events={}",
                 events_package_path.display()
