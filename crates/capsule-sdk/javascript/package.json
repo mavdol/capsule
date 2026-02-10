@@ -1,6 +1,6 @@
 {
   "name": "@capsule-run/sdk",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Capsule JavaScript SDK - run AI agent tasks in secure WASM sandboxes",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,6 +14,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./runner": {
+      "types": "./dist/run.d.ts",
+      "import": "./dist/run.js"
     },
     "./capsule/app.js": {
       "types": "./dist/app.d.ts",

@@ -87,10 +87,7 @@ class TaskRunner:
 
             result = task_func(*args, **kwargs)
 
-            if result is None:
-                return json.dumps({"error": "Unknown error"})
-
-            return json.dumps(result)
+            return json.dumps({"result": result})
 
         except Exception as e:
             import traceback

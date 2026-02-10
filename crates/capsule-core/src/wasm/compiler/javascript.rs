@@ -111,6 +111,22 @@ impl JavascriptWasmCompiler {
         }
     }
 
+    fn find_package(package_name: &str, source_dir: &Path, sdk_path: &Path) -> PathBuf {
+        if let Some(project_node_modules) = Self::find_node_modules(source_dir) {
+            let project_path = project_node_modules.join(package_name);
+            if project_path.exists() {
+                return project_path;
+            }
+        }
+
+        let sdk_node_modules = sdk_path.join("node_modules").join(package_name);
+        if sdk_node_modules.exists() {
+            return sdk_node_modules;
+        }
+
+        source_dir.join("node_modules").join(package_name)
+    }
+
     pub fn compile_wasm(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
         let source_dir = self.source_path.parent().ok_or_else(|| {
             JavascriptWasmCompilerError::FsError("Cannot determine source directory".to_string())
@@ -171,10 +187,11 @@ export const taskRunner = exports;
         let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
         let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
-        let project_node_modules = Self::find_node_modules(source_dir)
-            .map(|p| Self::normalize_path_for_command(&p))
-            .unwrap_or_else(|| Self::normalize_path_for_command(&source_dir.join("node_modules")));
-        let path_browserify_path = project_node_modules.join("path-browserify");
+        let path_browserify_path =
+            Self::find_package("path-browserify", source_dir, &sdk_path_normalized);
+        let buffer_package_path = Self::find_package("buffer", source_dir, &sdk_path_normalized);
+        let events_package_path = Self::find_package("events", source_dir, &sdk_path_normalized);
+
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
         let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
         let url_polyfill_path = sdk_path_normalized.join("dist/polyfills/url.js");
@@ -213,21 +230,15 @@ export const taskRunner = exports;
             ))
             .arg(format!("--alias:url={}", url_polyfill_path.display()))
             .arg(format!("--alias:node:url={}", url_polyfill_path.display()))
-            .arg(format!(
-                "--alias:buffer={}",
-                project_node_modules.join("buffer").display()
-            ))
+            .arg(format!("--alias:buffer={}", buffer_package_path.display()))
             .arg(format!(
                 "--alias:node:buffer={}",
-                project_node_modules.join("buffer").display()
+                buffer_package_path.display()
             ))
-            .arg(format!(
-                "--alias:events={}",
-                project_node_modules.join("events").display()
-            ))
+            .arg(format!("--alias:events={}", events_package_path.display()))
             .arg(format!(
                 "--alias:node:events={}",
-                project_node_modules.join("events").display()
+                events_package_path.display()
             ))
             .arg(format!("--alias:stream={}", stream_polyfill_path.display()))
             .arg(format!(

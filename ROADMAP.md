@@ -112,11 +112,11 @@ On failure:
 
 ## v0.6.0: SDK Runner & Network Controls
 
-**Status:** 📅 Planned
+**Status:** ⏳ In Progress
 
 **Goal:** Enable seamless third-party integration and basic network security.
 
-- [ ] **SDK Runner:** Add `run()` function to both SDKs for async subprocess execution.
+- [x] **SDK Runner:** Add `run()` function to both SDKs for async subprocess execution.
 ```typescript
 // JavaScript/TypeScript
 import { run } from '@capsule-run/sdk';
