@@ -37,6 +37,9 @@ pub struct ExecutionPolicy {
     pub allowed_files: Vec<String>,
 
     #[serde(default)]
+    pub allowed_hosts: Vec<String>,
+
+    #[serde(default)]
     pub env_variables: Vec<String>,
 }
 
@@ -49,7 +52,8 @@ impl Default for ExecutionPolicy {
             timeout: None,
             max_retries: 0,
             allowed_files: Vec::new(),
-            env_variables: Vec::new(),
+            allowed_hosts: Vec::new(),
+            env_variables: Vec::new()
         }
     }
 }
@@ -101,6 +105,11 @@ impl ExecutionPolicy {
         self
     }
 
+    pub fn allowed_hosts(mut self, allowed_hosts: Vec<String>) -> Self {
+        self.allowed_hosts = allowed_hosts;
+        self
+    }
+
     pub fn env_variables(mut self, env_variables: Vec<String>) -> Self {
         self.env_variables = env_variables;
         self
@@ -120,7 +129,8 @@ mod tests {
             .timeout(Some("60s".to_string()))
             .max_retries(Some(3))
             .allowed_files(vec!["/etc/passwd".to_string()])
-            .env_variables(vec!["API_KEY".to_string()]);
+            .env_variables(vec!["API_KEY".to_string()])
+            .allowed_hosts(vec!["https://example.com".to_string()]);
 
         assert_eq!(policy.name, "test");
         assert_eq!(policy.compute, Compute::Medium);
@@ -129,5 +139,6 @@ mod tests {
         assert_eq!(policy.max_retries, 3);
         assert_eq!(policy.allowed_files, vec!["/etc/passwd".to_string()]);
         assert_eq!(policy.env_variables, vec!["API_KEY".to_string()]);
+        assert_eq!(policy.allowed_hosts, vec!["https://example.com".to_string()]);
     }
 }
