@@ -25,6 +25,8 @@ export interface TaskOptions {
   maxRetries?: number;
   /** Files/folders accessible in the sandbox, e.g., ["./data"] */
   allowedFiles?: string[];
+  /** Allowed hosts for HTTP requests */
+  allowedHosts?: string[];
   /** Environment variables available from your .env file for the task */
   envVariables?: string[];
 }
@@ -108,6 +110,7 @@ export function task<TArgs extends any[], TReturn>(
     timeout: normalizeTimeout(options.timeout),
     maxRetries: options.maxRetries,
     allowedFiles: options.allowedFiles,
+    allowedHosts: options.allowedHosts,
     envVariables: options.envVariables,
   };
 

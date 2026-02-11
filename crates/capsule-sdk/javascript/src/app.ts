@@ -14,6 +14,7 @@ export interface TaskConfig {
   timeout?: string;
   maxRetries?: number;
   allowedFiles?: string[];
+  allowedHosts?: string[];
   envVariables?: string[];
 }
 
