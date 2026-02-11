@@ -10,7 +10,7 @@ from .host_api import call_host, is_wasm_mode
 from . import app
 
 
-def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, allowed_files=None, allowed_hosts=None, env_variables=None):
+def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, allowed_files=None, allowed_hosts=["*"], env_variables=None):
     """
     Decorator to mark a function as a Capsule task.
 
