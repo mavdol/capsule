@@ -329,6 +329,7 @@ dependencies = [
  "chrono",
  "colored",
  "humantime",
+ "hyper",
  "indicatif",
  "nanoid",
  "rayon",

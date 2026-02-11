@@ -148,6 +148,7 @@ impl RuntimeCommand for CreateInstance {
             table: ResourceTable::new(),
             limits,
             runtime: Some(Arc::clone(&runtime)),
+            policy: self.policy.clone(),
         };
 
         let mut store = Store::new(&runtime.engine, state);

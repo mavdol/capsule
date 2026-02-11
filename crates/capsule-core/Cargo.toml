@@ -36,6 +36,7 @@ rustpython-parser = "0.4"
 swc_ecma_parser = "33.0"
 swc_common = "18.0"
 swc_ecma_ast = "20.0"
+hyper = "1.8.1"
 
 [dev-dependencies]
 rustfmt = "0.10.0"
