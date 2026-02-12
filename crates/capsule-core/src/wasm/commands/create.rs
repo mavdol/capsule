@@ -35,7 +35,7 @@ impl CreateInstance {
             task_name: "default".to_string(),
             agent_name: "default".to_string(),
             agent_version: "0.0.0".to_string(),
-            wasm_path: PathBuf::from(".capsule/capsule.wasm"),
+            wasm_path: PathBuf::from(".capsule/wasm/default.wasm"),
             project_root: std::env::current_dir().unwrap_or_default(),
         }
     }

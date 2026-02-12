@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::config::fingerprint::SourceFingerprint;
+use crate::wasm::utilities::cache::generate_wasm_filename;
 use crate::wasm::utilities::introspection::javascript::extract_js_task_configs;
 use crate::wasm::utilities::wit_manager::WitManager;
 
@@ -59,9 +60,11 @@ impl JavascriptWasmCompiler {
             })?
             .join(".capsule");
 
-        fs::create_dir_all(&cache_dir)?;
+        let wasm_dir = cache_dir.join("wasm");
+        fs::create_dir_all(&wasm_dir)?;
 
-        let output_wasm = cache_dir.join("capsule.wasm");
+        let wasm_filename = generate_wasm_filename(&source_path);
+        let output_wasm = wasm_dir.join(wasm_filename);
 
         Ok(Self {
             source_path,

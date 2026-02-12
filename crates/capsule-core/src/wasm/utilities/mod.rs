@@ -1,3 +1,4 @@
+pub mod cache;
 pub mod host_validator;
 pub mod introspection;
 pub mod path_validator;
