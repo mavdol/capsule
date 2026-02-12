@@ -6,7 +6,8 @@ use std::process::Command;
 use std::process::Stdio;
 
 use crate::config::fingerprint::SourceFingerprint;
-use crate::wasm::utilities::introspection::scanner;
+use crate::wasm::utilities::cache::generate_wasm_filename;
+use crate::wasm::utilities::introspection::python::extract_python_task_configs;
 use crate::wasm::utilities::wit_manager::WitManager;
 
 pub enum PythonWasmCompilerError {
@@ -55,11 +56,14 @@ impl PythonWasmCompiler {
             })?
             .join(".capsule");
 
-        let output_wasm = cache_dir.join("capsule.wasm");
+        let wasm_dir = cache_dir.join("wasm");
 
-        if !cache_dir.exists() {
-            fs::create_dir_all(&cache_dir)?;
+        if !wasm_dir.exists() {
+            fs::create_dir_all(&wasm_dir)?;
         }
+
+        let wasm_filename = generate_wasm_filename(&source_path);
+        let output_wasm = wasm_dir.join(wasm_filename);
 
         Ok(Self {
             source_path,
@@ -293,7 +297,7 @@ from capsule.app import TaskRunner, exports
     }
 
     pub fn introspect_task_registry(&self) -> Option<HashMap<String, serde_json::Value>> {
-        let source_dir = self.source_path.parent()?;
-        scanner::scan_python_tasks(source_dir)
+        let source = fs::read_to_string(&self.source_path).ok()?;
+        extract_python_task_configs(&source)
     }
 }
