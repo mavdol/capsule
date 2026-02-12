@@ -25,6 +25,8 @@ export interface TaskOptions {
   maxRetries?: number;
   /** Files/folders accessible in the sandbox, e.g., ["./data"] */
   allowedFiles?: string[];
+  /** Allowed hosts for HTTP requests */
+  allowedHosts?: string[];
   /** Environment variables available from your .env file for the task */
   envVariables?: string[];
 }
@@ -100,6 +102,7 @@ export function task<TArgs extends any[], TReturn>(
 ): (...args: TArgs) => TaskReturnType<TReturn> {
   const taskName = options.name;
   let compute = options.compute?.toString().toUpperCase() ?? "MEDIUM";
+  let allowedHosts = options.allowedHosts ?? ["*"];
 
   const taskConfig: TaskConfig = {
     name: taskName,
@@ -108,6 +111,7 @@ export function task<TArgs extends any[], TReturn>(
     timeout: normalizeTimeout(options.timeout),
     maxRetries: options.maxRetries,
     allowedFiles: options.allowedFiles,
+    allowedHosts,
     envVariables: options.envVariables,
   };
 

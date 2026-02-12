@@ -36,6 +36,7 @@ pub struct DefaultPolicy {
     pub default_timeout: Option<String>,
     pub default_max_retries: Option<u64>,
     pub default_allowed_files: Option<Vec<String>>,
+    pub default_allowed_hosts: Option<Vec<String>>,
     pub default_env_variables: Option<Vec<String>>,
 }
 

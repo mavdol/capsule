@@ -10,7 +10,7 @@ from .host_api import call_host, is_wasm_mode
 from . import app
 
 
-def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, allowed_files=None, env_variables=None):
+def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, allowed_files=None, allowed_hosts=["*"], env_variables=None):
     """
     Decorator to mark a function as a Capsule task.
 
@@ -21,6 +21,7 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, 
         timeout: Timeout duration - e.g., "30s", "5m"
         max_retries: Maximum number of retries (default: 1)
         allowed_files: List of files/folders accessible in sandbox - e.g., ["./data"]
+        allowed_hosts: List of allowed hosts for HTTP requests - e.g., ["https://api.openai.com"]
         env_variables: List of environment variables accessible in sandbox - e.g., ["ANTHROPIC_API_KEY"]
 
     In WASM mode:
@@ -47,6 +48,8 @@ def task(name=None, compute="MEDIUM", ram=None, timeout=None, max_retries=None, 
             task_config["max_retries"] = max_retries
         if allowed_files is not None:
             task_config["allowed_files"] = allowed_files
+        if allowed_hosts is not None:
+            task_config["allowed_hosts"] = allowed_hosts
         if env_variables is not None:
             task_config["env_variables"] = env_variables
 
