@@ -5,16 +5,19 @@ use hyper::Request;
 use wasmtime::component::{ResourceTable, bindgen};
 use wasmtime::{ResourceLimiter, StoreLimits};
 use wasmtime_wasi::{WasiCtx, WasiView};
+use wasmtime_wasi_http::bindings::http::types::ErrorCode;
 use wasmtime_wasi_http::body::HyperOutgoingBody;
-use wasmtime_wasi_http::types::{HostFutureIncomingResponse, OutgoingRequestConfig, default_send_request};
+use wasmtime_wasi_http::types::{
+    HostFutureIncomingResponse, OutgoingRequestConfig, default_send_request,
+};
 use wasmtime_wasi_http::{HttpResult, WasiHttpCtx, WasiHttpView};
 
 use crate::wasm::commands::create::CreateInstance;
 use crate::wasm::commands::run::RunInstance;
-use crate::wasm::runtime::Runtime;
-use crate::wasm::utilities::task_config::{TaskConfig, TaskResult};
 use crate::wasm::execution_policy::ExecutionPolicy;
+use crate::wasm::runtime::Runtime;
 use crate::wasm::utilities::host_validator::is_host_allowed;
+use crate::wasm::utilities::task_config::{TaskConfig, TaskResult};
 
 use capsule::host::api::{Host, HttpError, HttpResponse, TaskError};
 
@@ -58,17 +61,15 @@ impl WasiHttpView for State {
         request: Request<HyperOutgoingBody>,
         config: OutgoingRequestConfig,
     ) -> HttpResult<HostFutureIncomingResponse> {
-        let allowed = is_host_allowed(request.uri().host().unwrap_or("Invalid URI"), &self.policy.allowed_hosts);
+        let host = request.uri().host().unwrap_or("unknown");
+        let allowed = is_host_allowed(host, &self.policy.allowed_hosts);
 
         if !allowed {
-            // return Err(HttpError::InternalError(
-            //     "Host not allowed".to_string(),
-            // ));
+            return Err(ErrorCode::HttpRequestDenied.into());
         }
 
         Ok(default_send_request(request, config))
     }
-
 }
 
 impl Host for State {
@@ -176,6 +177,12 @@ impl Host for State {
         headers: Vec<(String, String)>,
         body: Option<String>,
     ) -> Result<HttpResponse, HttpError> {
+        let allowed = is_host_allowed(&url, &self.policy.allowed_hosts);
+
+        if !allowed {
+            return Err(HttpError::InvalidUrl("Host not allowed".to_string()));
+        }
+
         let client = reqwest::Client::new();
 
         let mut request_builder = match method.to_uppercase().as_str() {
@@ -245,4 +252,3 @@ impl ResourceLimiter for State {
         self.limits.table_growing(current, desired, maximum)
     }
 }
-

@@ -53,7 +53,7 @@ impl Default for ExecutionPolicy {
             max_retries: 0,
             allowed_files: Vec::new(),
             allowed_hosts: vec!["*".to_string()],
-            env_variables: Vec::new()
+            env_variables: Vec::new(),
         }
     }
 }

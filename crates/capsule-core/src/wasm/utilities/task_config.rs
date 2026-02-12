@@ -100,7 +100,6 @@ impl TaskConfig {
             .or_else(|| default_policy.and_then(|p| p.default_env_variables.clone()))
             .unwrap_or_default();
 
-
         ExecutionPolicy::new()
             .name(self.name.clone())
             .compute(compute)
@@ -282,7 +281,10 @@ mod tests {
         assert_eq!(policy.timeout, Some("60s".to_string()));
         assert_eq!(policy.max_retries, 5);
         assert_eq!(policy.allowed_files, vec!["./default".to_string()]);
-        assert_eq!(policy.allowed_hosts, vec!["https://default.com".to_string()]);
+        assert_eq!(
+            policy.allowed_hosts,
+            vec!["https://default.com".to_string()]
+        );
         assert_eq!(policy.env_variables, vec!["FOO".to_string()]);
     }
 
