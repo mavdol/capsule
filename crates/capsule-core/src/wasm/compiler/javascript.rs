@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::config::fingerprint::SourceFingerprint;
-use crate::wasm::utilities::introspection::scanner;
+use crate::wasm::utilities::introspection::javascript::extract_js_task_configs;
 use crate::wasm::utilities::wit_manager::WitManager;
 
 #[derive(Debug)]
@@ -411,7 +411,11 @@ export const taskRunner = exports;
     }
 
     pub fn introspect_task_registry(&self) -> Option<HashMap<String, serde_json::Value>> {
-        let source_dir = self.source_path.parent()?;
-        scanner::scan_js_tasks(source_dir)
+        let source = fs::read_to_string(&self.source_path).ok()?;
+        let is_typescript = self
+            .source_path
+            .extension()
+            .is_some_and(|ext| ext == "ts" || ext == "mts");
+        extract_js_task_configs(&source, is_typescript)
     }
 }
