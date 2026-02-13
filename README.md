@@ -161,7 +161,7 @@ capsule run hello.ts
 
 The `run()` function lets you execute tasks programmatically from your application code, no CLI needed.
 
-#### Python
+### Python
 
 ```python
 from capsule import run
@@ -182,7 +182,7 @@ def main(code: str) -> str:
     return exec(code)
 ```
 
-#### TypeScript / JavaScript
+### TypeScript / JavaScript
 
 > [!IMPORTANT]
 > You need `@capsule-run/cli` in your dependencies to use the `runner` functions in TypeScript.
