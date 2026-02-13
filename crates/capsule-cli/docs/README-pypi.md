@@ -187,9 +187,9 @@ Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default
 from capsule import task
 from capsule.http import get
 
-@task(name="main", allowed_hosts=["api.xxx.com", "*.yyy.com"])
+@task(name="main", allowed_hosts=["api.openai.com", "*.anthropic.com"])
 def main() -> dict:
-    response = get("https://api.xxx.com/v1/models")
+    response = get("https://api.openai.com/v1/models")
     return response.json()
 ```
 

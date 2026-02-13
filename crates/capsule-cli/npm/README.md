@@ -204,9 +204,9 @@ import { task } from "@capsule-run/sdk";
 
 export const main = task({
     name: "main",
-    allowedHosts: ["api.xxx.com", "*.yyy.com"]
+    allowedHosts: ["api.openai.com", "*.anthropic.com"]
 }, async () => {
-    const response = await fetch("https://api.xxx.com/v1/models");
+    const response = await fetch("https://api.openai.com/v1/models");
     return response.json();
 });
 ```
