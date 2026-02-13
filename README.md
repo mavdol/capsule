@@ -172,7 +172,7 @@ result = await run(
 )
 ```
 
-Create the task file `capsule.py`:
+Create `capsule.py`:
 
 ```python
 from capsule import task
@@ -196,7 +196,7 @@ const result = await run({
 });
 ```
 
-Create the task file `capsule.ts`:
+Create `capsule.ts`:
 
 ```typescript
 import { task } from "@capsule-run/sdk";

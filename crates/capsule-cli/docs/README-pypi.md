@@ -52,7 +52,7 @@ result = await run(
 )
 ```
 
-Create the task file `capsule.py`:
+Create `capsule.py`:
 
 ```python
 from capsule import task
