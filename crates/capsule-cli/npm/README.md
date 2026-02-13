@@ -48,6 +48,8 @@ capsule run hello.ts
 
 The `run()` function lets you execute tasks programmatically from your application code, no CLI needed.
 
+> You need `@capsule-run/cli` in your dependencies to use the `runner` functions in TypeScript.
+
 ```typescript
 import { run } from '@capsule-run/sdk/runner';
 
@@ -57,8 +59,9 @@ const result = await run({
 });
 ```
 
+Create the task file `capsule.ts`:
+
 ```typescript
-// capsule.ts
 import { task } from "@capsule-run/sdk";
 
 export const main = task({
@@ -69,8 +72,6 @@ export const main = task({
   return eval(code);
 });
 ```
-
-> You need `@capsule-run/cli` in your dependencies to use the `runner` functions in TypeScript.
 
 ## How It Works
 

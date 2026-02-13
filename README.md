@@ -172,8 +172,9 @@ result = await run(
 )
 ```
 
+Create the task file `capsule.py`:
+
 ```python
-# capsule.py
 from capsule import task
 
 @task(name="main", compute="LOW", ram="64MB")
@@ -181,8 +182,10 @@ def main(code: str) -> str:
     return exec(code)
 ```
 
-
 #### TypeScript / JavaScript
+
+> [!IMPORTANT]
+> You need `@capsule-run/cli` in your dependencies to use the `runner` functions in TypeScript.
 
 ```typescript
 import { run } from '@capsule-run/sdk/runner';
@@ -193,8 +196,9 @@ const result = await run({
 });
 ```
 
+Create the task file `capsule.ts`:
+
 ```typescript
-// capsule.ts
 import { task } from "@capsule-run/sdk";
 
 export const main = task({
@@ -205,9 +209,6 @@ export const main = task({
   return eval(code);
 });
 ```
-
-> [!IMPORTANT]
-> You need `@capsule-run/cli` in your dependencies to use the `runner` functions in TypeScript.
 
 ## Documentation (v0.6.0)
 

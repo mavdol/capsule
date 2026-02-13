@@ -52,8 +52,9 @@ result = await run(
 )
 ```
 
+Create the task file `capsule.py`:
+
 ```python
-# capsule.py
 from capsule import task
 
 @task(name="main", compute="LOW", ram="64MB")
