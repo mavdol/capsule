@@ -10,7 +10,7 @@ This example demonstrates how to integrate [Capsule](https://github.com/mavdol/c
 4. Results are returned safely to the user
 
 > [!TIP]
-> Check [`capsule.py`](./capsule.py) to see how the sandbox task executes code.
+> Check [`capsule_sandbox.py`](./capsule_sandbox.py) to see how the sandbox task executes code.
 
 ## Quick Start
 
