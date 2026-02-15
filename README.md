@@ -356,9 +356,6 @@ export const main = task({ name: "main", allowedFiles: ["./data"] }, async () =>
 
 Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default, all outbound requests are allowed (`["*"]`). Restrict access by providing a whitelist of domains.
 
-> [!NOTE]
-> Wildcards are supported: `*.example.com` matches all subdomains of `example.com`.
-
 #### Python
 
 ```python
