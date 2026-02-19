@@ -387,6 +387,58 @@ export const main = task({
 });
 ```
 
+### In-Code Usage
+
+The `run()` function lets you execute tasks programmatically from your code instead of using the CLI. The `args` passed to `run()` are automatically forwarded as parameters to the `main` task.
+
+### Python
+
+```python
+from capsule import run
+
+result = await run(
+    file="./sandbox.py",
+    args=["code to execute"]
+)
+```
+
+Create `sandbox.py`:
+
+```python
+from capsule import task
+
+@task(name="main", compute="LOW", ram="64MB")
+def main(code: str) -> str:
+    return exec(code)
+```
+
+### TypeScript / JavaScript
+
+> [!IMPORTANT]
+You need @capsule-run/cli in your dependencies to use the runner functions in TypeScript.
+
+```typescript
+import { run } from '@capsule-run/sdk/runner';
+
+const result = await run({
+  file: './sandbox.ts',
+  args: ['code to execute']
+});
+```
+
+Create `sandbox.ts`:
+
+```typescript
+import { task } from "@capsule-run/sdk";
+
+export const main = task({
+  name: "main",
+  compute: "LOW",
+  ram: "64MB"
+}, (code: string): string => {
+  return eval(code);
+});
+```
 
 ## Compatibility
 
