@@ -127,17 +127,18 @@ Run it:
 capsule run hello.py
 ```
 
-Or from your existing code:
-
-```python
-from capsule import run
-
-result = await run(
-    file="./my_task.py",
-    args=[]
-)
-print(f"Task completed: {result['result']}")
-```
+> Or from your existing code:
+> 
+> ```python
+> from capsule import run
+> 
+> result = await run(
+>    file="./hello.py",
+>    args=[]
+> )
+> 
+> print(f"Task completed: {result['result']}")
+> ```
 
 ### TypeScript / JavaScript
 
@@ -166,18 +167,18 @@ Run it:
 capsule run hello.ts
 ```
 
-Or from your existing code:
-
-```typescript
-import { run } from '@capsule-run/sdk/runner';
-
-const result = await run({
-  file: './my_task.ts',
-  args: []
-});
-console.log(`Task completed: ${result.result}`);
-
-```
+> Or from your existing code:
+>
+> ```typescript
+> import { run } from '@capsule-run/sdk/runner';
+> 
+> const result = await run({
+>  file: './hello.ts',
+>  args: []
+> });
+> 
+> console.log(`Task completed: ${result.result}`);
+> ```
 
 > [!TIP]
 > Use `--verbose` to display real-time task execution details.
