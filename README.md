@@ -127,6 +127,18 @@ Run it:
 capsule run hello.py
 ```
 
+Or from your existing code:
+
+```python
+from capsule import run
+
+result = await run(
+    file="./my_task.py",
+    args=[]
+)
+print(f"Task completed: {result['result']}")
+```
+
 ### TypeScript / JavaScript
 
 ```bash
@@ -154,61 +166,21 @@ Run it:
 capsule run hello.ts
 ```
 
-> [!TIP]
-> Use `--verbose` to display real-time task execution details.
-
-## Integrate Into an Existing Project
-
-The `run()` function lets you execute tasks programmatically from your application code, no CLI needed.
-
-### Python
-
-```python
-from capsule import run
-
-result = await run(
-    file="./capsule.py",
-    args=["code to execute"]
-)
-```
-
-Create `capsule.py`:
-
-```python
-from capsule import task
-
-@task(name="main", compute="LOW", ram="64MB")
-def main(code: str) -> str:
-    return exec(code)
-```
-
-### TypeScript / JavaScript
-
-> [!IMPORTANT]
-> You need `@capsule-run/cli` in your dependencies to use the `runner` functions in TypeScript.
+Or from your existing code:
 
 ```typescript
 import { run } from '@capsule-run/sdk/runner';
 
 const result = await run({
-  file: './capsule.ts',
-  args: ['code to execute']
+  file: './my_task.ts',
+  args: []
 });
+console.log(`Task completed: ${result.result}`);
+
 ```
 
-Create `capsule.ts`:
-
-```typescript
-import { task } from "@capsule-run/sdk";
-
-export const main = task({
-  name: "main",
-  compute: "LOW",
-  ram: "64MB"
-}, (code: string): string => {
-  return eval(code);
-});
-```
+> [!TIP]
+> Use `--verbose` to display real-time task execution details.
 
 ## Documentation (v0.6.1)
 
