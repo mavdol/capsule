@@ -72,6 +72,8 @@ impl Default for RuntimeConfig {
     }
 }
 
+use crate::wasm::utilities::cache::precompile_component;
+
 pub struct Runtime {
     pub(crate) engine: Engine,
     pub(crate) log: Log,
@@ -138,5 +140,9 @@ impl Runtime {
 
     pub async fn set_component(&self, component: Component) {
         *self.component.write().await = Some(component);
+    }
+
+    pub fn precompile(&self, wasm_path: &std::path::Path) -> Result<std::path::PathBuf, WasmRuntimeError> {
+        precompile_component(&self.engine, wasm_path).map_err(WasmRuntimeError::WasmtimeError)
     }
 }

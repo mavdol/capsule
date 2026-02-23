@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use nanoid::nanoid;
 
-use wasmtime::component::{Component, Linker, ResourceTable};
+use wasmtime::component::{Linker, ResourceTable};
 use wasmtime::{Store, StoreLimitsBuilder};
 use wasmtime_wasi::add_to_linker_async;
 use wasmtime_wasi::{DirPerms, FilePerms, WasiCtxBuilder};
@@ -14,6 +14,8 @@ use crate::wasm::execution_policy::ExecutionPolicy;
 use crate::wasm::runtime::{Runtime, RuntimeCommand, WasmRuntimeError};
 use crate::wasm::state::{CapsuleAgent, State, capsule};
 use crate::wasm::utilities::path_validator::{FileAccessMode, validate_path};
+
+use crate::wasm::utilities::cache::load_or_compile_component;
 
 pub struct CreateInstance {
     pub policy: ExecutionPolicy,
@@ -160,34 +162,8 @@ impl RuntimeCommand for CreateInstance {
         let component = match runtime.get_component().await {
             Some(c) => c,
             None => {
-                let cwasm_path = self.wasm_path.with_extension("cwasm");
-
-                let use_cached = if cwasm_path.exists() {
-                    let wasm_time = std::fs::metadata(&self.wasm_path)
-                        .and_then(|m| m.modified())
-                        .ok();
-                    let cwasm_time = std::fs::metadata(&cwasm_path)
-                        .and_then(|m| m.modified())
-                        .ok();
-
-                    match (wasm_time, cwasm_time) {
-                        (Some(w), Some(c)) => c > w,
-                        _ => false,
-                    }
-                } else {
-                    false
-                };
-
-                let c = if use_cached {
-                    unsafe { Component::deserialize_file(&runtime.engine, &cwasm_path)? }
-                } else {
-                    let c = Component::from_file(&runtime.engine, &self.wasm_path)?;
-
-                    if let Ok(bytes) = c.serialize() {
-                        let _ = std::fs::write(&cwasm_path, bytes);
-                    }
-                    c
-                };
+                let c =
+                    load_or_compile_component(&runtime.engine, &self.wasm_path)?;
 
                 runtime.set_component(c.clone()).await;
                 c
