@@ -1,4 +1,49 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+use wasmtime::Engine;
+use wasmtime::component::Component;
+
+pub fn load_or_compile_component(
+    engine: &Engine,
+    wasm_path: &Path,
+) -> Result<Component, wasmtime::Error> {
+    let cwasm_path = wasm_path.with_extension("cwasm");
+
+    let use_cached = if cwasm_path.exists() {
+        let wasm_time = std::fs::metadata(wasm_path).and_then(|m| m.modified()).ok();
+        let cwasm_time = std::fs::metadata(&cwasm_path)
+            .and_then(|m| m.modified())
+            .ok();
+
+        match (wasm_time, cwasm_time) {
+            (Some(w), Some(c)) => c > w,
+            _ => false,
+        }
+    } else {
+        false
+    };
+
+    if use_cached {
+        unsafe { Component::deserialize_file(engine, &cwasm_path) }
+    } else {
+        let component = Component::from_file(engine, wasm_path)?;
+
+        if let Ok(bytes) = component.serialize() {
+            let _ = std::fs::write(&cwasm_path, bytes);
+        }
+
+        Ok(component)
+    }
+}
+
+pub fn precompile_component(engine: &Engine, wasm_path: &Path) -> Result<PathBuf, wasmtime::Error> {
+    let component = Component::from_file(engine, wasm_path)?;
+    let cwasm_path = wasm_path.with_extension("cwasm");
+    let bytes = component.serialize()?;
+    std::fs::write(&cwasm_path, &bytes)
+        .map_err(|e| wasmtime::Error::msg(format!("Failed to write cwasm: {}", e)))?;
+    Ok(cwasm_path)
+}
 
 pub fn generate_wasm_filename(source_path: &Path) -> String {
     let stem = source_path

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -7,16 +6,14 @@ use capsule_core::config::manifest::{CapsuleToml, Manifest, ManifestError};
 
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
-use capsule_core::wasm::compiler::javascript::{
-    JavascriptWasmCompiler, JavascriptWasmCompilerError,
-};
-use capsule_core::wasm::compiler::python::{PythonWasmCompiler, PythonWasmCompilerError};
 use capsule_core::wasm::execution_policy::{Compute, ExecutionPolicy};
 use capsule_core::wasm::runtime::Runtime;
 use capsule_core::wasm::runtime::RuntimeConfig;
 use capsule_core::wasm::runtime::WasmRuntimeError;
 use capsule_core::wasm::utilities::task_config::TaskConfig;
 use capsule_core::wasm::utilities::task_reporter::TaskReporter;
+
+use crate::build::{BuildError, TaskRegistry, compile_to_wasm};
 
 pub enum RunError {
     IoError(String),
@@ -38,14 +35,8 @@ impl From<std::io::Error> for RunError {
     }
 }
 
-impl From<PythonWasmCompilerError> for RunError {
-    fn from(err: PythonWasmCompilerError) -> Self {
-        RunError::ExecutionFailed(err.to_string())
-    }
-}
-
-impl From<JavascriptWasmCompilerError> for RunError {
-    fn from(err: JavascriptWasmCompilerError) -> Self {
+impl From<BuildError> for RunError {
+    fn from(err: BuildError) -> Self {
         RunError::ExecutionFailed(err.to_string())
     }
 }
@@ -59,50 +50,6 @@ impl From<WasmRuntimeError> for RunError {
 impl From<ManifestError> for RunError {
     fn from(err: ManifestError) -> Self {
         RunError::ExecutionFailed(err.to_string())
-    }
-}
-
-type TaskRegistry = HashMap<String, serde_json::Value>;
-
-struct CompileResult {
-    wasm_path: PathBuf,
-    cache_dir: PathBuf,
-    task_registry: Option<TaskRegistry>,
-}
-
-fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, RunError> {
-    let extension = file_path
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .unwrap_or("");
-
-    match extension {
-        "py" => {
-            let compiler = PythonWasmCompiler::new(file_path)?;
-            let wasm_path = compiler.compile_wasm()?;
-            let task_registry = compiler.introspect_task_registry();
-
-            Ok(CompileResult {
-                wasm_path,
-                cache_dir: compiler.cache_dir,
-                task_registry,
-            })
-        }
-        "js" | "mjs" | "ts" => {
-            let compiler = JavascriptWasmCompiler::new(file_path)?;
-            let wasm_path = compiler.compile_wasm()?;
-            let task_registry = compiler.introspect_task_registry();
-
-            Ok(CompileResult {
-                wasm_path,
-                cache_dir: compiler.cache_dir,
-                task_registry,
-            })
-        }
-        _ => Err(RunError::ExecutionFailed(format!(
-            "Unsupported file extension: '{}'. Supported: .py, .js, .mjs, .ts",
-            extension
-        ))),
     }
 }
 
