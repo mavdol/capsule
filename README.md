@@ -14,7 +14,7 @@
 
 ## Overview
 
-```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle, long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
+```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
 
 Each task runs inside its own WebAssembly sandbox, providing:
 
@@ -70,7 +70,7 @@ export const main = task({
 ```
 
 > [!NOTE]
-> The runtime requires a task named `"main"` as the entry point. Python can define the main task itself, but it's recommended to set it manually.
+> The runtime requires a task named `"main"` as the entry point. Python will create one automatically if none is defined, but it's recommended to set it explicitly.
 
 When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in a dedicated sandbox to isolate tasks.
 
@@ -95,7 +95,7 @@ Every task returns a structured JSON envelope containing both the result and exe
 
 **Response fields:**
 - `success` — Boolean indicating whether the task completed successfully
-- `result` — The actual return value from your task (json, string, null on failure etc..)
+- `result` — The actual return value from your task (json, string, null on failure etc.)
 - `error` — Error details if the task failed (`{ error_type: string, message: string }`)
 - `execution` — Performance metrics:
   - `task_name` — Name of the executed task
@@ -394,7 +394,7 @@ export const main = task({
 
 The `run()` function lets you execute tasks programmatically from your code instead of using the CLI. The `args` are automatically forwarded as parameters to the `main` task.
 
-### Python
+#### Python
 
 ```python
 from capsule import run
@@ -415,10 +415,10 @@ def main(code: str) -> str:
     return exec(code)
 ```
 
-### TypeScript / JavaScript
+#### TypeScript / JavaScript
 
 > [!IMPORTANT]
-You need @capsule-run/cli in your dependencies to use the runner functions in TypeScript.
+> You need `@capsule-run/cli` in your dependencies to use the runner functions in TypeScript.
 
 ```typescript
 import { run } from '@capsule-run/sdk/runner';
@@ -470,9 +470,9 @@ capsule build main.ts # or `main.py`
 > [!NOTE]
 > TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
 
-**Python:** Pure Python packages and standard library modules work. Packages with C extensions (`numpy`, `pandas`) are not yet supported.
+**Python:** Only pure Python is supported in sandboxes (no C extensions like `numpy` or `pandas`). However, your host code using `run()` has access to the full Python ecosystem, any pip package, native extensions, everything. (see [in-code usage](#in-code-usage))
 
-**TypeScript/JavaScript:** npm packages and ES modules work. Common Node.js built-ins are available. If you have any trouble with a built-in do not hesitate to open an issue.
+**TypeScript/JavaScript:** npm packages and ES modules work. Common Node.js built-ins are available. If you have any trouble with a built-in, do not hesitate to open an issue.
 
 ## Contributing
 
