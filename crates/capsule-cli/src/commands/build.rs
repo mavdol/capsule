@@ -124,7 +124,7 @@ pub async fn execute(file_path: Option<&Path>) -> Result<PathBuf, BuildError> {
     let cwasm_path = runtime.precompile(&compile_result.wasm_path)?;
 
     reporter.finish_progress(Some("Precompilation complete"));
-    reporter.success(&format!("Build successful."));
+    reporter.success("Build successful.");
 
     Ok(cwasm_path)
 }
