@@ -131,15 +131,15 @@ capsule run hello.py
 ```
 
 > Or from your existing code:
-> 
+>
 > ```python
 > from capsule import run
-> 
+>
 > result = await run(
 >    file="./hello.py",
 >    args=[]
 > )
-> 
+>
 > print(f"Task completed: {result['result']}")
 > ```
 
@@ -174,12 +174,12 @@ capsule run hello.ts
 >
 > ```typescript
 > import { run } from '@capsule-run/sdk/runner';
-> 
+>
 > const result = await run({
 >  file: './hello.ts',
 >  args: []
 > });
-> 
+>
 > console.log(`Task completed: ${result.result}`);
 > ```
 
@@ -459,8 +459,11 @@ When you run your code, Capsule creates a `.capsule` folder in your project root
 └── trace.db                   # Execution logs
 ```
 
+Use `capsule build` to precompile ahead of time and skip the compilation cost on the first run:
 
-
+```bash
+capsule build main.ts # or `main.py`
+```
 
 ## Compatibility
 
