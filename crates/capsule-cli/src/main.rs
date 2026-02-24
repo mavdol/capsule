@@ -6,17 +6,19 @@ use std::fmt;
 use std::path::Path;
 
 use cli::{Cli, Commands};
-use commands::{RunError, run};
+use commands::{BuildError, RunError, build, run};
 
 #[derive(Debug)]
 pub enum CliError {
     RunError(String),
+    BuildError(String),
 }
 
 impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CliError::RunError(msg) => write!(f, "{}", msg),
+            CliError::BuildError(msg) => write!(f, "{}", msg),
         }
     }
 }
@@ -24,6 +26,12 @@ impl fmt::Display for CliError {
 impl From<RunError> for CliError {
     fn from(err: RunError) -> Self {
         CliError::RunError(err.to_string())
+    }
+}
+
+impl From<BuildError> for CliError {
+    fn from(err: BuildError) -> Self {
+        CliError::BuildError(err.to_string())
     }
 }
 
@@ -48,6 +56,10 @@ async fn main() -> Result<(), CliError> {
             {
                 println!("{}", result);
             }
+        }
+        Commands::Build { file, verbose } => {
+            let file_path = file.as_deref().map(Path::new);
+            build::execute(file_path, verbose).await?;
         }
     }
 
