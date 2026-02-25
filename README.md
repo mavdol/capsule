@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
-[Getting Started](#getting-started) • [Documentation](#documentation-v061) • [Contributing](#contributing)
+[Getting Started](#getting-started) • [Documentation](#documentation-v062) • [Contributing](#contributing)
 
 </div>
 
@@ -186,7 +186,7 @@ capsule run hello.ts
 > [!NOTE]
 > See [in-code usage documentation](#in-code-usage)
 
-## Documentation (v0.6.1)
+## Documentation (v0.6.2)
 
 ### Task Configuration Options
 
