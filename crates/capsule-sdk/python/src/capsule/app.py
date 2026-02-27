@@ -5,6 +5,8 @@ This module implements the `capsule:host/task-runner` export interface
 that the Wasm component provide.
 """
 
+import asyncio
+import inspect
 import json
 
 _TASKS = {}
@@ -86,6 +88,8 @@ class TaskRunner:
                 })
 
             result = task_func(*args, **kwargs)
+            if inspect.iscoroutine(result):
+                result = asyncio.run(result)
 
             return json.dumps({"result": result})
 
