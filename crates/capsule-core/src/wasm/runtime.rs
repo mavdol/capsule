@@ -8,6 +8,7 @@ use wasmtime::{Config, Engine};
 
 use crate::config::log::{Log, LogError};
 use crate::config::manifest::CapsuleToml;
+use crate::wasm::utilities::cache::precompile_component;
 use crate::wasm::utilities::task_reporter::TaskReporter;
 
 pub enum WasmRuntimeError {
@@ -71,8 +72,6 @@ impl Default for RuntimeConfig {
         }
     }
 }
-
-use crate::wasm::utilities::cache::precompile_component;
 
 pub struct Runtime {
     pub(crate) engine: Engine,

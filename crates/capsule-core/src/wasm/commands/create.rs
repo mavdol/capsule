@@ -162,7 +162,13 @@ impl RuntimeCommand for CreateInstance {
         let component = match runtime.get_component().await {
             Some(c) => c,
             None => {
-                let c = load_or_compile_component(&runtime.engine, &self.wasm_path)?;
+                let file_name = self.wasm_path.file_name().unwrap_or_default();
+                let cwasm_path = runtime
+                    .cache_dir
+                    .join("wasm")
+                    .join(std::path::Path::new(file_name).with_extension("cwasm"));
+
+                let c = load_or_compile_component(&runtime.engine, &self.wasm_path, &cwasm_path)?;
 
                 runtime.set_component(c.clone()).await;
                 c

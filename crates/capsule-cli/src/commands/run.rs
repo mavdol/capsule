@@ -3,17 +3,15 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use capsule_core::config::manifest::{CapsuleToml, Manifest, ManifestError};
-
 use capsule_core::wasm::commands::create::CreateInstance;
 use capsule_core::wasm::commands::run::RunInstance;
 use capsule_core::wasm::execution_policy::{Compute, ExecutionPolicy};
-use capsule_core::wasm::runtime::Runtime;
-use capsule_core::wasm::runtime::RuntimeConfig;
-use capsule_core::wasm::runtime::WasmRuntimeError;
+use capsule_core::wasm::runtime::{Runtime, RuntimeConfig, WasmRuntimeError};
 use capsule_core::wasm::utilities::task_config::TaskConfig;
 use capsule_core::wasm::utilities::task_reporter::TaskReporter;
 
 use crate::build::{BuildError, TaskRegistry, compile_to_wasm};
+use crate::commands::shared::load_env_variables;
 
 pub enum RunError {
     IoError(String),
@@ -64,20 +62,6 @@ fn extract_main_execution_policy(
     Some(task_config.to_execution_policy(capsule_toml))
 }
 
-fn load_env_variables(project_root: &Path) -> Result<(), RunError> {
-    let env_files = vec![".env", ".env.local", ".env.development", ".env.production"];
-
-    for file_name in env_files {
-        let file_path = project_root.join(file_name);
-
-        if file_path.exists() {
-            dotenvy::from_path(&file_path).map_err(|e| RunError::IoError(e.to_string()))?;
-        }
-    }
-
-    Ok(())
-}
-
 pub async fn execute(
     file_path: Option<&Path>,
     args: Vec<String>,
@@ -104,7 +88,7 @@ pub async fn execute(
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
 
-    load_env_variables(&project_root)?;
+    load_env_variables(&project_root).map_err(RunError::IoError)?;
 
     let runtime_config = RuntimeConfig {
         cache_dir: compile_result.cache_dir,
@@ -133,10 +117,8 @@ pub async fn execute(
     })
     .to_string();
 
-    let run_instance_command =
-        RunInstance::new(task_id, execution_policy, store, instance, args_json);
-
-    let result = runtime.execute(run_instance_command).await?;
+    let run_command = RunInstance::new(task_id, execution_policy, store, instance, args_json);
+    let result = runtime.execute(run_command).await?;
 
     let elapsed = start_time.elapsed();
     let time_str = reporter.format_duration(elapsed);

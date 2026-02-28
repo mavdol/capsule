@@ -26,4 +26,16 @@ pub enum Commands {
     Build {
         file: Option<String>,
     },
+    Exec {
+        file: String,
+
+        #[arg(long)]
+        json: bool,
+
+        #[arg(long)]
+        verbose: bool,
+
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
 }

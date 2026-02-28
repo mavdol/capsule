@@ -6,12 +6,11 @@ use wasmtime::component::Component;
 pub fn load_or_compile_component(
     engine: &Engine,
     wasm_path: &Path,
+    cwasm_path: &Path,
 ) -> Result<Component, wasmtime::Error> {
-    let cwasm_path = wasm_path.with_extension("cwasm");
-
     let use_cached = if cwasm_path.exists() {
         let wasm_time = std::fs::metadata(wasm_path).and_then(|m| m.modified()).ok();
-        let cwasm_time = std::fs::metadata(&cwasm_path)
+        let cwasm_time = std::fs::metadata(cwasm_path)
             .and_then(|m| m.modified())
             .ok();
 
@@ -24,12 +23,12 @@ pub fn load_or_compile_component(
     };
 
     if use_cached {
-        unsafe { Component::deserialize_file(engine, &cwasm_path) }
+        unsafe { Component::deserialize_file(engine, cwasm_path) }
     } else {
         let component = Component::from_file(engine, wasm_path)?;
 
         if let Ok(bytes) = component.serialize() {
-            let _ = std::fs::write(&cwasm_path, bytes);
+            let _ = std::fs::write(cwasm_path, bytes);
         }
 
         Ok(component)
