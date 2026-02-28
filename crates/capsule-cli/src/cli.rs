@@ -25,6 +25,9 @@ pub enum Commands {
     },
     Build {
         file: Option<String>,
+
+        #[arg(long)]
+        export: bool,
     },
     Exec {
         file: String,

@@ -94,7 +94,7 @@ impl PythonWasmCompiler {
         path.to_path_buf()
     }
 
-    pub fn compile_wasm(&self) -> Result<PathBuf, PythonWasmCompilerError> {
+    pub fn compile_wasm(&self, export: bool) -> Result<PathBuf, PythonWasmCompilerError> {
         let source_dir = self.source_path.parent().ok_or_else(|| {
             PythonWasmCompilerError::FsError("Cannot determine source directory".to_string())
         })?;
@@ -106,6 +106,11 @@ impl PythonWasmCompiler {
             &["py", "toml"],
             &["__pycache__"],
         ) {
+            if export && let Some(file_stem) = self.source_path.file_stem() {
+                let export_path = source_dir.join(file_stem).with_extension("wasm");
+                let _ = fs::copy(&self.output_wasm, &export_path);
+            }
+
             return Ok(self.output_wasm.clone());
         }
 
@@ -197,6 +202,11 @@ from capsule.app import TaskRunner, exports
             &["py", "toml"],
             &["__pycache__"],
         );
+
+        if export && let Some(file_stem) = self.source_path.file_stem() {
+            let export_path = source_dir.join(file_stem).with_extension("wasm");
+            let _ = fs::copy(&self.output_wasm, &export_path);
+        }
 
         Ok(self.output_wasm.clone())
     }

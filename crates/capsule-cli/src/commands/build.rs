@@ -65,7 +65,7 @@ pub struct CompileResult {
     pub task_registry: Option<TaskRegistry>,
 }
 
-pub fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, BuildError> {
+pub fn compile_to_wasm(file_path: &Path, export: bool) -> Result<CompileResult, BuildError> {
     let extension = file_path
         .extension()
         .and_then(|ext| ext.to_str())
@@ -74,7 +74,7 @@ pub fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, BuildError> {
     match extension {
         "py" => {
             let compiler = PythonWasmCompiler::new(file_path)?;
-            let wasm_path = compiler.compile_wasm()?;
+            let wasm_path = compiler.compile_wasm(export)?;
             let task_registry = compiler.introspect_task_registry();
 
             Ok(CompileResult {
@@ -85,7 +85,7 @@ pub fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, BuildError> {
         }
         "js" | "mjs" | "ts" => {
             let compiler = JavascriptWasmCompiler::new(file_path)?;
-            let wasm_path = compiler.compile_wasm()?;
+            let wasm_path = compiler.compile_wasm(export)?;
             let task_registry = compiler.introspect_task_registry();
 
             Ok(CompileResult {
@@ -101,7 +101,7 @@ pub fn compile_to_wasm(file_path: &Path) -> Result<CompileResult, BuildError> {
     }
 }
 
-pub async fn execute(file_path: Option<&Path>) -> Result<PathBuf, BuildError> {
+pub async fn execute(file_path: Option<&Path>, export: bool) -> Result<PathBuf, BuildError> {
     let manifest = Manifest::new()?;
     let mut reporter = TaskReporter::new(true);
 
@@ -111,7 +111,7 @@ pub async fn execute(file_path: Option<&Path>) -> Result<PathBuf, BuildError> {
     };
 
     reporter.start_progress("Compiling to WASM");
-    let compile_result = compile_to_wasm(&file_path)?;
+    let compile_result = compile_to_wasm(&file_path, export)?;
     reporter.finish_progress(Some("WASM compiled"));
 
     reporter.start_progress("Precompiling to native (cwasm)");
@@ -124,6 +124,11 @@ pub async fn execute(file_path: Option<&Path>) -> Result<PathBuf, BuildError> {
     let cwasm_path = runtime.precompile(&compile_result.wasm_path)?;
 
     reporter.finish_progress(Some("Precompilation complete"));
+
+    if export {
+        reporter.success("Export successful");
+    }
+
     reporter.success("Build successful.");
 
     Ok(cwasm_path)

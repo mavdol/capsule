@@ -65,9 +65,9 @@ async fn main() -> Result<(), CliError> {
                 println!("{}", result);
             }
         }
-        Commands::Build { file } => {
+        Commands::Build { file, export } => {
             let file_path = file.as_deref().map(Path::new);
-            build::execute(file_path).await?;
+            build::execute(file_path, export).await?;
         }
         Commands::Exec {
             file,

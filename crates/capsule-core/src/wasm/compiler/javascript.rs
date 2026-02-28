@@ -130,7 +130,7 @@ impl JavascriptWasmCompiler {
         source_dir.join("node_modules").join(package_name)
     }
 
-    pub fn compile_wasm(&self) -> Result<PathBuf, JavascriptWasmCompilerError> {
+    pub fn compile_wasm(&self, export: bool) -> Result<PathBuf, JavascriptWasmCompilerError> {
         let source_dir = self.source_path.parent().ok_or_else(|| {
             JavascriptWasmCompilerError::FsError("Cannot determine source directory".to_string())
         })?;
@@ -142,6 +142,11 @@ impl JavascriptWasmCompiler {
             &["js", "ts", "toml"],
             &["node_modules", "dist"],
         ) {
+            if export && let Some(file_stem) = self.source_path.file_stem() {
+                let export_path = source_dir.join(file_stem).with_extension("wasm");
+                let _ = fs::copy(&self.output_wasm, &export_path);
+            }
+
             return Ok(self.output_wasm.clone());
         }
 
@@ -317,6 +322,11 @@ export const taskRunner = exports;
             &["js", "ts", "toml"],
             &["node_modules", "dist"],
         );
+
+        if export && let Some(file_stem) = self.source_path.file_stem() {
+            let export_path = source_dir.join(file_stem).with_extension("wasm");
+            let _ = fs::copy(&self.output_wasm, &export_path);
+        }
 
         Ok(self.output_wasm.clone())
     }

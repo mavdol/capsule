@@ -77,7 +77,7 @@ pub async fn execute(
     };
 
     reporter.start_progress("Preparing environment");
-    let compile_result = compile_to_wasm(&file_path)?;
+    let compile_result = compile_to_wasm(&file_path, false)?;
     reporter.finish_progress(Some("Environment ready"));
 
     reporter.start_progress("Initializing runtime");
