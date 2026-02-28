@@ -14,7 +14,7 @@
 
 ## Overview
 
-```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
+```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle untrusted code execution, long-running workflows, large-scale processing, or even multi-agent systems.
 
 Each task runs inside its own WebAssembly sandbox, providing:
 
@@ -155,7 +155,7 @@ capsule run hello.ts
 ```
 
 > [!TIP]
-> Add `--verbose` to any `capsule run` command to see real-time task execution details.
+> Add `--verbose` to see real-time task execution details.
 
 ## Production
 
@@ -165,12 +165,12 @@ Running source code directly (like `.py` or `.ts`) evaluates and compiles your f
 # Generates an optimized hello.wasm file
 capsule build hello.py --export
 
-# Execute the compiled artifact directly:
+# Execute the compiled artifact directly
 capsule exec hello.wasm
 ```
 
 > [!NOTE]
-> Or exec from your existing code:
+> Or from your existing code:
 >
 > ```python
 > from capsule import run
@@ -472,7 +472,7 @@ capsule build main.ts # or `main.py`
 > [!NOTE]
 > TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
 
-**Python:** Only pure Python is supported in sandboxes (no C extensions like `numpy` or `pandas`). However, your host code using `run()` has access to the full Python ecosystem, any pip package, native extensions, everything. (see [in-code usage](#in-code-usage))
+**Python:** Only pure Python is supported in sandboxes (no C extensions like `numpy` or `pandas`). However, your host code using `run()` has access to the full Python ecosystem, any pip package, native extensions. (see [in-code usage](#in-code-usage))
 
 **TypeScript/JavaScript:** npm packages and ES modules work. Common Node.js built-ins are available. If you have any trouble with a built-in, do not hesitate to open an issue.
 
