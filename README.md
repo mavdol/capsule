@@ -163,13 +163,10 @@ Running source code directly (like `.py` or `.ts`) evaluates and compiles your f
 
 **1. Export a compiled artifact:**
 ```bash
-capsule build hello.py --export
 # Generates an optimized hello.wasm file
-```
+capsule build hello.py --export
 
-**2. Execute the compiled artifact directly:**
-
-```bash
+# Execute the compiled artifact directly:**
 capsule exec hello.wasm
 ```
 
