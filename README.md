@@ -165,24 +165,24 @@ Running source code directly (like `.py` or `.ts`) evaluates and compiles your f
 # Generates an optimized hello.wasm file
 capsule build hello.py --export
 
-# Execute the compiled artifact directly:**
+# Execute the compiled artifact directly:
 capsule exec hello.wasm
 ```
 
-Or from your existing code:
-
-```python
-from capsule import run
-
-result = await run(
-   file="./hello.wasm",
-   args=[]
-)
-
-print(f"Task completed: {result['result']}")
-```
-
 > [!NOTE]
+> Or exec from your existing code:
+>
+> ```python
+> from capsule import run
+>
+> result = await run(
+>    file="./hello.wasm", # or `hello.py`
+>    args=[]
+> )
+>
+> print(f"Task completed: {result['result']}")
+> ```
+>
 > See [in-code usage documentation](#in-code-usage) for details on both Python and TypeScript integration.
 
 
@@ -402,7 +402,7 @@ The `run()` function lets you execute tasks programmatically from your code inst
 from capsule import run
 
 result = await run(
-    file="./sandbox.py",
+    file="./sandbox.py", # or `sandbox.wasm`
     args=["code to execute"]
 )
 ```
@@ -426,7 +426,7 @@ def main(code: str) -> str:
 import { run } from '@capsule-run/sdk/runner';
 
 const result = await run({
-  file: './sandbox.ts',
+  file: './sandbox.ts', // or `sandbox.wasm`
   args: ['code to execute']
 });
 ```
