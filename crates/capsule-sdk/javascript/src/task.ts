@@ -34,7 +34,7 @@ export interface TaskOptions {
 interface TaskResult<T> {
   success: boolean;
   result: T;
-  error: string | null;
+  error: { error_type: string; message: string } | null;
   execution: TaskExecution;
 }
 

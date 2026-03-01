@@ -102,10 +102,10 @@ export class TaskRunner {
 
       return JSON.stringify({ result: result ?? null });
     } catch (e) {
-      const errorMsg = e instanceof Error
-        ? `${e.message}\n${e.stack || ''}`
-        : String(e);
-      throw errorMsg;
+      return JSON.stringify({
+        error_type: "task_error",
+        message: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 }

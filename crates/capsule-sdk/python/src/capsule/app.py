@@ -90,10 +90,9 @@ class TaskRunner:
             return json.dumps({"result": result})
 
         except Exception as e:
-            import traceback
             return json.dumps({
-                "error": str(e),
-                "traceback": traceback.format_exc()
+                "error_type": "task_error",
+                "message": str(e),
             })
 
 
