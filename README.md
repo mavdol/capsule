@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
-[Getting Started](#getting-started) • [Documentation](#documentation-v062) • [Contributing](#contributing)
+[Getting Started](#getting-started) • [Documentation](#documentation-v063) • [Contributing](#contributing)
 
 </div>
 
@@ -14,7 +14,7 @@
 
 ## Overview
 
-```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle long-running workflows, large-scale processing, autonomous decision-making securely, or even multi-agent systems.
+```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle untrusted code execution, long-running workflows, large-scale processing, or even multi-agent systems.
 
 Each task runs inside its own WebAssembly sandbox, providing:
 
@@ -127,19 +127,6 @@ Run it:
 capsule run hello.py
 ```
 
-> Or from your existing code:
->
-> ```python
-> from capsule import run
->
-> result = await run(
->    file="./hello.py",
->    args=[]
-> )
->
-> print(f"Task completed: {result['result']}")
-> ```
-
 ### TypeScript / JavaScript
 
 ```bash
@@ -167,26 +154,41 @@ Run it:
 capsule run hello.ts
 ```
 
-> Or from your existing code:
->
-> ```typescript
-> import { run } from '@capsule-run/sdk/runner';
->
-> const result = await run({
->  file: './hello.ts',
->  args: []
-> });
->
-> console.log(`Task completed: ${result.result}`);
-> ```
+> [!TIP]
+> Add `--verbose` to see real-time task execution details.
+
+## Production
+
+Running source code directly (like `.py` or `.ts`) evaluates and compiles your file at runtime. While great for development, this compilation step adds a few seconds of latency. For use cases where sub-second latency is critical, you should build your tasks ahead of time.
+
+```bash
+# Generates an optimized hello.wasm file
+capsule build hello.py --export
+
+# Execute the compiled artifact directly
+capsule exec hello.wasm
+```
 
 > [!NOTE]
-> See [in-code usage documentation](#in-code-usage)
+> Or from your existing code:
+>
+> ```python
+> from capsule import run
+>
+> result = await run(
+>    file="./hello.wasm", # or `hello.py`
+>    args=[]
+> )
+>
+> print(f"Task completed: {result['result']}")
+> ```
+>
+> See [in-code usage documentation](#in-code-usage) for details on both Python and TypeScript integration.
 
-> [!TIP]
-> Add `--verbose` to any `capsule run` command to see real-time task execution details.
 
-## Documentation (v0.6.2)
+Executing a `.wasm` file bypasses the compiler completely, reducing initialization time to milliseconds while using a natively optimized (`.cwasm`) format behind the scenes.
+
+## Documentation (v0.6.3)
 
 ### Task Configuration Options
 
@@ -283,6 +285,36 @@ export const main = task({
 });
 ```
 
+### Network Access
+
+Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default, all outbound requests are allowed (`["*"]`). Restrict access by providing a whitelist of domains.
+
+#### Python
+
+```python
+from capsule import task
+from capsule.http import get
+
+@task(name="main", allowed_hosts=["api.openai.com", "*.anthropic.com"])
+def main() -> dict:
+    response = get("https://api.openai.com/v1/models")
+    return response.json()
+```
+
+#### TypeScript / JavaScript
+
+```typescript
+import { task } from "@capsule-run/sdk";
+
+export const main = task({
+    name: "main",
+    allowedHosts: ["api.openai.com", "*.anthropic.com"]
+}, async () => {
+    const response = await fetch("https://api.openai.com/v1/models");
+    return response.json();
+});
+```
+
 ### File Access
 
 Tasks can read and write files within directories specified in `allowed_files`. Any attempt to access files outside these directories is not possible.
@@ -328,36 +360,6 @@ export const main = task({ name: "main", allowedFiles: ["./data"] }, async () =>
 });
 ```
 
-### Network Access
-
-Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default, all outbound requests are allowed (`["*"]`). Restrict access by providing a whitelist of domains.
-
-#### Python
-
-```python
-from capsule import task
-from capsule.http import get
-
-@task(name="main", allowed_hosts=["api.openai.com", "*.anthropic.com"])
-def main() -> dict:
-    response = get("https://api.openai.com/v1/models")
-    return response.json()
-```
-
-#### TypeScript / JavaScript
-
-```typescript
-import { task } from "@capsule-run/sdk";
-
-export const main = task({
-    name: "main",
-    allowedHosts: ["api.openai.com", "*.anthropic.com"]
-}, async () => {
-    const response = await fetch("https://api.openai.com/v1/models");
-    return response.json();
-});
-```
-
 ### Environment Variables
 
 Tasks can access environment variables to read configuration, API keys, or other runtime settings.
@@ -400,7 +402,7 @@ The `run()` function lets you execute tasks programmatically from your code inst
 from capsule import run
 
 result = await run(
-    file="./sandbox.py",
+    file="./sandbox.py", # or `sandbox.wasm`
     args=["code to execute"]
 )
 ```
@@ -424,7 +426,7 @@ def main(code: str) -> str:
 import { run } from '@capsule-run/sdk/runner';
 
 const result = await run({
-  file: './sandbox.ts',
+  file: './sandbox.ts', // or `sandbox.wasm`
   args: ['code to execute']
 });
 ```
@@ -470,7 +472,7 @@ capsule build main.ts # or `main.py`
 > [!NOTE]
 > TypeScript/JavaScript has broader compatibility than Python since it doesn't rely on native bindings.
 
-**Python:** Only pure Python is supported in sandboxes (no C extensions like `numpy` or `pandas`). However, your host code using `run()` has access to the full Python ecosystem, any pip package, native extensions, everything. (see [in-code usage](#in-code-usage))
+**Python:** Only pure Python is supported in sandboxes (no C extensions like `numpy` or `pandas`). However, your host code using `run()` has access to the full Python ecosystem, any pip package and native extensions. (see [in-code usage](#in-code-usage))
 
 **TypeScript/JavaScript:** npm packages and ES modules work. Common Node.js built-ins are available. If you have any trouble with a built-in, do not hesitate to open an issue.
 

@@ -6,12 +6,13 @@ use std::fmt;
 use std::path::Path;
 
 use cli::{Cli, Commands};
-use commands::{BuildError, RunError, build, run};
+use commands::{BuildError, ExecError, RunError, build, exec, run};
 
 #[derive(Debug)]
 pub enum CliError {
     RunError(String),
     BuildError(String),
+    ExecError(String),
 }
 
 impl fmt::Display for CliError {
@@ -19,6 +20,7 @@ impl fmt::Display for CliError {
         match self {
             CliError::RunError(msg) => write!(f, "{}", msg),
             CliError::BuildError(msg) => write!(f, "{}", msg),
+            CliError::ExecError(msg) => write!(f, "{}", msg),
         }
     }
 }
@@ -32,6 +34,12 @@ impl From<RunError> for CliError {
 impl From<BuildError> for CliError {
     fn from(err: BuildError) -> Self {
         CliError::BuildError(err.to_string())
+    }
+}
+
+impl From<ExecError> for CliError {
+    fn from(err: ExecError) -> Self {
+        CliError::ExecError(err.to_string())
     }
 }
 
@@ -57,9 +65,25 @@ async fn main() -> Result<(), CliError> {
                 println!("{}", result);
             }
         }
-        Commands::Build { file } => {
+        Commands::Build { file, export } => {
             let file_path = file.as_deref().map(Path::new);
-            build::execute(file_path).await?;
+            build::execute(file_path, export).await?;
+        }
+        Commands::Exec {
+            file,
+            json,
+            verbose,
+            args,
+        } => {
+            let result = exec::execute(Path::new(&file), args, json, verbose).await?;
+
+            if json {
+                println!("{}", result);
+            } else if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&result)
+                && !parsed.get("result").is_none_or(|r| r.is_null())
+            {
+                println!("{}", result);
+            }
         }
     }
 
