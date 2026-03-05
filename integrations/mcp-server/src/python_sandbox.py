@@ -21,8 +21,6 @@ def execute_code(code: str):
         exec(compile(tree, filename="<ast>", mode="exec"), local_env)
         return local_env.get("result")
 
-    return result
-
 @task(name="main", compute="HIGH")
 def main(code: str):
     response = execute_code(code)
