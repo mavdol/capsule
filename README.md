@@ -462,7 +462,7 @@ capsule exec hello.wasm
 > print(f"Task completed: {result['result']}")
 > ```
 >
-> See [in-code usage documentation](#in-code-usage) for details on both Python and TypeScript integration.
+> See [in-code usage](#in-code-usage) for details on both Python and TypeScript integration.
 
 Executing a `.wasm` file bypasses the compiler completely, reducing initialization time to milliseconds while using a natively optimized (`.cwasm`) format behind the scenes.
 
