@@ -16,8 +16,8 @@
   "homepage": "https://github.com/mavdol/capsule",
   "scripts": {
     "build:ts": "tsc",
-    "build:wasm:py": "capsule build src/python_sandbox.py -o dist/sandboxes/python_sandbox.wasm",
-    "build:wasm:js": "capsule build src/js_sandbox.ts -o dist/sandboxes/js_sandbox.wasm",
+    "build:wasm:py": "capsule build src/python_sandbox.py --export && mv src/python_sandbox.wasm dist/sandboxes/python_sandbox.wasm",
+    "build:wasm:js": "capsule build src/js_sandbox.ts --export && mv src/js_sandbox.wasm dist/sandboxes/js_sandbox.wasm",
     "build:wasm": "npm run build:wasm:py && npm run build:wasm:js",
     "build": "npm run build:wasm && npm run build:ts"
   },
