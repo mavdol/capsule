@@ -19,26 +19,16 @@ Ask your AI agent:
 
 > *"I have monthly revenue of [12400, 15800, 14200, 18900, 21000, 19500]. What's the average and which month grew the most?"*
 
-**Python**
+The agent calls `execute_python` with:
+
 ```python
 revenue = [12400, 15800, 14200, 18900, 21000, 19500]
 
 avg = sum(revenue) / len(revenue)
 growth = [revenue[i] - revenue[i-1] for i in range(1, len(revenue))]
-best_month = growth.index(max(growth)) + 2
+best_month = growth.index(max(growth)) + 2  # +2 for 1-indexed and offset
 
 {"average": round(avg, 2), "best_growth_month": best_month, "growth": max(growth)}
-```
-
-**JavaScript**
-```javascript
-const revenue = [12400, 15800, 14200, 18900, 21000, 19500];
-
-const avg = revenue.reduce((a, b) => a + b) / revenue.length;
-const growth = revenue.slice(1).map((v, i) => v - revenue[i]);
-const bestMonth = growth.indexOf(Math.max(...growth)) + 2;
-
-({ average: Math.round(avg * 100) / 100, best_growth_month: bestMonth, growth: Math.max(...growth) })
 ```
 
 → `{"average": 16966.67, "best_growth_month": 4, "growth": 4700}`
