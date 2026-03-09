@@ -21,11 +21,6 @@ jobs:
             platform: linux-x64
             os_name: linux
             cpu: x64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            platform: linux-arm64
-            os_name: linux
-            cpu: arm64
           - os: macos-latest
             target: x86_64-apple-darwin
             platform: darwin-x64
@@ -61,13 +56,6 @@ jobs:
       - name: Install musl tools (x64)
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get install -y musl-tools
-
-      - name: Install musl tools (arm64)
-        if: matrix.target == 'aarch64-unknown-linux-musl'
-        run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
-          echo '[target.aarch64-unknown-linux-musl]' >> ~/.cargo/config.toml
-          echo 'linker = "aarch64-linux-gnu-gcc"' >> ~/.cargo/config.toml
 
       - name: Build
         working-directory: crates/capsule-cli
