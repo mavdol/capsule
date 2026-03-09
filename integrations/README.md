@@ -4,13 +4,13 @@ This directory contains integrations for Capsule with popular AI frameworks and 
 
 ## Available Integrations
 
-- **[MCP Server](https://github.com/mavdol/capsule/tree/main/integrations/mcp-server)** - Model Context Protocol server implementation
+- [MCP Server](https://github.com/mavdol/capsule/tree/main/integrations/mcp-server) - Model Context Protocol server implementation
 
 ## External Integrations
 
-- **[langchain-capsule](https://github.com/mavdol/langchain-capsule)** - LangChain integration
-- **[smolagents-capsule](https://github.com/mavdol/smolagents-capsule)** - smolagents integration
-- **[mastra-capsule](https://github.com/mavdol/mastra-capsule)** - Mastra integration
+- [langchain-capsule](https://github.com/mavdol/langchain-capsule) - LangChain integration
+- [smolagents-capsule](https://github.com/mavdol/smolagents-capsule) - smolagents integration
+- [mastra-capsule](https://github.com/mavdol/mastra-capsule) - Mastra integration
 
 ---
 
