@@ -58,19 +58,18 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install cross
-        if: contains(matrix.target, 'musl')
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cross
+      - name: Install musl tools (x64)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get install -y musl-tools
 
-      - name: Build (cross)
-        if: contains(matrix.target, 'musl')
-        working-directory: crates/capsule-cli
-        run: cross build --release --target ${{ matrix.target }}
+      - name: Install musl tools (arm64)
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu musl-tools
+          echo '[target.aarch64-unknown-linux-musl]' >> ~/.cargo/config.toml
+          echo 'linker = "aarch64-linux-gnu-gcc"' >> ~/.cargo/config.toml
 
-      - name: Build (cargo)
-        if: "!contains(matrix.target, 'musl')"
+      - name: Build
         working-directory: crates/capsule-cli
         run: cargo build --release --target ${{ matrix.target }}
 
