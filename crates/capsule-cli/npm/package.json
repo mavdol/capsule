@@ -32,7 +32,6 @@
     "@capsule-run/cli-darwin-arm64": "0.6.4",
     "@capsule-run/cli-darwin-x64": "0.6.4",
     "@capsule-run/cli-linux-x64": "0.6.4",
-    "@capsule-run/cli-linux-arm64": "0.6.4",
     "@capsule-run/cli-win32-x64": "0.6.4"
   }
 }
