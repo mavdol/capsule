@@ -1,4 +1,6 @@
-# Capsule Python Adapter
+# `Capsule` Python Adapter
+
+[![Python Adapter Release](https://github.com/mavdol/capsule/actions/workflows/python-adapter-release.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/python-adapter-release.yml)
 
 Execute Python and JavaScript code securely inside Capsule sandboxes from your Python applications.
 
@@ -13,9 +15,9 @@ pip install capsule-run-adapter
 ### Execute Python Code
 
 ```python
-from capsule_adapter import run_python_sync
+from capsule_adapter import run_python
 
-result = run_python_sync("""
+result = await run_python("""
 print("Hello from Python!")
 x = 5 + 3
 x * 2
@@ -27,9 +29,9 @@ print(result)  # "Hello from Python!\n16"
 ### Execute JavaScript Code
 
 ```python
-from capsule_adapter import run_javascript_sync
+from capsule_adapter import run_javascript
 
-result = run_javascript_sync("""
+result = await run_javascript("""
 console.log("Hello from JavaScript!");
 const x = 5 + 3;
 x * 2;
@@ -38,45 +40,9 @@ x * 2;
 print(result)  # "Hello from JavaScript!\n16"
 ```
 
-### Async API
-
-For async applications, use the async versions:
-
-```python
-import asyncio
-from capsule_adapter import run_python, run_javascript
-
-async def main():
-    result = await run_python("print('Hello!')")
-    print(result)
-
-asyncio.run(main())
-```
-
 ### Preload Sandboxes (Optional)
 
 The first execution of a sandbox has a cold start (~1 second). You can preload sandboxes to warm them up for faster subsequent executions (~10ms):
-
-```python
-from capsule_adapter import load_sandboxes_sync, run_python_sync
-
-# Preload both sandboxes in parallel
-load_sandboxes_sync()
-
-# Now executions will be faster
-result = run_python_sync('print("Fast!")')
-```
-
-Or preload individually:
-
-```python
-from capsule_adapter import load_python_sandbox_sync, load_javascript_sandbox_sync
-
-load_python_sandbox_sync()      # Warm up Python only
-load_javascript_sandbox_sync()  # Warm up JavaScript only
-```
-
-For async applications:
 
 ```python
 import asyncio
@@ -85,6 +51,10 @@ from capsule_adapter import load_sandboxes, run_python
 async def main():
     # Preload sandboxes
     await load_sandboxes()
+
+    # Or preload individually
+    # await load_python_sandbox()     # Warm up Python only
+    # await load_javascript_sandbox() # Warm up JavaScript only
 
     # Fast execution
     result = await run_python('print("Fast!")')
@@ -98,7 +68,3 @@ asyncio.run(main())
 The adapter compiles Python and JavaScript sandboxes into WebAssembly modules during the build step. When you call `run_python()` or `run_javascript()`, the adapter invokes these pre-built sandboxes using Capsule's runner with the code you provide.
 
 Learn more about [Capsule](https://github.com/mavdol/capsule).
-
-## License
-
-Apache-2.0
