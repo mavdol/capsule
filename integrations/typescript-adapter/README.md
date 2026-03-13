@@ -1,4 +1,4 @@
-# Capsule TypeScript Adapter
+# `Capsule` TypeScript Adapter
 
 Execute Python and JavaScript code securely inside Capsule sandboxes from your TypeScript/JavaScript applications.
 
@@ -71,8 +71,3 @@ The adapter compiles Python and JavaScript sandboxes into WebAssembly modules du
 npm install
 npm run build
 ```
-
-This will:
-1. Compile the Python sandbox (`src/python_sandbox.py`) to `dist/sandboxes/python_sandbox.wasm`
-2. Compile the JavaScript sandbox (`src/js_sandbox.ts`) to `dist/sandboxes/js_sandbox.wasm`
-3. Build the TypeScript adapter code to `dist/index.js`
