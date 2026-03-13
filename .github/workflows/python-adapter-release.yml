@@ -25,6 +25,10 @@ jobs:
       - name: Install capsule-run (PyPI)
         run: pip install capsule-run
 
+      - name: Create sandboxes directory
+        working-directory: integrations/python-adapter
+        run: mkdir -p capsule_adapter/sandboxes
+
       - name: Build python_sandbox.wasm
         working-directory: integrations/python-adapter
         run: |
@@ -79,6 +83,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+
+      - name: Create sandboxes directory
+        working-directory: integrations/python-adapter
+        run: mkdir -p capsule_adapter/sandboxes
 
       - name: Download wasm sandboxes
         uses: actions/download-artifact@v4
