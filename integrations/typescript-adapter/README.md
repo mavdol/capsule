@@ -1,4 +1,6 @@
-# Capsule TypeScript Adapter
+# `Capsule` TypeScript Adapter
+
+[![TypeScript Adapter Release](https://github.com/mavdol/capsule/actions/workflows/typescript-adapter-release.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/typescript-adapter-release.yml)
 
 Execute Python and JavaScript code securely inside Capsule sandboxes from your TypeScript/JavaScript applications.
 
@@ -13,9 +15,9 @@ npm install @capsule-run/adapter
 ### Execute Python Code
 
 ```typescript
-import { executePython } from '@capsule-run/adapter';
+import { runPython } from '@capsule-run/adapter';
 
-const result = await executePython(`
+const result = await runPython(`
 print("Hello from Python!")
 x = 5 + 3
 x * 2
@@ -27,9 +29,9 @@ console.log(result); // "Hello from Python!\n16"
 ### Execute JavaScript Code
 
 ```typescript
-import { executeJavaScript } from '@capsule-run/adapter';
+import { runJavaScript } from '@capsule-run/adapter';
 
-const result = await executeJavaScript(`
+const result = await runJavaScript(`
 console.log("Hello from JavaScript!");
 const x = 5 + 3;
 x * 2;
@@ -43,13 +45,13 @@ console.log(result); // "Hello from JavaScript!\n16"
 The first execution of a sandbox has a cold start (~1 second). You can preload sandboxes to warm them up for faster subsequent executions (~10ms):
 
 ```typescript
-import { loadSandboxes, executePython } from '@capsule-run/adapter';
+import { loadSandboxes, runPython } from '@capsule-run/adapter';
 
 // Preload both sandboxes in parallel
 await loadSandboxes();
 
 // Now executions will be faster
-const result = await executePython('print("Fast!")');
+const result = await runPython('print("Fast!")');
 ```
 
 Or preload individually:
@@ -63,16 +65,6 @@ await loadJavaScriptSandbox();  // Warm up JavaScript only
 
 ## How It Works
 
-The adapter compiles Python and JavaScript sandboxes into WebAssembly modules during the build step. When you call `executePython()` or `executeJavaScript()`, the adapter invokes these pre-built sandboxes using Capsule's runner with the code you provide.
+The adapter compiles Python and JavaScript sandboxes into WebAssembly modules during the build step. When you call `runPython()` or `runJavaScript()`, the adapter invokes these pre-built sandboxes using Capsule's runner with the code you provide.
 
-## Building from Source
-
-```bash
-npm install
-npm run build
-```
-
-This will:
-1. Compile the Python sandbox (`src/python_sandbox.py`) to `dist/sandboxes/python_sandbox.wasm`
-2. Compile the JavaScript sandbox (`src/js_sandbox.ts`) to `dist/sandboxes/js_sandbox.wasm`
-3. Build the TypeScript adapter code to `dist/index.js`
+Learn more about [Capsule](https://github.com/mavdol/capsule).

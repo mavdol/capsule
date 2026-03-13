@@ -31,10 +31,10 @@ export async function loadSandboxes(): Promise<void> {
   ]);
 }
 
-export async function executePython(code: string): Promise<string> {
+export async function runPython(code: string): Promise<string> {
   return await invokeSandbox(SANDBOX_PY, code);
 }
 
-export async function executeJavaScript(code: string): Promise<string> {
+export async function runJavaScript(code: string): Promise<string> {
   return await invokeSandbox(SANDBOX_JS, code);
 }
