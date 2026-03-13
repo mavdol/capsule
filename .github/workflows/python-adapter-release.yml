@@ -10,8 +10,61 @@ on:
         required: true
 
 jobs:
+  build-wasm:
+    name: Build WebAssembly sandboxes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install capsule-run (PyPI)
+        run: pip install capsule-run
+
+      - name: Build python_sandbox.wasm
+        working-directory: integrations/python-adapter
+        run: |
+          capsule build src/python_sandbox.py --export
+          mv src/python_sandbox.wasm capsule_adapter/sandboxes/python_sandbox.wasm
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install @capsule-run/cli (npm)
+        run: npm install -g @capsule-run/cli
+
+      - name: Setup package.json for SDK
+        run: |
+          echo '{"type": "module"}' > package.json
+          npm install @capsule-run/sdk
+
+      - name: Build js_sandbox.wasm
+        working-directory: integrations/python-adapter
+        run: |
+          capsule build src/js_sandbox.ts --export
+          mv src/js_sandbox.wasm capsule_adapter/sandboxes/js_sandbox.wasm
+
+      - name: Upload wasm sandboxes
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-sandboxes
+          path: integrations/python-adapter/capsule_adapter/sandboxes/
+
+      - name: Clean up Node.js artifacts
+        run: |
+          rm -rf node_modules
+          rm -f package.json package-lock.json
+
   publish-pypi:
     name: Publish to PyPI
+    needs: [build-wasm]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -27,52 +80,17 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      - name: Download wasm sandboxes
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-sandboxes
+          path: integrations/python-adapter/capsule_adapter/sandboxes/
+
       - name: Install dependencies
         working-directory: integrations/python-adapter
         run: |
           python -m pip install --upgrade pip
           pip install build twine
-
-      - name: Install capsule-run (PyPI)
-        working-directory: integrations/python-adapter
-        run: pip install capsule-run
-
-      - name: Create sandboxes directory
-        working-directory: integrations/python-adapter
-        run: mkdir -p capsule_run_adapter/sandboxes
-
-      - name: Build python_sandbox.wasm
-        working-directory: integrations/python-adapter
-        run: |
-          capsule build src/sandbox_py.py --export
-          mv src/sandbox_py.wasm capsule_run_adapter/sandboxes/sandbox_py.wasm
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Install @capsule-run/cli (npm)
-        working-directory: integrations/python-adapter
-        run: npm install -g @capsule-run/cli
-
-      - name: Setup package.json for SDK
-        working-directory: integrations/python-adapter
-        run: |
-          echo '{"type": "module"}' > package.json
-          npm install @capsule-run/sdk
-
-      - name: Build js_sandbox.wasm
-        working-directory: integrations/python-adapter
-        run: |
-          capsule build src/sandbox_js.ts --export
-          mv src/sandbox_js.wasm capsule_run_adapter/sandboxes/sandbox_js.wasm
-
-      - name: Clean up Node.js artifacts
-        working-directory: integrations/python-adapter
-        run: |
-          rm -rf node_modules
-          rm -f package.json package-lock.json
 
       - name: Build package
         working-directory: integrations/python-adapter
@@ -92,3 +110,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
+          packages-dir: integrations/python-adapter/dist/
