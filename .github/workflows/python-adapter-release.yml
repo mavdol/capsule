@@ -28,6 +28,7 @@ jobs:
       - name: Build python_sandbox.wasm
         working-directory: integrations/python-adapter
         run: |
+          mkdir -p capsule_adapter/sandboxes
           capsule build src/python_sandbox.py --export
           mv src/python_sandbox.wasm capsule_adapter/sandboxes/python_sandbox.wasm
 
