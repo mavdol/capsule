@@ -43,8 +43,9 @@ const pythonCodeAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
+    const code = message.content.text || '';
+
     try {
-      const code = message.content.text || '';
       logger.info(`Executing Python code`);
       const result = await runPython(code);
 
@@ -72,7 +73,14 @@ const pythonCodeAction: Action = {
       logger.error(`Python code execution failed: ${errorMessage}`);
       return {
         success: false,
-        error: error instanceof Error ? error : new Error(String(error)),
+        error: String(error),
+        data: {
+          actions: ['EXECUTE_PYTHON'],
+          source: message.content.source,
+          language: 'Python',
+          code,
+          result: errorMessage,
+        },
       };
     }
   },
@@ -172,9 +180,9 @@ const javascriptCodeAction: Action = {
     callback?: HandlerCallback,
     _responses?: Memory[]
   ): Promise<ActionResult> => {
-    try {
-      const code = message.content.text || '';
+    const code = message.content.text || '';
 
+    try {
       logger.info(`Executing JavaScript code`);
       const result = await runJavaScript(code);
 
@@ -202,7 +210,14 @@ const javascriptCodeAction: Action = {
       logger.error(`JavaScript code execution failed: ${errorMessage}`);
       return {
         success: false,
-        error: error instanceof Error ? error : new Error(String(error)),
+        error: String(error),
+        data: {
+          actions: ['EXECUTE_JAVASCRIPT'],
+          source: message.content.source,
+          language: 'JavaScript',
+          code,
+          result: errorMessage,
+        },
       };
     }
   },
