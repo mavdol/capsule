@@ -96,7 +96,7 @@ const pythonCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: '3588',
+          text: '156 * 23',
           actions: ['EXECUTE_PYTHON'],
         },
       },
@@ -111,7 +111,7 @@ const pythonCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: '5050',
+          text: 'sum(range(1, 101))',
           actions: ['EXECUTE_PYTHON'],
         },
       },
@@ -126,7 +126,7 @@ const pythonCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: '[42, 17, 89, 3, 56, 91, 24, 67, 8, 45]',
+          text: 'import random\n[random.randint(1, 100) for _ in range(10)]',
           actions: ['EXECUTE_PYTHON'],
         },
       },
@@ -141,7 +141,67 @@ const pythonCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'True',
+          text: 'n = 17\nn > 1 and all(n % i != 0 for i in range(2, int(n**0.5) + 1))',
+          actions: ['EXECUTE_PYTHON'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Calculate the factorial of 8',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: 'import math\nmath.factorial(8)',
+          actions: ['EXECUTE_PYTHON'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Find the average of these numbers: 12, 45, 23, 67, 89',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: 'numbers = [12, 45, 23, 67, 89]\nsum(numbers) / len(numbers)',
+          actions: ['EXECUTE_PYTHON'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Convert celsius 25 to fahrenheit',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: 'celsius = 25\n(celsius * 9/5) + 32',
+          actions: ['EXECUTE_PYTHON'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Find the fibonacci number at position 10',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: 'def fib(n):\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a\nfib(10)',
           actions: ['EXECUTE_PYTHON'],
         },
       },
