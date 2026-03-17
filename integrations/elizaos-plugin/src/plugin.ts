@@ -5,8 +5,9 @@ import {
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
+  ModelType,
   type State,
-  logger,
+  logger
 } from '@elizaos/core';
 import { runPython, runJavaScript, loadSandboxes } from '@capsule-run/adapter';
 import { CapsulePluginTestSuite } from './__tests__/e2e/capsule-plugin.e2e.js';
@@ -36,18 +37,32 @@ const pythonCodeAction: Action = {
   },
 
   handler: async (
-    _runtime: IAgentRuntime,
+    runtime: IAgentRuntime,
     message: Memory,
     _state: State | undefined,
     _options: Record<string, unknown> = {},
     callback?: HandlerCallback,
-    _responses?: Memory[]
+    responses?: Memory[]
   ): Promise<ActionResult> => {
-    const code = message.content.text || '';
+    const code = responses?.[0]?.content?.text || message.content.text || '';
+
+    const response = await runtime.useModel(ModelType.MEDIUM, {
+      prompt: `
+        Generate a python code with the following rules:\n
+        - Both standard output (print statements) and the last evaluated expression are returned\n
+        - Supports pure Python only (no C extensions like numpy/pandas).\n
+        - No explanation, just the code\n
+        Here is the problem to solve:\n
+        ${message.content.text}
+      `,
+      temperature: 0.5
+    });
+
+
+    const codeMatch = response.match(/```python\n([\s\S]*?)```/);
 
     try {
-      logger.info(`Executing Python code`);
-      const result = await runPython(code);
+      const result = await runPython(codeMatch ? codeMatch[1] : code);
 
       if (callback) {
         await callback({
@@ -233,18 +248,32 @@ const javascriptCodeAction: Action = {
   },
 
   handler: async (
-    _runtime: IAgentRuntime,
+    runtime: IAgentRuntime,
     message: Memory,
     _state: State | undefined,
     _options: Record<string, unknown> = {},
     callback?: HandlerCallback,
-    _responses?: Memory[]
+    responses?: Memory[]
   ): Promise<ActionResult> => {
-    const code = message.content.text || '';
+    const code = responses?.[0]?.content?.text || message.content.text || '';
+
+    const response = await runtime.useModel(ModelType.MEDIUM, {
+      prompt: `
+        Generate a javascript code with the following rules:\n
+        - Both standard output (console.log statements) and the last evaluated expression are returned\n
+        - No explanation, just the code\n
+        Here is the problem to solve:\n
+        ${message.content.text}
+      `,
+      temperature: 0.5
+    });
+
+
+    const codeMatch = response.match(/```javascript\n([\s\S]*?)```/);
 
     try {
       logger.info(`Executing JavaScript code`);
-      const result = await runJavaScript(code);
+      const result = await runJavaScript(codeMatch ? codeMatch[1] : code);
 
       if (callback) {
         await callback({
@@ -293,7 +322,7 @@ const javascriptCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: '[1,2,5,8,9]',
+          text: '[5, 2, 8, 1, 9].sort((a, b) => a - b)',
           actions: ['EXECUTE_JAVASCRIPT'],
         },
       },
@@ -308,7 +337,7 @@ const javascriptCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'John',
+          text: 'const obj = JSON.parse(\'{"name":"John","age":30}\');\nobj.name',
           actions: ['EXECUTE_JAVASCRIPT'],
         },
       },
@@ -323,7 +352,7 @@ const javascriptCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: '15',
+          text: '[1, 2, 3, 4, 5].reduce((sum, num) => sum + num, 0)',
           actions: ['EXECUTE_JAVASCRIPT'],
         },
       },
@@ -338,7 +367,82 @@ const javascriptCodeAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'olleh',
+          text: '"hello".split("").reverse().join("")',
+          actions: ['EXECUTE_JAVASCRIPT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Filter even numbers from [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(n => n % 2 === 0)',
+          actions: ['EXECUTE_JAVASCRIPT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Convert this array to uppercase: ["hello", "world"]',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: '["hello", "world"].map(s => s.toUpperCase())',
+          actions: ['EXECUTE_JAVASCRIPT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Find the maximum value in [23, 45, 12, 67, 34]',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: 'Math.max(...[23, 45, 12, 67, 34])',
+          actions: ['EXECUTE_JAVASCRIPT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Count how many times "a" appears in "banana"',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: '"banana".split("a").length - 1',
+          actions: ['EXECUTE_JAVASCRIPT'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: 'Generate an array of numbers from 1 to 10',
+        },
+      },
+      {
+        name: '{{name2}}',
+        content: {
+          text: 'Array.from({length: 10}, (_, i) => i + 1)',
           actions: ['EXECUTE_JAVASCRIPT'],
         },
       },
