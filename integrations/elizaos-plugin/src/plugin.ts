@@ -25,7 +25,7 @@ import { CapsulePluginTestSuite } from './__tests__/e2e/capsule-plugin.e2e.js';
 const executeCodeAction: Action = {
   name: 'EXECUTE_CODE',
   similes: ['RUN_CODE', 'EVAL_CODE', 'CODE_EXEC', 'RUN_PYTHON', 'RUN_JAVASCRIPT'],
-  description: 'Executes Python or JavaScript code in a secure Capsule sandbox',
+  description: 'Executes Python or JavaScript code in a secure Capsule sandbox. Both standard output (print/console.log statements) and the last evaluated expression are returned. Supports pure Python only (no C extensions like numpy/pandas).',
 
   validate: async (
     _runtime: IAgentRuntime,
