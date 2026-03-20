@@ -238,51 +238,6 @@ Every task returns a structured JSON envelope containing both the result and exe
   - `retries` — Number of retry attempts that occurred
   - `fuel_consumed` — CPU resources used (see [Compute Levels](#compute-levels))
 
-### HTTP Client API
-
-#### Python
-
-The standard Python `requests` library and socket-based networking aren't natively compatible with WebAssembly's sandboxed I/O model. Capsule provides its own HTTP client that works within the Wasm environment:
-
-```python
-from capsule import task
-from capsule.http import get, post, put, delete
-
-@task(name="http_example", compute="MEDIUM", timeout="30s")
-def main() -> dict:
-    """Example demonstrating HTTP client usage within a task."""
-
-    # GET request
-    response = get("https://api.example.com/data")
-
-    # POST with JSON body
-    response = post("https://api.example.com/submit", json={"key": "value"})
-
-    # Response methods
-    is_ok = response.ok()           # Returns True if status code is 2xx
-    status = response.status_code    # Get the HTTP status code
-    data = response.json()           # Parse response as JSON
-    text = response.text()           # Get response as text
-
-    return {"status": status, "success": is_ok}
-```
-
-#### TypeScript / JavaScript
-
-Standard libraries like `fetch` are already compatible, so no custom HTTP client is needed for TypeScript/JavaScript.
-
-```typescript
-import { task } from "@capsule-run/sdk";
-
-export const main = task({
-    name: "main",
-    compute: "MEDIUM"
-}, async () => {
-    const response = await fetch("https://api.example.com/data");
-    return response.json();
-});
-```
-
 ### Network Access
 
 Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default, all outbound requests are allowed (`["*"]`). Restrict access by providing a whitelist of domains.
@@ -290,13 +245,14 @@ Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default
 #### Python
 
 ```python
+import json
 from capsule import task
-from capsule.http import get
+from urllib.request import urlopen
 
 @task(name="main", allowed_hosts=["api.openai.com", "*.anthropic.com"])
 def main() -> dict:
-    response = get("https://api.openai.com/v1/models")
-    return response.json()
+    with urlopen("https://api.openai.com/v1/models") as response:
+        return json.loads(response.read().decode("utf-8"))
 ```
 
 #### TypeScript / JavaScript
