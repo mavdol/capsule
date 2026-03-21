@@ -82,7 +82,9 @@ fn extract_call_args(
     Some(config)
 }
 
-fn normalize_file_entry(map: &std::collections::HashMap<String, serde_json::Value>) -> Option<serde_json::Value> {
+fn normalize_file_entry(
+    map: &std::collections::HashMap<String, serde_json::Value>,
+) -> Option<serde_json::Value> {
     let path = map.get("path")?.as_str()?.to_string();
     let mode = map.get("mode").and_then(|v| v.as_str()).unwrap_or("");
     let normalized = match mode {
@@ -191,7 +193,10 @@ def main():
     pass
 "#;
         let configs = extract_python_task_configs(source).unwrap();
-        assert_eq!(configs["main"]["allowed_files"], serde_json::json!(["./data", "./output"]));
+        assert_eq!(
+            configs["main"]["allowed_files"],
+            serde_json::json!(["./data", "./output"])
+        );
     }
 
     #[test]
@@ -202,6 +207,9 @@ def main():
     pass
 "#;
         let configs = extract_python_task_configs(source).unwrap();
-        assert_eq!(configs["main"]["allowed_files"], serde_json::json!(["./data:ro", "./output"]));
+        assert_eq!(
+            configs["main"]["allowed_files"],
+            serde_json::json!(["./data:ro", "./output"])
+        );
     }
 }

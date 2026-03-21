@@ -272,7 +272,10 @@ const asyncTask = task({ name: "asyncTask", compute: "LOW" }, async () => {
 const main = task({ name: "main", allowedFiles: ["./data", "./output"] }, () => {});
 "#;
         let configs = extract_js_task_configs(source, false).unwrap();
-        assert_eq!(configs["main"]["allowedFiles"], serde_json::json!(["./data", "./output"]));
+        assert_eq!(
+            configs["main"]["allowedFiles"],
+            serde_json::json!(["./data", "./output"])
+        );
     }
 
     #[test]
@@ -281,6 +284,9 @@ const main = task({ name: "main", allowedFiles: ["./data", "./output"] }, () => 
 const main = task({ name: "main", allowedFiles: [{ path: "./data", mode: "read-only" }, { path: "./output", mode: "read-write" }] }, async () => {});
 "#;
         let configs = extract_js_task_configs(source, false).unwrap();
-        assert_eq!(configs["main"]["allowedFiles"], serde_json::json!(["./data:ro", "./output"]));
+        assert_eq!(
+            configs["main"]["allowedFiles"],
+            serde_json::json!(["./data:ro", "./output"])
+        );
     }
 }
