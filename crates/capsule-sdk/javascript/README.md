@@ -208,7 +208,7 @@ Tasks can read and write files within directories specified in `allowedFiles`. A
 
 > `allowedFiles` supports directory paths only, not individual files.
 
-Each entry can be a plain path (read-write by default) or an `AllowedFile` object with an explicit `mode`: `"ro"` (read-only) or `"rw"` (read-write).
+Each entry can be a plain path (read-write by default) or an `AllowedFile` object with an explicit `mode`: `"read-only"` (or `"ro"`) or `"read-write"` (or `"rw"`).
 
 Common Node.js built-ins are available. Use the standard `fs` module:
 
@@ -219,8 +219,8 @@ import fs from "fs/promises";
 export const main = task({
     name: "main",
     allowedFiles: [
-        { path: "./data", mode: "ro" },
-        { path: "./output", mode: "rw" },
+        { path: "./data", mode: "read-only" },
+        { path: "./output", mode: "read-write" },
     ]
 }, async () => {
     const content = await fs.readFile("./data/input.txt", "utf8");

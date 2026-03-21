@@ -184,14 +184,14 @@ Tasks can read and write files within directories specified in `allowed_files`. 
 
 > `allowed_files` supports directory paths only, not individual files.
 
-Each entry can be a plain path (read-write by default) or a dict with an explicit `mode`: `"ro"` (read-only) or `"rw"` (read-write).
+Each entry can be a plain path (read-write by default) or a dict with an explicit `mode`: `"read-only"` (or `"ro"`) or `"read-write"` (or `"rw"`).
 
 ```python
 from capsule import task
 
 @task(name="main", allowed_files=[
-    {"path": "./data", "mode": "ro"},
-    {"path": "./output", "mode": "rw"},
+    {"path": "./data", "mode": "read-only"},
+    {"path": "./output", "mode": "read-write"},
 ])
 def main() -> str:
     with open("./data/input.txt") as f:

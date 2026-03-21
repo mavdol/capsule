@@ -277,8 +277,8 @@ Tasks can read and write files within directories specified in `allowed_files`. 
 > `allowed_files` supports directory paths only, not individual files.
 
 Each entry can be a plain path (read-write by default) or a structured object with an explicit `mode`:
-- `"ro"` — read-only
-- `"rw"` — read-write (default when mode is omitted)
+- `"read-only"` (or `"ro"`)
+- `"read-write"` (or `"rw"`)
 
 #### Python
 
@@ -288,8 +288,8 @@ Python's standard file operations work normally. Use `open()`, `os`, `pathlib`, 
 from capsule import task
 
 @task(name="main", allowed_files=[
-    {"path": "./data", "mode": "ro"},
-    {"path": "./output", "mode": "rw"},
+    {"path": "./data", "mode": "read-only"},
+    {"path": "./output", "mode": "read-write"},
 ])
 def main() -> str:
     with open("./data/input.txt") as f:
@@ -312,8 +312,8 @@ import fs from "fs/promises";
 export const main = task({
     name: "main",
     allowedFiles: [
-        { path: "./data", mode: "ro" },
-        { path: "./output", mode: "rw" },
+        { path: "./data", mode: "read-only" },
+        { path: "./output", mode: "read-write" },
     ]
 }, async () => {
     const content = await fs.readFile("./data/input.txt", "utf8");
