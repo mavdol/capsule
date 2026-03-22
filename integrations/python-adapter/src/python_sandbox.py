@@ -1,7 +1,10 @@
 import ast
 import sys
+import urllib.request, urllib.error, urllib.parse
+
 from io import StringIO
 from capsule import task
+
 
 @task(name="executeCode", compute="LOW", ram="256MB")
 def execute_code(code: str):
