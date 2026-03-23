@@ -183,6 +183,8 @@ impl Host for State {
             .and_then(|u| u.host_str().map(|h| h.to_string()))
             .unwrap_or("unknown".to_string());
 
+        println!("Policy: {:?}", &self.policy);
+
         let allowed = is_host_allowed(&host, &self.policy.allowed_hosts);
 
         if !allowed {

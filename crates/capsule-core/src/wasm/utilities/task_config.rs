@@ -92,7 +92,7 @@ impl TaskConfig {
             .allowed_hosts
             .clone()
             .or_else(|| default_policy.and_then(|p| p.default_allowed_hosts.clone()))
-            .unwrap_or(vec!["*".to_string()]);
+            .unwrap_or_default();
 
         let env_variables = self
             .env_variables
