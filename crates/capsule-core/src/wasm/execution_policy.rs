@@ -52,7 +52,7 @@ impl Default for ExecutionPolicy {
             timeout: None,
             max_retries: 0,
             allowed_files: Vec::new(),
-            allowed_hosts: vec!["*".to_string()],
+            allowed_hosts: Vec::new(),
             env_variables: Vec::new(),
         }
     }
@@ -138,6 +138,6 @@ mod tests {
         assert_eq!(policy.max_retries, 3);
         assert_eq!(policy.allowed_files, vec!["/etc/passwd".to_string()]);
         assert_eq!(policy.env_variables, vec!["API_KEY".to_string()]);
-        assert_eq!(policy.allowed_hosts, vec!["*".to_string()]);
+        assert_eq!(policy.allowed_hosts, Vec::<String>::new());
     }
 }

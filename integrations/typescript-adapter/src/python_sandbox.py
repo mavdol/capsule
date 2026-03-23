@@ -1,6 +1,5 @@
 import ast
 import sys
-import urllib.request, urllib.error, urllib.parse
 
 from io import StringIO
 from capsule import task

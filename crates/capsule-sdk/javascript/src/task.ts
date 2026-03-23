@@ -127,7 +127,7 @@ export function task<TArgs extends any[], TReturn>(
 ): (...args: TArgs) => TaskReturnType<TReturn> {
   const taskName = options.name;
   let compute = options.compute?.toString().toUpperCase() ?? "MEDIUM";
-  let allowedHosts = options.allowedHosts ?? ["*"];
+  let allowedHosts = options.allowedHosts ?? [];
 
   const taskConfig: TaskConfig = {
     name: taskName,

@@ -150,7 +150,7 @@ Every task returns a structured JSON envelope containing both the result and exe
 | `timeout` | Maximum execution time | `str` | unlimited | `"30s"`, `"5m"` |
 | `max_retries` | Retry attempts on failure | `int` | `0` | `3` |
 | `allowed_files` | Folders accessible in the sandbox (with optional access mode) | `list` | `[]` | `["./data"]`, `[{"path": "./data", "mode": "ro"}]` |
-| `allowed_hosts` | Domains accessible in the sandbox | `list` | `["*"]` | `["api.openai.com", "*.anthropic.com"]` |
+| `allowed_hosts` | Domains accessible in the sandbox | `list` | `[]` | `["api.openai.com", "*.anthropic.com"]` |
 | `env_variables` | Environment variables accessible in the sandbox | `list` | `[]` | `["API_KEY"]` |
 
 ### Compute Levels
@@ -205,7 +205,7 @@ Plain strings are still accepted: `allowed_files=["./output"]` defaults to read-
 
 ### Network Access
 
-Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default, all outbound requests are allowed (`["*"]`). Restrict access by providing a whitelist of domains.
+Tasks can make HTTP requests to domains specified in `allowed_hosts`. By default, no outbound requests are allowed (`[]`). Provide an allowlist of domains to grant access, or use `["*"]` to allow all domains.
 
 > Wildcards are supported: `*.example.com` matches all subdomains of `example.com`.
 
