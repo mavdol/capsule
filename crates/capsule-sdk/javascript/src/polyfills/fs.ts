@@ -13,6 +13,8 @@ interface Descriptor {
     write(buffer: Uint8Array, offset: bigint): bigint;
     stat(): { size: bigint };
     readDirectory(): any;
+    unlinkFileAt(path: string): void;
+    removeDirectoryAt(path: string): void;
     openAt(
         pathFlags: { symlinkFollow?: boolean },
         path: string,
@@ -285,6 +287,43 @@ export function existsSync(_path: string): boolean {
 }
 
 /**
+ * Delete a file.
+ */
+export async function unlink(path: string): Promise<void> {
+    const resolved = resolvePath(path);
+    if (!resolved) {
+        throw new Error("File not found.");
+    }
+
+    const fs = getFsBindings();
+    if (!fs) {
+        throw new Error("File not found.");
+    }
+
+    try {
+        resolved.dir.unlinkFileAt(resolved.relativePath);
+    } catch (e) {
+        throw new Error(`Failed to delete file '${path}': ${e}`);
+    }
+}
+
+/**
+ * Delete a directory.
+ */
+export async function rmdir(path: string): Promise<void> {
+    const resolved = resolvePath(path);
+    if (!resolved) {
+        throw new Error("Folder not found.");
+    }
+
+    try {
+        resolved.dir.removeDirectoryAt(resolved.relativePath);
+    } catch (e) {
+        throw new Error(`Failed to remove directory '${path}': ${e}`);
+    }
+}
+
+/**
  * Promises API
  */
 export const promises = {
@@ -313,6 +352,14 @@ export const promises = {
         }
     },
 
+    async unlink(path: string): Promise<void> {
+        await unlink(path);
+    },
+
+    async rmdir(path: string): Promise<void> {
+        await rmdir(path);
+    },
+
     async stat(path: string): Promise<{ isFile: () => boolean; isDirectory: () => boolean }> {
         const fileExists = await exists(path);
         if (!fileExists) {
@@ -330,6 +377,8 @@ const fs = {
     writeFile,
     readdir,
     existsSync,
+    unlink,
+    rmdir,
     promises,
 };
 
