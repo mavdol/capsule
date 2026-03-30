@@ -16,17 +16,17 @@ const executeCodeInSession = task(
     name: "executeCodeInSession",
     compute: "LOW",
     ram: "256MB",
-    allowedFiles: [{ path: ".capsule/sessions", mode: "read-write" }],
+    allowedFiles: [{ path: ".capsule/sessions/states", mode: "read-write" }],
   },
   async (code: string, session_id: string): Promise<unknown> => {
     const env: Record<string, unknown> = {};
 
-    const stateData = JSON.parse(await fs.readFile(`.capsule/sessions/${session_id}_state.json`, "utf-8")) as Record<string, SerializedValue>;
+    const stateData = JSON.parse(await fs.readFile(`.capsule/sessions/states/${session_id}.json`, "utf-8")) as Record<string, SerializedValue>;
     deserializeEnv(stateData, env);
 
     const result = _executeCode(code, env);
 
-    await fs.writeFile(`.capsule/sessions/${session_id}_state.json`, JSON.stringify(serializeEnv(env)));
+    await fs.writeFile(`.capsule/sessions/states/${session_id}.json`, JSON.stringify(serializeEnv(env)));
 
     return result;
   }
@@ -37,13 +37,13 @@ const importFile = task(
     name: "importFile",
     compute: "MEDIUM",
     ram: "256MB",
-    allowedFiles: [{ path: ".capsule/sessions", mode: "read-write" }],
+    allowedFiles: [
+      { path: "./", mode: "read-only" }
+    ],
   },
-  async (sessionId: string, filePath: string, content: string): Promise<string> => {
-    const fullPath = `.capsule/sessions/${sessionId}_workspace/${filePath}`;
-    await fs.mkdir(`.capsule/sessions/${sessionId}_workspace`, { recursive: true });
-    await fs.writeFile(fullPath, content);
-    return `Imported ${filePath}`;
+  async (path: string, content: string): Promise<string> => {
+    await fs.writeFile(path, content);
+    return `Imported ${path}`;
   }
 );
 
@@ -52,12 +52,10 @@ const deleteFile = task(
     name: "deleteFile",
     compute: "MEDIUM",
     ram: "256MB",
-    allowedFiles: [{ path: ".capsule/sessions", mode: "read-write" }],
   },
-  async (sessionId: string, filePath: string): Promise<string> => {
-    const fullPath = `.capsule/sessions/${sessionId}_workspace/${filePath}`;
-    await fs.unlink(fullPath);
-    return `Deleted ${filePath}`;
+  async (path: string): Promise<string> => {
+    await fs.unlink(path);
+    return `Deleted ${path}`;
   }
 );
 
@@ -71,9 +69,9 @@ export const main = task(
     } else if (action === "EXECUTE_CODE_IN_SESSION") {
       response = await executeCodeInSession(...args as [string, string]);
     } else if (action === "IMPORT_FILE_IN_SESSION") {
-      response = await importFile(...args as [string, string, string]);
+      response = await importFile(...args as [string, string]);
     } else if (action === "DELETE_FILE_IN_SESSION") {
-      response = await deleteFile(...args as [string, string]);
+      response = await deleteFile(...args as [string]);
     } else {
       throw new Error(`Invalid action: ${action}`);
     }

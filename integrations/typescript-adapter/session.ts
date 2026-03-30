@@ -36,7 +36,7 @@ export class Session {
   constructor(type: SandboxType = "python") {
     this.sandboxFile = type === "python" ? SANDBOX_PY : SANDBOX_JS;
     this.id = randomUUID().replace(/-/g, "");
-    this.stateFile = resolve(SESSIONS_DIR, `${this.id}_state.json`);
+    this.stateFile = resolve(SESSIONS_DIR, `/states/${this.id}.json`);
     this.workspaceDir = resolve(SESSIONS_DIR, `${this.id}_workspace`);
     fs.mkdirSync(SESSIONS_DIR, { recursive: true });
     fs.mkdirSync(this.workspaceDir, { recursive: true });
@@ -47,6 +47,7 @@ export class Session {
     const res = await run({
       file: this.sandboxFile,
       args: [action, ...args],
+      mounts: [`${this.workspaceDir}::workspace`],
     });
 
     if (!res.success) throw new Error(`Capsule session failed: ${res.error?.message}`);

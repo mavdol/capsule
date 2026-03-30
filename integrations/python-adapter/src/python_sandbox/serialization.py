@@ -119,12 +119,11 @@ def _deserialize_dict(pairs: dict, env: dict) -> dict:
 
 
 def _deserialize_env(data: dict, env: dict) -> None:
-    # First pass: reconstruct all class definitions so instances can reference them
     for key, entry in data.items():
         if isinstance(entry, dict) and entry.get("__type__") == "classdef":
             source = entry["__source__"]
             exec(compile(source, "<session>", "exec"), env)
-            # tag by class name (may differ from env key if stored as alias)
+
             cls = env.get(key) or next(
                 (v for v in env.values() if isinstance(v, type) and not getattr(v, "__source__", None)),
                 None
@@ -132,7 +131,6 @@ def _deserialize_env(data: dict, env: dict) -> None:
             if cls is not None:
                 cls.__source__ = source
 
-    # Second pass: reconstruct everything else
     for key, entry in data.items():
         if not isinstance(entry, dict):
             continue

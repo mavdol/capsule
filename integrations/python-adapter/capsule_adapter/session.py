@@ -34,7 +34,7 @@ class Session:
     def __init__(self, type: str = "python"):
         self._sandbox = _SANDBOX_PY if type == "python" else _SANDBOX_JS
         self._id = uuid.uuid4().hex
-        self._state_file = _SESSIONS_DIR / f"{self._id}_state.json"
+        self._state_file = _SESSIONS_DIR / f"/states/{self._id}.json"
         self._workspace_dir = _SESSIONS_DIR / f"{self._id}_workspace"
         _SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
         self._workspace_dir.mkdir(exist_ok=True)
@@ -44,6 +44,7 @@ class Session:
         res = await run(
             file=self._sandbox,
             args=[action, *args],
+            mounts=[f"{self._workspace_dir}::workspace"],
         )
         if not res.get("success"):
             error = res.get("error", {})
