@@ -37,7 +37,10 @@ const importFile = task(
     name: "importFile",
     compute: "MEDIUM",
     ram: "256MB",
-    allowedFiles: [{ path: ".capsule/sessions", mode: "read-write" }],
+    allowedFiles: [
+      { path: ".capsule/sessions", mode: "read-write" },
+      { path: "./", mode: "read-only" }
+    ],
   },
   async (sessionId: string, filePath: string, content: string): Promise<string> => {
     const fullPath = `.capsule/sessions/${sessionId}_workspace/${filePath}`;

@@ -10,7 +10,7 @@ from serialization import _serialize_env, _deserialize_env
     name="import_file",
     compute="MEDIUM",
     ram="256MB",
-    allowed_files=[{"path": ".capsule/sessions", "mode": "read-write"}],
+    allowed_files=[{"path": ".capsule/sessions", "mode": "read-write"}, {"path": "./", "mode": "read-only"}],
 )
 def import_file(session_id: str, path: str, content: str):
     workspace = f".capsule/sessions/{session_id}_workspace"
