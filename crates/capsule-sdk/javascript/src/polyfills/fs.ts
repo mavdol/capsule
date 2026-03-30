@@ -29,6 +29,7 @@ interface Descriptor {
     readDirectory(): DirectoryStream;
     unlinkFileAt(path: string): void;
     removeDirectoryAt(path: string): void;
+    createDirectoryAt(path: string): void;
     openAt(
         pathFlags: { symlinkFollow?: boolean },
         path: string,
@@ -81,11 +82,14 @@ function resolvePath(path: string): { dir: Descriptor; relativePath: string } | 
 
     const normalizedPath = normalizePath(path);
 
+    let catchAll: { dir: Descriptor; relativePath: string } | null = null;
+
     for (const { descriptor, guestPath } of preopens) {
         const normalizedGuest = normalizePath(guestPath);
 
         if (normalizedGuest === '.' || normalizedGuest === '') {
-            return { dir: descriptor, relativePath: normalizedPath };
+            if (!catchAll) catchAll = { dir: descriptor, relativePath: normalizedPath };
+            continue;
         }
 
         if (normalizedPath.startsWith(normalizedGuest + '/')) {
@@ -98,7 +102,7 @@ function resolvePath(path: string): { dir: Descriptor; relativePath: string } | 
         }
     }
 
-    return { dir: preopens[0].descriptor, relativePath: normalizedPath };
+    return catchAll ?? { dir: preopens[0].descriptor, relativePath: normalizedPath };
 }
 
 /**
@@ -115,7 +119,7 @@ export async function readText(path: string): Promise<string> {
 export async function readBytes(path: string): Promise<Uint8Array> {
     const resolved = resolvePath(path);
     if (!resolved) {
-        throw new Error("Filesystem not available.");
+        throw new Error("File not found.");
     }
 
     try {
@@ -146,13 +150,13 @@ export async function writeText(path: string, content: string): Promise<void> {
 export async function writeBytes(path: string, data: Uint8Array): Promise<void> {
     const resolved = resolvePath(path);
     if (!resolved) {
-        throw new Error("Filesystem not available.");
+        throw new Error("File not found.");
     }
 
     try {
         const pathFlags = { symlinkFollow: false };
         const openFlags = { create: true, truncate: true };
-        const descriptorFlags = { write: true };
+        const descriptorFlags = { write: true, mutateDirectory: true };
 
         const fd = resolved.dir.openAt(pathFlags, resolved.relativePath, openFlags, descriptorFlags);
         fd.write(data, BigInt(0));
@@ -167,7 +171,7 @@ export async function writeBytes(path: string, data: Uint8Array): Promise<void> 
 export async function list(path: string = "."): Promise<string[]> {
     const resolved = resolvePath(path);
     if (!resolved) {
-        throw new Error("Filesystem not available.");
+        throw new Error("Path not found.");
     }
 
     try {
@@ -419,6 +423,83 @@ export async function rm(path: string, options?: RmOptions): Promise<void> {
     }
 }
 
+export interface MkdirOptions {
+    recursive?: boolean;
+}
+
+/**
+ * Create a directory. Pass `{ recursive: true }` to create intermediate directories.
+ */
+export async function mkdir(path: string, options?: MkdirOptions): Promise<void> {
+    if (options?.recursive) {
+        const normalized = normalizePath(path);
+        const parts = normalized.split('/').filter(Boolean);
+        for (let i = 1; i <= parts.length; i++) {
+            const partial = parts.slice(0, i).join('/');
+            const resolved = resolvePath(partial);
+            if (!resolved) continue;
+            try {
+                resolved.dir.createDirectoryAt(resolved.relativePath);
+            } catch {
+                // Directory may already exist, continue
+            }
+        }
+    } else {
+        const resolved = resolvePath(path);
+        if (!resolved) throw new Error(`Cannot resolve path: '${path}'`);
+        try {
+            resolved.dir.createDirectoryAt(resolved.relativePath);
+        } catch (e) {
+            throw new Error(`Failed to create directory '${path}': ${e}`);
+        }
+    }
+}
+
+/**
+ * Copy a file from src to dest.
+ */
+export async function copyFile(src: string, dest: string): Promise<void> {
+    const data = await readBytes(src);
+    await writeBytes(dest, data);
+}
+
+async function copyDirRecursive(src: string, dest: string): Promise<void> {
+    await mkdir(dest, { recursive: true });
+    const entries = await list(src);
+    for (const entry of entries) {
+        const srcEntry = src.replace(/\/$/, '') + '/' + entry;
+        const destEntry = dest.replace(/\/$/, '') + '/' + entry;
+        const kind = await statPath(srcEntry);
+        if (kind === 'directory') {
+            await copyDirRecursive(srcEntry, destEntry);
+        } else {
+            await copyFile(srcEntry, destEntry);
+        }
+    }
+}
+
+export interface CpOptions {
+    recursive?: boolean;
+}
+
+/**
+ * Copy a file or directory. Pass `{ recursive: true }` to copy directories.
+ */
+export async function cp(src: string, dest: string, options?: CpOptions): Promise<void> {
+    const kind = await statPath(src);
+    if (kind === 'notfound') {
+        throw new Error(`ENOENT: no such file or directory '${src}'`);
+    }
+    if (kind === 'directory') {
+        if (!options?.recursive) {
+            throw new Error(`EISDIR: illegal operation on a directory '${src}' (use { recursive: true })`);
+        }
+        await copyDirRecursive(src, dest);
+    } else {
+        await copyFile(src, dest);
+    }
+}
+
 /**
  * Promises API
  */
@@ -470,6 +551,18 @@ export const promises = {
     async rm(path: string, options?: RmOptions): Promise<void> {
         await rm(path, options);
     },
+
+    async mkdir(path: string, options?: MkdirOptions): Promise<void> {
+        await mkdir(path, options);
+    },
+
+    async copyFile(src: string, dest: string): Promise<void> {
+        await copyFile(src, dest);
+    },
+
+    async cp(src: string, dest: string, options?: CpOptions): Promise<void> {
+        await cp(src, dest, options);
+    },
 };
 
 const fs = {
@@ -480,6 +573,9 @@ const fs = {
     unlink,
     rmdir,
     rm,
+    mkdir,
+    copyFile,
+    cp,
     promises,
 };
 

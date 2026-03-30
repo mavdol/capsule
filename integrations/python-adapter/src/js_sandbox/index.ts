@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import path from "path";
 import { task } from "@capsule-run/sdk";
 import { deserializeEnv, serializeEnv, SerializedValue } from "./serialization";
 import { _executeCode } from "./execution";
@@ -32,24 +33,28 @@ const executeCodeInSession = task(
   }
 );
 
-const importFile = task(
+const importFileInSession = task(
   {
-    name: "importFile",
+    name: "importFileInSession",
     compute: "MEDIUM",
     ram: "256MB",
     allowedFiles: [
       { path: "./", mode: "read-only" }
     ],
   },
-  async (path: string, content: string): Promise<string> => {
-    await fs.writeFile(path, content);
-    return `Imported ${path}`;
+  async (src_path: string, dest_path: string): Promise<string> => {
+    const folder = path.dirname(dest_path)
+
+    await fs.mkdir(path.normalize(`workspace/${folder}`), { recursive: true });
+
+    await fs.cp(src_path, path.normalize(`workspace/${dest_path}`), { recursive: true });
+    return `Imported ${dest_path}`;
   }
 );
 
-const deleteFile = task(
+const deleteFileFromSession = task(
   {
-    name: "deleteFile",
+    name: "deleteFileFromSession",
     compute: "MEDIUM",
     ram: "256MB",
   },
@@ -69,9 +74,9 @@ export const main = task(
     } else if (action === "EXECUTE_CODE_IN_SESSION") {
       response = await executeCodeInSession(...args as [string, string]);
     } else if (action === "IMPORT_FILE_IN_SESSION") {
-      response = await importFile(...args as [string, string]);
-    } else if (action === "DELETE_FILE_IN_SESSION") {
-      response = await deleteFile(...args as [string]);
+      response = await importFileInSession(...args as [string, string]);
+    } else if (action === "DELETE_FILE_FROM_SESSION") {
+      response = await deleteFileFromSession(...args as [string]);
     } else {
       throw new Error(`Invalid action: ${action}`);
     }

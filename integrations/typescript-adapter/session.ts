@@ -17,13 +17,14 @@
  */
 
 import { run } from "@capsule-run/sdk/runner";
-import { resolve } from "path";
+import { normalize } from "path";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 
 import { SANDBOX_PY, SANDBOX_JS, unwrapResult } from "./execution.js";
 
-const SESSIONS_DIR = resolve(".capsule/sessions");
+const SESSIONS_DIR = ".capsule/sessions";
+const SESSIONS_STATES_DIR = ".capsule/sessions/states";
 
 type SandboxType = "python" | "javascript";
 
@@ -36,9 +37,10 @@ export class Session {
   constructor(type: SandboxType = "python") {
     this.sandboxFile = type === "python" ? SANDBOX_PY : SANDBOX_JS;
     this.id = randomUUID().replace(/-/g, "");
-    this.stateFile = resolve(SESSIONS_DIR, `/states/${this.id}.json`);
-    this.workspaceDir = resolve(SESSIONS_DIR, `${this.id}_workspace`);
+    this.stateFile = normalize(SESSIONS_STATES_DIR + `/${this.id}.json`);
+    this.workspaceDir = normalize(SESSIONS_DIR + `/${this.id}_workspace`);
     fs.mkdirSync(SESSIONS_DIR, { recursive: true });
+    fs.mkdirSync(SESSIONS_STATES_DIR, { recursive: true });
     fs.mkdirSync(this.workspaceDir, { recursive: true });
     fs.writeFileSync(this.stateFile, "{}");
   }
@@ -60,13 +62,13 @@ export class Session {
   }
 
   /** Write a file into the session workspace. */
-  async importFile(path: string, content: string): Promise<string> {
-    return this.invoke("IMPORT_FILE_IN_SESSION", path, content);
+  async importFile(srcPath: string, destPath: string): Promise<string> {
+    return this.invoke("IMPORT_FILE_IN_SESSION", srcPath, destPath);
   }
 
   /** Delete a file from the session workspace. */
-  async deleteFile(filePath: string): Promise<string> {
-    return this.invoke("DELETE_FILE_IN_SESSION", filePath);
+  async deleteFile(path: string): Promise<string> {
+    return this.invoke("DELETE_FILE_FROM_SESSION", path);
   }
 
   /** Clear session state, preserving workspace files. */

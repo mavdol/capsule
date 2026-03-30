@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from capsule import task
 
 from execution import _execute_code
@@ -7,27 +8,30 @@ from serialization import _serialize_env, _deserialize_env
 
 
 @task(
-    name="import_file",
+    name="import_file_in_session",
     compute="MEDIUM",
     ram="256MB",
     allowed_files=[{"path": "./", "mode": "read-only"}],
 )
-def import_file(path: str, content: str):
-    # have access to mounted /workspace
-    full_path = os.path.normpath('workspace/' + path)
+def import_file_in_session(src_path: str, dest_path: str):
+    src = os.path.normpath(src_path)
+    dest = os.path.normpath(os.path.join('workspace', dest_path))
 
-    with open(full_path, "w") as f:
-        f.write(content)
+    if os.path.isdir(src):
+        shutil.copytree(src, dest, dirs_exist_ok=True)
+    else:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(src, dest)
 
-    return f"Imported {path}"
+    return f"Imported {dest_path}"
 
 
 @task(
-    name="delete_file",
+    name="delete_file_from_session",
     compute="MEDIUM",
     ram="256MB",
 )
-def delete_file(path: str):
+def delete_file_from_session(path: str):
     # have access to mounted /workspace
     full_path = os.path.normpath('workspace/' + path)
     os.remove(full_path)
@@ -70,10 +74,10 @@ def main(action: str, *args):
         response = execute_code_in_session(*args)
 
     elif action == "IMPORT_FILE_IN_SESSION":
-        response = import_file(*args)
+        response = import_file_in_session(*args)
 
-    elif action == "DELETE_FILE_IN_SESSION":
-        response = delete_file(*args)
+    elif action == "DELETE_FILE_FROM_SESSION":
+        response = delete_file_from_session(*args)
 
     else:
         raise ValueError(f"Invalid action: {action}")

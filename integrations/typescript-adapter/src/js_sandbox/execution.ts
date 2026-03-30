@@ -19,6 +19,7 @@ export function _executeCode(code: string, env: Record<string, unknown>): unknow
 
     let result: unknown;
     let executed = false;
+
     try {
       const fn = new Function("__env__", `with (__env__) { return (${code}); }`);
       result = fn(proxy);

@@ -342,13 +342,10 @@ The `--mount` flag (CLI) or `mounts` parameter (SDK) mount a host directory into
 # Mount a session workspace and expose it as "workspace" inside the task
 capsule run main.py --mount .capsule/sessions/abc123_workspace::workspace
 
-# Read-only data directory, no alias
-capsule run main.py --mount ./data:ro
-
 # Multiple directories
 capsule run main.py \
   --mount .capsule/sessions/abc123_workspace::workspace \
-  --mount ./shared-data::data:ro
+  --mount .capsule/sessions/bce456_workspace::workspace:ro
 ```
 
 **Python SDK**
