@@ -1,3 +1,3 @@
-examples/** linguist-documentation=true
-integrations/** linguist-vendored=true
-integrations/README.md linguist-vendored=false
+examples/** linguist-vendored
+integrations/** linguist-vendored
+integrations/README.md -linguist-vendored

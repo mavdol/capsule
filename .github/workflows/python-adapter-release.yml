@@ -43,9 +43,10 @@ jobs:
         run: npm install -g @capsule-run/cli
 
       - name: Setup package.json for SDK
+        working-directory: integrations/python-adapter
         run: |
           echo '{"type": "module"}' > package.json
-          npm install @capsule-run/sdk
+          npm install @capsule-run/sdk @types/node
 
       - name: Build js_sandbox.wasm
         working-directory: integrations/python-adapter
@@ -60,6 +61,7 @@ jobs:
           path: integrations/python-adapter/capsule_adapter/sandboxes/
 
       - name: Clean up Node.js artifacts
+        working-directory: integrations/python-adapter
         run: |
           rm -rf node_modules
           rm -f package.json package-lock.json
