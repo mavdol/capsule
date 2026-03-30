@@ -326,7 +326,7 @@ Plain strings are still accepted: `allowedFiles: ["./output"]` defaults to read-
 
 #### Dynamic directory aliases (`--mount`)
 
-The `--mount` flag (CLI) or `mounts` parameter (SDK) mount a host directory into the sandbox under an alias. Each sub-task still enforces its own `allowed_files` rules. Mounts only add access, they don't override per-task restrictions.
+The `--mount` flag (CLI) or `mounts` parameter (SDK) mount a host directory into the sandbox under an alias. Mounts propagate to sub-tasks and add access to new paths — they don't change the access mode of paths already declared in `allowed_files`.
 
 **Format:** `HOST_PATH[::GUEST_PATH][:ro|:rw]`
 
