@@ -66,6 +66,13 @@ class Session:
         """Delete a file from the session workspace."""
         return await self._invoke("DELETE_FILE_FROM_SESSION", path)
 
+    async def export_file(self, src_path: str, dest_path: str) -> str:
+        """Export a file from the session workspace."""
+        dest_path = Path(dest_path)
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(self._workspace_dir / src_path, dest_path)
+        return f"exported at {dest_path}"
+
     async def reset(self) -> None:
         """Clear session state, preserving workspace files."""
         self._state_file.write_text("{}")

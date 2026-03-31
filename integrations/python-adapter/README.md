@@ -101,6 +101,17 @@ content
 """)
 ```
 
+### Export Files
+
+Export file from the session workspace to your filesystem.
+
+```python
+async with Session() as s:
+    await s.import_file("./notes.txt", "notes.txt")
+    # ... do some work ...
+    await s.export_file("notes.txt", "./exported_notes.txt")
+```
+
 #### Delete Files
 
 Remove a file from the session workspace:

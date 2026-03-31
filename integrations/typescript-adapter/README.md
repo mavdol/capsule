@@ -107,6 +107,18 @@ content
 `);
 ```
 
+#### Export Files
+
+Export file from the session workspace to your filesystem.
+
+```typescript
+await using s = new Session("python");
+await s.importFile("./notes.txt", "notes.txt");
+
+// Export a single file
+await s.exportFile("notes.txt", "./exported_notes.txt");
+```
+
 #### Delete Files
 
 Remove a file from the session workspace:
@@ -128,6 +140,7 @@ await s.run("x = 42");
 s.reset();
 const result = await s.run("x"); // throws
 ```
+
 
 ## How It Works
 
