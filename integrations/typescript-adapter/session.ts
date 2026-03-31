@@ -20,6 +20,7 @@ import { run } from "@capsule-run/sdk/runner";
 import { normalize } from "path";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
+import path from "path";
 
 import { SANDBOX_PY, SANDBOX_JS, unwrapResult } from "./execution.js";
 
@@ -69,6 +70,14 @@ export class Session {
   /** Delete a file from the session workspace. */
   async deleteFile(path: string): Promise<string> {
     return this.invoke("DELETE_FILE_FROM_SESSION", path);
+  }
+
+  /** Export a file from the session workspace. */
+  async exportFile(srcPath: string, destPath: string): Promise<string> {
+    const parentDir = path.dirname(destPath);
+    fs.mkdirSync(parentDir, { recursive: true });
+    fs.copyFileSync(this.workspaceDir + "/" + srcPath, destPath);
+    return `exported at ${destPath}`;
   }
 
   /** Clear session state, preserving workspace files. */
