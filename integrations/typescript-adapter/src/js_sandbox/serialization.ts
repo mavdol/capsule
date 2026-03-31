@@ -23,8 +23,6 @@ export function serializeValue(val: unknown): SerializedValue {
     return { __type__: "primitive", value: val };
   }
 
-  // number must check NaN/Infinity before returning as primitive —
-  // JSON.stringify turns both into null which breaks the round-trip
   if (typeof val === "number") {
     if (Number.isNaN(val)) return { __type__: "nan" };
     if (!Number.isFinite(val)) return { __type__: "infinity", sign: val > 0 ? 1 : -1 };
