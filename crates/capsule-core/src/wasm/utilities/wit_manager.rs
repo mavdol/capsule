@@ -156,6 +156,22 @@ pub const WASI_DEPS: &[(&str, &str, &str)] = &[
         "world.wit",
         include_str!("../../../../capsule-wit/deps/random/world.wit"),
     ),
+    // http deps (incoming-handler + outgoing-handler + types + proxy world)
+    (
+        "http",
+        "types.wit",
+        include_str!("../../../../capsule-wit/deps/http/types.wit"),
+    ),
+    (
+        "http",
+        "handler.wit",
+        include_str!("../../../../capsule-wit/deps/http/handler.wit"),
+    ),
+    (
+        "http",
+        "proxy.wit",
+        include_str!("../../../../capsule-wit/deps/http/proxy.wit"),
+    ),
 ];
 
 pub struct WitManager {}
