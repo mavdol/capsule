@@ -67,7 +67,8 @@ impl RuntimeCommand for RunInstance {
                                 .cloned()
                                 .unwrap_or(result_object);
 
-                            if result.get("error_type").is_some() && result.get("message").is_some() {
+                            if result.get("error_type").is_some() && result.get("message").is_some()
+                            {
                                 TaskResult {
                                     success: false,
                                     result: None,
