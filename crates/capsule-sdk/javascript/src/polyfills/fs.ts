@@ -867,7 +867,6 @@ const fs = {
     mkdir,
     copyFile,
     cp,
-    // Sync stubs (throw ERR_NOT_SUPPORTED)
     readFileSync,
     writeFileSync,
     appendFileSync,
