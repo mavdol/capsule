@@ -176,13 +176,18 @@ import * as hostApi from 'capsule:host/api';
 import * as fsTypes from 'wasi:filesystem/types@0.2.0';
 import * as fsPreopens from 'wasi:filesystem/preopens@0.2.0';
 import * as environment from 'wasi:cli/environment@0.2.0';
+import * as stdinApi from 'wasi:cli/stdin@0.2.0';
+import * as stdoutApi from 'wasi:cli/stdout@0.2.0';
 globalThis['capsule:host/api'] = hostApi;
 globalThis['wasi:filesystem/types'] = fsTypes;
 globalThis['wasi:filesystem/preopens'] = fsPreopens;
 globalThis['wasi:cli/environment'] = environment;
+globalThis['wasi:cli/stdin'] = stdinApi;
+globalThis['wasi:cli/stdout'] = stdoutApi;
 import '{}';
-import {{ exports }} from '{}/dist/app.js';
+import {{ exports, incomingHandler }} from '{}/dist/app.js';
 export const taskRunner = exports;
+export {{ incomingHandler }};
             "#,
             import_path, sdk_path_str
         );
@@ -195,20 +200,13 @@ export const taskRunner = exports;
         let sdk_path_normalized = Self::normalize_path_for_command(&sdk_path);
         let output_wasm_normalized = Self::normalize_path_for_command(&self.output_wasm);
 
-        let path_browserify_path =
-            Self::find_package("path-browserify", source_dir, &sdk_path_normalized);
-        let buffer_package_path = Self::find_package("buffer", source_dir, &sdk_path_normalized);
-        let events_package_path = Self::find_package("events", source_dir, &sdk_path_normalized);
-
+        let unenv_path = Self::find_package("unenv", source_dir, &sdk_path_normalized);
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
         let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
-        let url_polyfill_path = sdk_path_normalized.join("dist/polyfills/url.js");
-        let buffer_polyfill_path = sdk_path_normalized.join("dist/polyfills/buffer.js");
-        let events_polyfill_path = sdk_path_normalized.join("dist/polyfills/events.js");
-        let stream_polyfill_path = sdk_path_normalized.join("dist/polyfills/stream.js");
         let fs_polyfill_path = sdk_path_normalized.join("dist/polyfills/fs.js");
 
-        let esbuild_output = Self::npx_command()
+        let mut esbuild_cmd = Self::npx_command();
+        esbuild_cmd
             .arg("esbuild")
             .arg(&wrapper_path_normalized)
             .arg("--bundle")
@@ -219,13 +217,6 @@ export const taskRunner = exports;
             .arg("--external:wasi:filesystem/*")
             .arg("--external:wasi:cli/*")
             .arg(format!("--inject:{}", process_polyfill_path.display()))
-            .arg(format!("--inject:{}", buffer_polyfill_path.display()))
-            .arg(format!("--inject:{}", events_polyfill_path.display()))
-            .arg(format!("--alias:path={}", path_browserify_path.display()))
-            .arg(format!(
-                "--alias:node:path={}",
-                path_browserify_path.display()
-            ))
             .arg(format!("--alias:os={}", os_polyfill_path.display()))
             .arg(format!("--alias:node:os={}", os_polyfill_path.display()))
             .arg(format!(
@@ -235,23 +226,6 @@ export const taskRunner = exports;
             .arg(format!(
                 "--alias:node:process={}",
                 process_polyfill_path.display()
-            ))
-            .arg(format!("--alias:url={}", url_polyfill_path.display()))
-            .arg(format!("--alias:node:url={}", url_polyfill_path.display()))
-            .arg(format!("--alias:buffer={}", buffer_package_path.display()))
-            .arg(format!(
-                "--alias:node:buffer={}",
-                buffer_package_path.display()
-            ))
-            .arg(format!("--alias:events={}", events_package_path.display()))
-            .arg(format!(
-                "--alias:node:events={}",
-                events_package_path.display()
-            ))
-            .arg(format!("--alias:stream={}", stream_polyfill_path.display()))
-            .arg(format!(
-                "--alias:node:stream={}",
-                stream_polyfill_path.display()
             ))
             .arg(format!("--alias:fs={}", fs_polyfill_path.display()))
             .arg(format!("--alias:node:fs={}", fs_polyfill_path.display()))
@@ -266,19 +240,42 @@ export const taskRunner = exports;
                 sdk_path_normalized
                     .join("dist/polyfills/fs-promises.js")
                     .display()
-            ))
-            .arg(format!(
-                "--alias:stream/web={}",
-                sdk_path_normalized
-                    .join("dist/polyfills/stream-web.js")
-                    .display()
-            ))
-            .arg(format!(
-                "--alias:node:stream/web={}",
-                sdk_path_normalized
-                    .join("dist/polyfills/stream-web.js")
-                    .display()
-            ))
+            ));
+
+        esbuild_cmd.arg(format!("--alias:unenv={}", unenv_path.display()));
+
+        let unenv_node_dir = unenv_path.join("dist/runtime/node");
+        let mut stack = vec![(unenv_node_dir, String::new())];
+        while let Some((dir, prefix)) = stack.pop() {
+            let Ok(entries) = fs::read_dir(&dir) else {
+                continue;
+            };
+
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+                    continue;
+                };
+
+                if path.is_file() {
+                    if let Some(stripped) = name.strip_suffix(".mjs") {
+                        let mod_name = format!("{}{}", prefix, stripped);
+                        if !matches!(mod_name.as_str(), "os" | "process" | "fs" | "fs/promises") {
+                            esbuild_cmd.arg(format!(
+                                "--alias:node:{}={}",
+                                mod_name,
+                                path.display()
+                            ));
+                            esbuild_cmd.arg(format!("--alias:{}={}", mod_name, path.display()));
+                        }
+                    }
+                } else {
+                    stack.push((path.clone(), format!("{}{}/", prefix, name)));
+                }
+            }
+        }
+
+        let esbuild_output = esbuild_cmd
             .arg(format!("--outfile={}", bundled_path_normalized.display()))
             .current_dir(&sdk_path_normalized)
             .stdout(Stdio::piped())

@@ -111,3 +111,11 @@ export class TaskRunner {
 }
 
 export const exports = new TaskRunner();
+
+/**
+ * Implementation of wasi:http/incoming-handler@0.2.0.
+ * Required for some edge use cases.
+ */
+export const incomingHandler = {
+  handle(_req: unknown, _responseOut: unknown): void {},
+};
