@@ -36,6 +36,7 @@ pub struct State {
     pub limits: StoreLimits,
     pub runtime: Option<Arc<Runtime>>,
     pub policy: ExecutionPolicy,
+    pub peak_memory_bytes: u64,
 }
 
 impl WasiView for State {
@@ -248,6 +249,10 @@ impl ResourceLimiter for State {
         desired: usize,
         maximum: Option<usize>,
     ) -> Result<bool> {
+        if desired as u64 > self.peak_memory_bytes {
+            self.peak_memory_bytes = desired as u64;
+        }
+
         self.limits.memory_growing(current, desired, maximum)
     }
 

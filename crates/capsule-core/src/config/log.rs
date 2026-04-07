@@ -77,6 +77,7 @@ pub struct InstanceLog {
     pub state: InstanceState,
     pub fuel_limit: u64,
     pub fuel_consumed: u64,
+    pub ram_used: u64,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -90,6 +91,7 @@ pub struct CreateInstanceLog {
     pub state: InstanceState,
     pub fuel_limit: u64,
     pub fuel_consumed: u64,
+    pub ram_used: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -97,6 +99,7 @@ pub struct UpdateInstanceLog {
     pub task_id: String,
     pub state: InstanceState,
     pub fuel_consumed: u64,
+    pub ram_used: u64,
 }
 
 enum LogCommand {
@@ -147,6 +150,7 @@ impl Log {
                     "state TEXT NOT NULL",
                     "fuel_limit INTEGER NOT NULL",
                     "fuel_consumed INTEGER NOT NULL",
+                    "ram_used INTEGER NOT NULL",
                 ],
                 &[],
             )?;
@@ -195,7 +199,7 @@ impl Log {
 
     fn execute_create(db: &Database, log: CreateInstanceLog) -> Result<(), LogError> {
         db.execute(
-            "INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 &nanoid!(10),
                 &log.agent_name,
@@ -205,6 +209,7 @@ impl Log {
                 &log.state.to_string(),
                 &log.fuel_limit.to_string(),
                 &log.fuel_consumed.to_string(),
+                &log.ram_used.to_string(),
             ],
         )?;
 
@@ -213,10 +218,11 @@ impl Log {
 
     fn execute_update(db: &Database, log: UpdateInstanceLog) -> Result<(), LogError> {
         db.execute(
-            "UPDATE instance_log SET state = ?, fuel_consumed = ? WHERE task_id = ?",
+            "UPDATE instance_log SET state = ?, fuel_consumed = ?, ram_used = ? WHERE task_id = ?",
             [
                 &log.state.to_string(),
                 &log.fuel_consumed.to_string(),
+                &log.ram_used.to_string(),
                 &log.task_id,
             ],
         )?;
@@ -242,7 +248,7 @@ impl Log {
 
     pub fn get_logs(&self) -> Result<Vec<InstanceLog>, LogError> {
         let logs = self.db.query(
-            "SELECT id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at FROM instance_log ORDER BY created_at DESC",
+            "SELECT id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at FROM instance_log ORDER BY created_at DESC",
             [],
             |row| {
                 let id_str: String = row.get(0)?;
@@ -263,8 +269,9 @@ impl Log {
                     },
                     fuel_limit: row.get::<_, i64>(6)? as u64,
                     fuel_consumed: row.get::<_, i64>(7)? as u64,
-                    created_at: row.get(8)?,
-                    updated_at: row.get(9)?,
+                    ram_used: row.get::<_, i64>(8)? as u64,
+                    created_at: row.get(9)?,
+                    updated_at: row.get(10)?,
                 })
             }
         )?;
@@ -351,6 +358,7 @@ mod tests {
                     state: InstanceState::Created,
                     fuel_limit: 100,
                     fuel_consumed: 0,
+                    ram_used: 0,
                 })
                 .await
                 .expect("Failed to commit log");
@@ -378,7 +386,7 @@ mod tests {
             {
                 let conn = log.db.conn.lock().unwrap();
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -387,6 +395,7 @@ mod tests {
                     "created",
                     "15000000",
                     "0",
+                    "0"
                 ]).expect("Failed to insert test data");
             }
 
@@ -395,6 +404,7 @@ mod tests {
                     task_id: "test_task_123".to_string(),
                     state: InstanceState::Running,
                     fuel_consumed: 10,
+                    ram_used: 1500,
                 })
                 .await
                 .expect("Failed to update log");
@@ -418,8 +428,17 @@ mod tests {
                 )
                 .expect("Failed to query fuel_consumed");
 
+            let ram_used: i64 = conn
+                .query_row(
+                    "SELECT ram_used FROM instance_log WHERE task_id = 'test_task_123'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("Failed to query ram_used");
+
             assert_eq!(state, "running", "State should be updated to running");
             assert_eq!(fuel_consumed, 10, "Fuel consumed should be updated to 10");
+            assert_eq!(ram_used, 1500, "Ram used should be updated to 1500");
         }
     }
 
@@ -433,7 +452,7 @@ mod tests {
             {
                 let conn = log.db.conn.lock().unwrap();
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -442,11 +461,12 @@ mod tests {
                     "created",
                     "10000",
                     "0",
+                    "0",
                     "1000",
                     "1000",
                 ]).expect("Failed to insert first test log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -455,11 +475,12 @@ mod tests {
                     "running",
                     "10000",
                     "5000",
+                    "1500",
                     "2000",
                     "2000",
                 ]).expect("Failed to insert second test log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "other_agent",
                     "2.0.0",
@@ -468,6 +489,7 @@ mod tests {
                     "completed",
                     "5000",
                     "2500",
+                    "1500",
                     "1500",
                     "1500",
                 ]).expect("Failed to insert task to keep");
@@ -535,7 +557,7 @@ mod tests {
             {
                 let conn = log.db.conn.lock().unwrap();
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -544,11 +566,12 @@ mod tests {
                     "created",
                     "10000",
                     "0",
+                    "0",
                     "1000",
                     "1000",
                 ]).expect("Failed to insert created log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -557,11 +580,12 @@ mod tests {
                     "running",
                     "10000",
                     "5000",
+                    "1500",
                     "2000",
                     "2000",
                 ]).expect("Failed to insert running log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -570,11 +594,12 @@ mod tests {
                     "completed",
                     "10000",
                     "8500",
+                    "1500",
                     "3000",
                     "3000",
                 ]).expect("Failed to insert completed log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -585,9 +610,10 @@ mod tests {
                     "2500",
                     "1500",
                     "1500",
+                    "1500",
                 ]).expect("Failed to insert failed log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     &nanoid!(10),
                     "test_agent",
                     "1.0.0",
@@ -596,6 +622,7 @@ mod tests {
                     "interrupted",
                     "7000",
                     "3000",
+                    "1500",
                     "2500",
                     "2500",
                 ]).expect("Failed to insert interrupted log");
@@ -694,57 +721,61 @@ mod tests {
             {
                 let conn = log.db.conn.lock().unwrap();
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                &nanoid!(10),
-                "test_agent",
-                "1.0.0",
-                "test_task_123",
-                "Test Task",
-                "created",
-                "10000",
-                "0",
-                "1000",
-                "1000",
-            ]).expect("Failed to insert first test log");
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &nanoid!(10),
+                    "test_agent",
+                    "1.0.0",
+                    "test_task_123",
+                    "Test Task",
+                    "created",
+                    "10000",
+                    "0",
+                    "0",
+                    "1000",
+                    "1000",
+                ]).expect("Failed to insert first test log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                &nanoid!(10),
-                "test_agent",
-                "1.0.0",
-                "test_task_123",
-                "Test Task",
-                "running",
-                "10000",
-                "5000",
-                "2000",
-                "2000",
-            ]).expect("Failed to insert second test log");
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &nanoid!(10),
+                    "test_agent",
+                    "1.0.0",
+                    "test_task_123",
+                    "Test Task",
+                    "running",
+                    "10000",
+                    "5000",
+                    "1500",
+                    "2000",
+                    "2000",
+                ]).expect("Failed to insert second test log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                &nanoid!(10),
-                "test_agent",
-                "1.0.0",
-                "test_task_123",
-                "Test Task",
-                "completed",
-                "10000",
-                "8500",
-                "3000",
-                "3000",
-            ]).expect("Failed to insert third test log");
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &nanoid!(10),
+                    "test_agent",
+                    "1.0.0",
+                    "test_task_123",
+                    "Test Task",
+                    "completed",
+                    "10000",
+                    "8500",
+                    "1500",
+                    "3000",
+                    "3000",
+                ]).expect("Failed to insert third test log");
 
-                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                &nanoid!(10),
-                "other_agent",
-                "2.0.0",
-                "other_task_456",
-                "Other Task",
-                "failed",
-                "5000",
-                "2500",
-                "1500",
-                "1500",
-            ]).expect("Failed to insert other task log");
+                conn.execute("INSERT INTO instance_log (id, agent_name, agent_version, task_id, task_name, state, fuel_limit, fuel_consumed, ram_used, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+                    &nanoid!(10),
+                    "other_agent",
+                    "2.0.0",
+                    "other_task_456",
+                    "Other Task",
+                    "failed",
+                    "5000",
+                    "2500",
+                    "1500",
+                    "1500",
+                    "1500",
+                ]).expect("Failed to insert other task log");
             }
 
             let logs = log.get_logs().expect("Failed to get logs");
@@ -760,6 +791,7 @@ mod tests {
                 logs[0].fuel_consumed, 8500,
                 "First log fuel_consumed should be 8500"
             );
+            assert_eq!(logs[0].ram_used, 1500, "First log ram_used should be 1500");
             assert_eq!(
                 logs[0].created_at, 3000,
                 "First log created_at should be 3000"
@@ -774,6 +806,7 @@ mod tests {
                 logs[1].fuel_consumed, 5000,
                 "Second log fuel_consumed should be 5000"
             );
+            assert_eq!(logs[1].ram_used, 1500, "Second log ram_used should be 1500");
             assert_eq!(
                 logs[1].created_at, 2000,
                 "Second log created_at should be 2000"
@@ -806,6 +839,7 @@ mod tests {
                 logs[3].fuel_consumed, 0,
                 "Fourth log fuel_consumed should be 0"
             );
+            assert_eq!(logs[3].ram_used, 0, "Fourth log ram_used should be 0");
             assert_eq!(
                 logs[3].created_at, 1000,
                 "Fourth log created_at should be 1000"

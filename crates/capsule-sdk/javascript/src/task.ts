@@ -50,6 +50,7 @@ interface TaskExecution {
     duration_ms: number;
     retries: number;
     fuel_consumed: number;
+    ram_used: number;
 }
 
 type Awaited<T> = T extends Promise<infer U> ? U : T;
@@ -154,6 +155,7 @@ export function task<TArgs extends any[], TReturn>(
             duration_ms: 0,
             retries: 0,
             fuel_consumed: 0,
+            ram_used: 0,
           },
         })) as TaskReturnType<TReturn>;
       }
@@ -167,6 +169,7 @@ export function task<TArgs extends any[], TReturn>(
           duration_ms: 0,
           retries: 0,
           fuel_consumed: 0,
+          ram_used: 0,
         },
       } as TaskReturnType<TReturn>;
     }

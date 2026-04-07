@@ -26,6 +26,7 @@ class ExecutionInfo(TypedDict):
     duration_ms: int
     retries: int
     fuel_consumed: int
+    ram_used: int
 
 
 class ErrorInfo(TypedDict):

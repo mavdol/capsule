@@ -23,6 +23,7 @@ pub struct TaskExecution {
     pub duration_ms: u64,
     pub retries: u64,
     pub fuel_consumed: u64,
+    pub ram_used: u64,
 }
 
 #[derive(Debug, Deserialize, Default)]
