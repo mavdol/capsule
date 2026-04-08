@@ -147,7 +147,9 @@ Every task returns a structured JSON envelope containing both the result and exe
     "task_name": "data_processor",
     "duration_ms": 1523,
     "retries": 0,
-    "fuel_consumed": 45000
+    "fuel_consumed": 45000,
+    "ram_used": 1200000,
+    "host_requests": [{...}]
   }
 }
 ```
