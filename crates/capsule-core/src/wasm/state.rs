@@ -70,6 +70,19 @@ impl WasiHttpView for State {
             return Err(ErrorCode::HttpRequestDenied.into());
         }
 
+        let headers: Vec<(String, String)> = request
+            .headers()
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string()))
+            .collect();
+
+        self.host_requests.push(HostRequest {
+            method: request.method().to_string().to_uppercase(),
+            url: request.uri().to_string(),
+            headers: Some(headers),
+            body: Some("Hidden".to_string()), // Can't have it from send_request
+        });
+
         Ok(default_send_request(request, config))
     }
 }
