@@ -139,6 +139,8 @@ Every task returns a structured JSON envelope containing both the result and exe
   - `duration_ms` — Execution time in milliseconds
   - `retries` — Number of retry attempts that occurred
   - `fuel_consumed` — CPU resources used (see [Compute Levels](#compute-levels))
+  - `ram_used` — Peak memory used in bytes
+  - `host_requests` — List of host requests made by the task
 
 ## Documentation
 
