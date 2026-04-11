@@ -126,8 +126,8 @@ impl JavascriptWasmCompiler {
             .canonicalize()
             .map(|p| Self::normalize_path_for_command(&p))
             .unwrap_or_else(|_| sdk_path.to_path_buf());
-        if let Some(node_modules) = resolved_sdk.parent().and_then(|p| p.parent()) {
-            let pkg_path = node_modules.join(package_name);
+        if let Some(sdk_node_modules) = Self::find_node_modules(&resolved_sdk) {
+            let pkg_path = sdk_node_modules.join(package_name);
             if pkg_path.exists() {
                 return pkg_path;
             }
@@ -210,7 +210,6 @@ export {{ incomingHandler }};
         let os_polyfill_path = sdk_path_normalized.join("dist/polyfills/os.js");
         let process_polyfill_path = sdk_path_normalized.join("dist/polyfills/process.js");
         let fs_polyfill_path = sdk_path_normalized.join("dist/polyfills/fs.js");
-
         let mut esbuild_cmd = Self::npx_command();
         esbuild_cmd
             .arg("esbuild")
