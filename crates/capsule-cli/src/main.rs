@@ -6,8 +6,8 @@ use std::fmt;
 use std::path::Path;
 
 use cli::{Cli, Commands};
-use commands::{BuildError, ExecError, RunError, build, exec, run};
 use commands::shared::load_args_file;
+use commands::{BuildError, ExecError, RunError, build, exec, run};
 
 #[derive(Debug)]
 pub enum CliError {
@@ -58,7 +58,7 @@ async fn main() -> Result<(), CliError> {
             args,
         } => {
             let args = match args_file {
-                Some(ref path) => load_args_file(path).map_err(|e| CliError::RunError(e))?,
+                Some(ref path) => load_args_file(path).map_err(CliError::RunError)?,
                 None => args,
             };
             let file_path = file.as_deref().map(Path::new);
@@ -85,7 +85,7 @@ async fn main() -> Result<(), CliError> {
             args,
         } => {
             let args = match args_file {
-                Some(ref path) => load_args_file(path).map_err(|e| CliError::ExecError(e))?,
+                Some(ref path) => load_args_file(path).map_err(CliError::ExecError)?,
                 None => args,
             };
             let result = exec::execute(Path::new(&file), args, mount, json, verbose).await?;
