@@ -7,6 +7,7 @@ use std::path::Path;
 
 use cli::{Cli, Commands};
 use commands::{BuildError, ExecError, RunError, build, exec, run};
+use commands::shared::load_args_file;
 
 #[derive(Debug)]
 pub enum CliError {
@@ -53,8 +54,13 @@ async fn main() -> Result<(), CliError> {
             json,
             verbose,
             mount,
+            args_file,
             args,
         } => {
+            let args = match args_file {
+                Some(ref path) => load_args_file(path).map_err(|e| CliError::RunError(e))?,
+                None => args,
+            };
             let file_path = file.as_deref().map(Path::new);
             let result = run::execute(file_path, args, mount, json, verbose).await?;
 
@@ -75,8 +81,13 @@ async fn main() -> Result<(), CliError> {
             json,
             verbose,
             mount,
+            args_file,
             args,
         } => {
+            let args = match args_file {
+                Some(ref path) => load_args_file(path).map_err(|e| CliError::ExecError(e))?,
+                None => args,
+            };
             let result = exec::execute(Path::new(&file), args, mount, json, verbose).await?;
 
             if json {
