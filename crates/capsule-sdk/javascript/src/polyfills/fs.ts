@@ -72,9 +72,13 @@ function getPreopenedDirs(): PreopenedDir[] {
 }
 
 function normalizePath(path: string): string {
-    if (path.startsWith('./')) return path.slice(2);
-    if (path.startsWith('/')) return path.slice(1);
-    return path;
+    let p = path;
+
+    if (p.startsWith('./')) p = p.slice(2);
+    else if (p.startsWith('/')) p = p.slice(1);
+    if (p.length > 1) p = p.replace(/\/+$/, '');
+
+    return p;
 }
 
 /**
@@ -88,6 +92,37 @@ function getEffectivePath(path: string): string {
     if (path === '.') return cwd;
     if (path.startsWith('./')) return cwd.replace(/\/+$/, '') + '/' + path.slice(2);
     return cwd.replace(/\/+$/, '') + '/' + path;
+}
+
+function resolveNormalizedPath(normalizedPath: string): { dir: Descriptor; relativePath: string } | null {
+    const preopens = getPreopenedDirs();
+    if (preopens.length === 0) return null;
+
+    const sorted = [...preopens].sort((a, b) => b.guestPath.length - a.guestPath.length);
+
+    let catchAll: { dir: Descriptor; relativePath: string } | null = null;
+
+    for (const { descriptor, guestPath } of sorted) {
+        const normalizedGuest = normalizePath(guestPath);
+
+        if (normalizedGuest === '.' || normalizedGuest === '') {
+            if (!catchAll) catchAll = { dir: descriptor, relativePath: normalizedPath };
+            continue;
+        }
+
+        const guestPrefix = normalizedGuest.endsWith('/') ? normalizedGuest : normalizedGuest + '/';
+
+        if (normalizedPath.startsWith(guestPrefix)) {
+            const relativePath = normalizedPath.slice(guestPrefix.length);
+            return { dir: descriptor, relativePath: relativePath || '.' };
+        }
+
+        if (normalizedPath === normalizedGuest) {
+            return { dir: descriptor, relativePath: '.' };
+        }
+    }
+
+    return catchAll ?? { dir: preopens[0].descriptor, relativePath: normalizedPath };
 }
 
 function resolvePath(path: string): { dir: Descriptor; relativePath: string } | null {
@@ -473,7 +508,7 @@ export function mkdirSync(path: string, options?: MkdirOptions): void {
         const parts = normalized.split('/').filter(Boolean);
         for (let i = 1; i <= parts.length; i++) {
             const partial = parts.slice(0, i).join('/');
-            const resolved = resolvePath(partial);
+            const resolved = resolveNormalizedPath(partial);
             if (!resolved) continue;
             try { resolved.dir.createDirectoryAt(resolved.relativePath); } catch { /* already exists */ }
         }
@@ -504,6 +539,33 @@ export function rmdirSync(path: string, _options?: RmdirOptions): void {
 /**
  * Remove a file or directory synchronously.
  */
+function removeRecursiveSync(path: string): void {
+    const resolved = resolvePath(path);
+    if (!resolved) throw enoent(path);
+
+    const fd = resolved.dir.openAt(
+        { symlinkFollow: false },
+        resolved.relativePath,
+        { directory: true },
+        { read: true, mutateDirectory: true }
+    );
+
+    const stream = fd.readDirectory();
+    let entry: DirectoryEntry | null | undefined;
+    while ((entry = stream.readDirectoryEntry()) && entry) {
+        if (!entry.name) continue;
+        const childPath = path.replace(/\/$/, '') + '/' + entry.name;
+        if (entry.type === 'directory') {
+            removeRecursiveSync(childPath);
+        } else {
+            const childResolved = resolvePath(childPath);
+            if (childResolved) childResolved.dir.unlinkFileAt(childResolved.relativePath);
+        }
+    }
+
+    resolved.dir.removeDirectoryAt(resolved.relativePath);
+}
+
 export function rmSync(path: string, options?: RmOptions): void {
     const resolved = resolvePath(path);
     if (!resolved) {
@@ -521,7 +583,7 @@ export function rmSync(path: string, options?: RmOptions): void {
                     { code: 'EISDIR' }
                 );
             }
-            resolved.dir.removeDirectoryAt(resolved.relativePath);
+            removeRecursiveSync(path);
         } else {
             resolved.dir.unlinkFileAt(resolved.relativePath);
         }
@@ -729,7 +791,7 @@ export async function mkdir(path: string, options?: MkdirOptions): Promise<void>
         const parts = normalized.split('/').filter(Boolean);
         for (let i = 1; i <= parts.length; i++) {
             const partial = parts.slice(0, i).join('/');
-            const resolved = resolvePath(partial);
+            const resolved = resolveNormalizedPath(partial);
             if (!resolved) continue;
             try {
                 resolved.dir.createDirectoryAt(resolved.relativePath);
@@ -780,6 +842,7 @@ export interface CpOptions {
  */
 export async function cp(src: string, dest: string, options?: CpOptions): Promise<void> {
     const kind = await statPath(src);
+
     if (kind === 'notfound') {
         throw new Error(`ENOENT: no such file or directory '${src}'`);
     }
@@ -787,7 +850,14 @@ export async function cp(src: string, dest: string, options?: CpOptions): Promis
         if (!options?.recursive) {
             throw new Error(`EISDIR: illegal operation on a directory '${src}' (use { recursive: true })`);
         }
-        await copyDirRecursive(src, dest);
+
+        const destKind = await statPath(dest);
+        const srcName = src.replace(/\/$/, '').split('/').pop()!;
+        const effectiveDest = destKind === 'directory'
+            ? dest.replace(/\/$/, '') + '/' + srcName
+            : dest;
+
+        await copyDirRecursive(src, effectiveDest);
     } else {
         await copyFile(src, dest);
     }
