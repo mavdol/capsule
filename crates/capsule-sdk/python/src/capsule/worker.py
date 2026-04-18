@@ -39,28 +39,49 @@ class _WorkerClient:
 
     async def _reader_loop(self) -> None:
         assert self._process and self._process.stdout
-        while True:
-            try:
-                line = await self._process.stdout.readline()
-            except Exception:
-                break
+        try:
+            while True:
+                try:
+                    line = await self._process.stdout.readline()
+                except Exception:
+                    break
 
-            if not line:
-                break
-            try:
-                response = json.loads(line.decode("utf-8"))
-                req_id = response.get("id")
-                future = self._pending.pop(req_id, None)
-                if future and not future.done():
-                    future.set_result(line.decode("utf-8"))
-            except Exception:
-                continue
+                if not line:
+                    break
+                try:
+                    response = json.loads(line.decode("utf-8"))
+                    req_id = response.get("id")
+                    future = self._pending.pop(req_id, None)
+                    if future and not future.done():
+                        future.set_result(line.decode("utf-8"))
+                except Exception:
+                    continue
+        finally:
+            for future in self._pending.values():
+                if not future.done():
+                    future.set_exception(RuntimeError("capsule worker process exited unexpectedly"))
+            self._pending.clear()
 
-        for future in self._pending.values():
-            if not future.done():
-                future.set_exception(RuntimeError("capsule worker process exited unexpectedly"))
-
-        self._pending.clear()
+            # Terminate and wait for the subprocess so the asyncio child-watcher
+            # can reap it before loop.close() returns, preventing a hang on exit.
+            proc = self._process
+            if proc is not None and proc.returncode is None:
+                try:
+                    if proc.stdin:
+                        proc.stdin.close()
+                except Exception:
+                    pass
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
+                try:
+                    await asyncio.shield(asyncio.wait_for(proc.wait(), timeout=3.0))
+                except Exception:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
 
     async def _ensure_running(self) -> None:
         async with self._lock:
@@ -199,9 +220,10 @@ import atexit
 def _close_all_sync() -> None:
     """Close all workers synchronously (for atexit hook)."""
     for client in _clients.values():
-        if client._process and client._process.returncode is None:
+        proc = client._process
+        if proc and proc.returncode is None:
             try:
-                client._process.terminate()
+                proc.terminate()
             except Exception:
                 pass
 
