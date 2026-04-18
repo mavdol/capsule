@@ -50,16 +50,6 @@ pub async fn execute(
     mounts: Vec<String>,
     json: bool,
     verbose: bool,
-) -> Result<String, ExecError> {
-    execute_with_runtime(wasm_path, args, mounts, json, verbose, None).await
-}
-
-pub async fn execute_with_runtime(
-    wasm_path: &Path,
-    args: Vec<String>,
-    mounts: Vec<String>,
-    json: bool,
-    verbose: bool,
     shared_runtime: Option<Arc<Runtime>>,
 ) -> Result<String, ExecError> {
     let ext = wasm_path.extension().and_then(|e| e.to_str()).unwrap_or("");
@@ -102,9 +92,11 @@ pub async fn execute_with_runtime(
         Some(r) => r,
         None => {
             reporter.start_progress("Initializing runtime");
+
             let capsule_toml = Manifest::new().map(|m| m.capsule_toml).unwrap_or_default();
             let runtime_config = RuntimeConfig { cache_dir, verbose };
             let r = Runtime::new(runtime_config, capsule_toml)?;
+
             reporter.finish_progress(Some("Runtime ready"));
             r
         }

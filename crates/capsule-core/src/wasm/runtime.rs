@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -82,7 +83,7 @@ pub struct Runtime {
 
     pub verbose: bool,
 
-    component: RwLock<Option<Component>>,
+    component: RwLock<HashMap<PathBuf, Component>>,
     pub task_reporter: Arc<Mutex<TaskReporter>>,
     pub capsule_toml: CapsuleToml,
 }
@@ -120,7 +121,7 @@ impl Runtime {
             log,
             cache_dir: config.cache_dir,
             verbose: config.verbose,
-            component: RwLock::new(None),
+            component: RwLock::new(HashMap::new()),
             task_reporter,
             capsule_toml,
         }))
@@ -133,12 +134,12 @@ impl Runtime {
         command.execute(Arc::clone(self)).await
     }
 
-    pub async fn get_component(&self) -> Option<Component> {
-        self.component.read().await.clone()
+    pub async fn get_component(&self, wasm_path: &PathBuf) -> Option<Component> {
+        self.component.read().await.get(wasm_path).cloned()
     }
 
-    pub async fn set_component(&self, component: Component) {
-        *self.component.write().await = Some(component);
+    pub async fn set_component(&self, wasm_path: PathBuf, component: Component) {
+        self.component.write().await.insert(wasm_path, component);
     }
 
     pub fn precompile(
