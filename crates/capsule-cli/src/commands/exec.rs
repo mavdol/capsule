@@ -95,10 +95,10 @@ pub async fn execute(
 
             let capsule_toml = Manifest::new().map(|m| m.capsule_toml).unwrap_or_default();
             let runtime_config = RuntimeConfig { cache_dir, verbose };
-            let r = Runtime::new(runtime_config, capsule_toml)?;
+            let runtime = Runtime::new(runtime_config, capsule_toml)?;
 
             reporter.finish_progress(Some("Runtime ready"));
-            r
+            runtime
         }
     };
 

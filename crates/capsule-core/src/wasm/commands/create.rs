@@ -179,10 +179,13 @@ impl RuntimeCommand for CreateInstance {
                     .join("wasm")
                     .join(std::path::Path::new(file_name).with_extension("cwasm"));
 
-                let c = load_or_compile_component(&runtime.engine, &self.wasm_path, &cwasm_path)?;
+                let component =
+                    load_or_compile_component(&runtime.engine, &self.wasm_path, &cwasm_path)?;
 
-                runtime.set_component(self.wasm_path.clone(), c.clone()).await;
-                c
+                runtime
+                    .set_component(self.wasm_path.clone(), component.clone())
+                    .await;
+                component
             }
         };
 
