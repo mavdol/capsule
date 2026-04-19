@@ -102,7 +102,10 @@ pub async fn execute(
             reporter.start_progress("Initializing runtime");
 
             let capsule_toml = Manifest::new().map(|m| m.capsule_toml).unwrap_or_default();
-            let runtime_config = RuntimeConfig { cache_dir, log_level };
+            let runtime_config = RuntimeConfig {
+                cache_dir,
+                log_level,
+            };
             let runtime = Runtime::new(runtime_config, capsule_toml)?;
 
             reporter.finish_progress(Some("Runtime ready"));

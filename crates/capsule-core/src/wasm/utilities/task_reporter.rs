@@ -153,8 +153,7 @@ impl TaskReporter {
         let elapsed = self.start_time.elapsed();
         let time_str = self.format_duration(elapsed);
 
-        if let Some(msg) = completion_message
-        {
+        if let Some(msg) = completion_message {
             eprintln!("{} {} ({})", "✓".green(), msg.green(), time_str);
         }
     }

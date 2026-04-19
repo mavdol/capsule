@@ -69,7 +69,7 @@ impl Default for RuntimeConfig {
     fn default() -> Self {
         Self {
             cache_dir: PathBuf::from(".capsule"),
-            log_level: LogLevel::Normal
+            log_level: LogLevel::Normal,
         }
     }
 }
