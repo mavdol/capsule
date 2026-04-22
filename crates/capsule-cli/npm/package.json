@@ -1,7 +1,7 @@
 {
   "name": "@capsule-run/cli",
   "version": "0.8.9",
-  "description": "Secure WASM runtime to isolate and manage AI agent tasks",
+  "description": "Secure WASM runtime to execute untrusted code",
   "bin": {
     "capsule": "./bin/capsule.js"
   },
