@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
-[Getting Started](#getting-started) • [Documentation](#documentation) • [Contributing](#contributing)
+[Getting Started](#getting-started) • [Documentation](#documentation) • [Issues](https://github.com/capsulerun/capsule/issues/new) • [Contributing](#contributing)
 
 </div>
 
@@ -75,6 +75,13 @@ export const main = task({
 When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in isolated sandboxes.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
+
+## Ecosystem
+
+| Package | Description |
+|---------|-------------|
+| [`capsule`](https://github.com/capsulerun/capsule) | Core runtime (this repository) |
+| [`capsule-bash`](https://github.com/capsulerun/bash) | Sandboxed bash interface built for AI agents |
 
 ## Getting Started
 
