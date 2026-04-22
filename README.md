@@ -1,8 +1,12 @@
 <div align="center">
 
-# `Capsule`
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark-mode.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo-light-mode.png" />
+  <img alt="Capsule" src="assets/logo-light-mode.png" width="80" />
+</picture>
 
-**A secure, durable runtime for AI agents**
+# `Capsule`
 
 [![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
@@ -14,16 +18,14 @@
 
 ## Overview
 
-```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle untrusted code execution, long-running workflows, large-scale processing, or even multi-agent systems.
-
-Each task runs inside its own WebAssembly sandbox, providing:
+```Capsule``` is a runtime for executing untrusted code in isolated environments. Each task runs inside its own WebAssembly sandbox, providing:
 
 - **Isolated execution**: Each task runs isolated from your host system
 - **Resource limits**: Set CPU, memory, and timeout limits per task
 - **Automatic retries**: Handle failures without manual intervention
 - **Lifecycle tracking**: Monitor which tasks are running, completed, or failed
 
-This enables safe task-level execution of untrusted code within AI agent systems.
+This enables safe task-level execution of untrusted code.
 
 ## How It Works
 
@@ -81,7 +83,7 @@ Each task operates within its own sandbox with configurable resource limits, ens
 | Package | Description |
 |---------|-------------|
 | [`capsule`](https://github.com/capsulerun/capsule) | Core runtime (this repository) |
-| [`capsule-bash`](https://github.com/capsulerun/bash) | Sandboxed bash interface built for AI agents |
+| [`capsule-bash`](https://github.com/capsulerun/bash) | Sandboxed bash interface built from capsule |
 
 ## Getting Started
 
@@ -433,7 +435,7 @@ You can create a `capsule.toml` file in your project root to set default options
 # capsule.toml
 
 [workflow]
-name = "My AI Workflow"
+name = "My Workflow"
 version = "1.0.0"
 entrypoint = "src/main.py"  # Default file when running `capsule run`
 
