@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "capsule"
 version = "0.8.9"
-description = "Capsule Python SDK - run AI agent tasks in secure WASM sandboxes"
+description = "Capsule Python SDK - run untrusted code in secure WASM sandboxes"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
@@ -45,9 +45,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mavdol/capsule"
-Repository = "https://github.com/mavdol/capsule"
-Documentation = "https://github.com/mavdol/capsule"
+Homepage = "https://github.com/capsulerun/capsule"
+Repository = "https://github.com/capsulerun/capsule"
+Documentation = "https://github.com/capsulerun/capsule"
 
 [tool.setuptools.packages.find]
 where = ["src"]

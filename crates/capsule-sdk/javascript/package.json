@@ -1,14 +1,14 @@
 {
   "name": "@capsule-run/sdk",
   "version": "0.8.9",
-  "description": "Capsule JavaScript SDK - run AI agent tasks in secure WASM sandboxes",
+  "description": "Capsule JavaScript SDK - Execute untrusted code in secure WASM sandboxes",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "homepage": "https://github.com/mavdol/capsule",
+  "homepage": "https://github.com/capsulerun/capsule",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mavdol/capsule.git"
+    "url": "https://github.com/capsulerun/capsule.git"
   },
   "exports": {
     ".": {

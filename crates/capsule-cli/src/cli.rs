@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(name = "capsule")]
 #[command(version)]
-#[command(about = "A secure, durable runtime for AI agents", long_about = None)]
+#[command(about = "A secure, durable runtime for untrusted code", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

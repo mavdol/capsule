@@ -1,10 +1,15 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark-mode.png" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo-light-mode.png" />
+  <img alt="Capsule" src="assets/logo-light-mode.png" width="100" />
+</picture>
+
 # `Capsule`
 
-**A secure, durable runtime for AI agents**
+[![CI](https://img.shields.io/github/actions/workflow/status/capsulerun/capsule/ci.yml?branch=main&label=CI)](https://github.com/capsulerun/capsule/actions/workflows/ci.yml) [![NPM Downloads](https://img.shields.io/npm/dm/@capsule-run%2Fcli?label=npm&color=orange)](https://www.npmjs.com/package/@capsule-run/cli) [![PyPI Downloads](https://img.shields.io/pypi/dm/capsule-run?label=PyPI&color=3775A9)](https://pypistats.org/packages/capsule-run)
 
-[![CI](https://github.com/mavdol/capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/mavdol/capsule/actions/workflows/ci.yml)
 
 [Getting Started](#getting-started) • [Documentation](#documentation) • [Issues](https://github.com/capsulerun/capsule/issues/new) • [Contributing](#contributing)
 
@@ -14,16 +19,12 @@
 
 ## Overview
 
-```Capsule``` is a runtime for coordinating AI agent tasks in isolated environments. It is designed to handle untrusted code execution, long-running workflows, large-scale processing, or even multi-agent systems.
-
-Each task runs inside its own WebAssembly sandbox, providing:
+```Capsule``` is a runtime for executing untrusted code in isolated environments. Each task runs inside its own WebAssembly sandbox, providing:
 
 - **Isolated execution**: Each task runs isolated from your host system
 - **Resource limits**: Set CPU, memory, and timeout limits per task
 - **Automatic retries**: Handle failures without manual intervention
 - **Lifecycle tracking**: Monitor which tasks are running, completed, or failed
-
-This enables safe task-level execution of untrusted code within AI agent systems.
 
 ## How It Works
 
@@ -58,15 +59,6 @@ export const analyzeData = task({
   // Your code runs safely in a Wasm sandbox
   return { processed: dataset.length, status: "complete" };
 });
-
-// The "main" task is required as the entrypoint
-export const main = task({
-    name: "main",
-    compute: "HIGH"
-}, () => {
-  return analyzeData([1, 2, 3, 4, 5]);
-});
-
 ```
 
 > [!NOTE]
@@ -81,7 +73,7 @@ Each task operates within its own sandbox with configurable resource limits, ens
 | Package | Description |
 |---------|-------------|
 | [`capsule`](https://github.com/capsulerun/capsule) | Core runtime (this repository) |
-| [`capsule-bash`](https://github.com/capsulerun/bash) | Sandboxed bash interface built for AI agents |
+| [`capsule-bash`](https://github.com/capsulerun/bash) | Sandboxed bash interface built from capsule |
 
 ## Getting Started
 
@@ -191,7 +183,7 @@ export const main = task({
 ```
 
 > [!TIP]
-> If you're looking for a pre-configured, ready-to-use solution, check out the [Python adapter](https://github.com/mavdol/capsule/tree/main/integrations/python-adapter) or [TypeScript adapter](https://github.com/mavdol/capsule/tree/main/integrations/typescript-adapter).
+> If you're looking for a pre-configured, ready-to-use solution, check out the [Python adapter](https://github.com/capsulerun/capsule/tree/main/integrations/python-adapter) or [TypeScript adapter](https://github.com/capsulerun/capsule/tree/main/integrations/typescript-adapter).
 
 ## Documentation
 
@@ -433,7 +425,7 @@ You can create a `capsule.toml` file in your project root to set default options
 # capsule.toml
 
 [workflow]
-name = "My AI Workflow"
+name = "My Workflow"
 version = "1.0.0"
 entrypoint = "src/main.py"  # Default file when running `capsule run`
 
@@ -520,7 +512,7 @@ Contributions are welcome!
 **Prerequisites:** Rust (latest stable), Python 3.13+, Node.js 22+
 
 ```bash
-git clone https://github.com/mavdol/capsule.git
+git clone https://github.com/capsulerun/capsule.git
 cd capsule
 
 # Build and install CLI
@@ -543,7 +535,7 @@ npm install && npm run build && npm link
 3. **Run tests**: `cargo test` (only needed if modifying `crates/capsule-cli` or `crates/capsule-core`)
 4. **Open** a Pull Request
 
-Need help? [Open an issue](https://github.com/mavdol/capsule/issues)
+Need help? [Open an issue](https://github.com/capsulerun/capsule/issues)
 
 ## Credits
 
