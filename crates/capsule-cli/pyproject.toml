@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "capsule-run"
-version = "0.8.9"
+version = "0.8.10"
 description = "Secure WASM runtime to execute untrusted code"
 readme = "docs/README-pypi.md"
 license = {text = "Apache-2.0"}
