@@ -10,9 +10,18 @@ declare const globalThis: {
     'wasi:filesystem/preopens': any;
 };
 
+interface WasiDatetime {
+    seconds: bigint;
+    nanoseconds: number;
+}
+
 interface DescriptorStat {
+    type: string;
+    linkCount: bigint;
     size: bigint;
-    type?: string;
+    dataAccessTimestamp?: WasiDatetime | null;
+    dataModificationTimestamp?: WasiDatetime | null;
+    statusChangeTimestamp?: WasiDatetime | null;
 }
 
 interface DirectoryEntry {
@@ -28,6 +37,7 @@ interface Descriptor {
     read(length: bigint, offset: bigint): [Uint8Array, boolean];
     write(buffer: Uint8Array, offset: bigint): bigint;
     stat(): DescriptorStat;
+    statAt(pathFlags: { symlinkFollow?: boolean }, path: string): DescriptorStat;
     readDirectory(): DirectoryStream;
     unlinkFileAt(path: string): void;
     removeDirectoryAt(path: string): void;
@@ -462,41 +472,64 @@ export interface StatResult {
     mode: number;
 }
 
-function makeStatResult(type: 'file' | 'directory' | 'notfound', size: bigint = BigInt(0)): StatResult {
+function datetimeToMs(dt: WasiDatetime | null | undefined): number {
+    if (!dt) return 0;
+    return Number(dt.seconds) * 1000 + Math.floor(dt.nanoseconds / 1_000_000);
+}
+
+function makeStatResult(s: DescriptorStat): StatResult {
+    const isDir = s.type === 'directory';
+    const isSym = s.type === 'symbolic-link';
     return {
-        isFile: () => type === 'file',
-        isDirectory: () => type === 'directory',
-        isSymbolicLink: () => false,
-        size: Number(size),
-        mtimeMs: 0,
-        atimeMs: 0,
-        ctimeMs: 0,
-        mode: type === 'directory' ? 0o40755 : 0o100644,
+        isFile:         () => s.type === 'regular-file',
+        isDirectory:    () => isDir,
+        isSymbolicLink: () => isSym,
+        size:    Number(s.size),
+        mtimeMs: datetimeToMs(s.dataModificationTimestamp),
+        atimeMs: datetimeToMs(s.dataAccessTimestamp),
+        ctimeMs: datetimeToMs(s.statusChangeTimestamp),
+        mode: isDir ? 0o40755 : 0o100644,
     };
 }
 
 /**
- * Get file stats synchronously.
+ * Get file stats synchronously (follows symlinks).
  */
 export function statSync(path: string): StatResult {
     const resolved = resolvePath(path);
     if (!resolved) throw enoent(path);
 
     try {
-        const fd = resolved.dir.openAt({ symlinkFollow: false }, resolved.relativePath, {}, { read: true });
-        const s = fd.stat();
-        const type = s.type === 'directory' ? 'directory' : 'file';
-        return makeStatResult(type, s.size);
-    } catch (e) {
+        if (typeof resolved.dir.statAt === 'function') {
+            const s = resolved.dir.statAt({ symlinkFollow: true }, resolved.relativePath);
+            return makeStatResult(s);
+        }
+
+        const fd = resolved.dir.openAt({ symlinkFollow: true }, resolved.relativePath, {}, { read: true });
+        return makeStatResult(fd.stat());
+    } catch {
         throw Object.assign(new Error(`ENOENT: no such file or directory, stat '${path}'`), { code: 'ENOENT' });
     }
 }
 
 /**
- * Get file stats synchronously (no symlink follow — same as stat in WASI 0.2).
+ * Get file stats synchronously without following symlinks (lstat).
  */
 export function lstatSync(path: string): StatResult {
-    return statSync(path);
+    const resolved = resolvePath(path);
+    if (!resolved) throw enoent(path);
+
+    try {
+        if (typeof resolved.dir.statAt === 'function') {
+            const s = resolved.dir.statAt({ symlinkFollow: false }, resolved.relativePath);
+            return makeStatResult(s);
+        }
+
+        const fd = resolved.dir.openAt({ symlinkFollow: false }, resolved.relativePath, {}, { read: true });
+        return makeStatResult(fd.stat());
+    } catch {
+        throw Object.assign(new Error(`ENOENT: no such file or directory, lstat '${path}'`), { code: 'ENOENT' });
+    }
 }
 
 /**
@@ -574,8 +607,10 @@ export function rmSync(path: string, options?: RmOptions): void {
     }
 
     try {
-        const fd = resolved.dir.openAt({ symlinkFollow: false }, resolved.relativePath, {}, { read: true });
-        const s = fd.stat();
+        const s = typeof resolved.dir.statAt === 'function'
+            ? resolved.dir.statAt({ symlinkFollow: false }, resolved.relativePath)
+            : (() => { const fd = resolved.dir.openAt({ symlinkFollow: false }, resolved.relativePath, {}, { read: true }); return fd.stat(); })();
+
         if (s.type === 'directory') {
             if (!options?.recursive) {
                 throw Object.assign(
@@ -681,15 +716,16 @@ export async function unlink(path: string): Promise<void> {
 }
 
 /**
- * Returns 'file', 'directory', or 'notfound' for a given path.
+ * Internal helper — returns the entry type for a path without building a full StatResult.
  */
 async function statPath(path: string): Promise<'file' | 'directory' | 'notfound'> {
     const resolved = resolvePath(path);
     if (!resolved) return 'notfound';
 
     try {
-        const fd = resolved.dir.openAt({ symlinkFollow: false }, resolved.relativePath, {}, { read: true });
-        const s = fd.stat();
+        const s = typeof resolved.dir.statAt === 'function'
+            ? resolved.dir.statAt({ symlinkFollow: false }, resolved.relativePath)
+            : (() => { const fd = resolved.dir.openAt({ symlinkFollow: false }, resolved.relativePath, {}, { read: true }); return fd.stat(); })();
         if (s.type === 'directory') return 'directory';
         return 'file';
     } catch {
@@ -897,14 +933,27 @@ export const promises = {
     },
 
     async stat(path: string): Promise<StatResult> {
-        const kind = await statPath(path);
-        if (kind === 'notfound') {
+        const resolved = resolvePath(path);
+        if (!resolved) {
             throw Object.assign(
                 new Error(`ENOENT: no such file or directory, stat '${path}'`),
                 { code: 'ENOENT' }
             );
         }
-        return makeStatResult(kind);
+        try {
+            if (typeof resolved.dir.statAt === 'function') {
+                const s = resolved.dir.statAt({ symlinkFollow: true }, resolved.relativePath);
+                return makeStatResult(s);
+            }
+
+            const fd = resolved.dir.openAt({ symlinkFollow: true }, resolved.relativePath, {}, { read: true });
+            return makeStatResult(fd.stat());
+        } catch {
+            throw Object.assign(
+                new Error(`ENOENT: no such file or directory, stat '${path}'`),
+                { code: 'ENOENT' }
+            );
+        }
     },
 
     async rmdir(path: string, options?: RmdirOptions): Promise<void> {
