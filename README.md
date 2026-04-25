@@ -3,13 +3,12 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark-mode.png" />
   <source media="(prefers-color-scheme: light)" srcset="assets/logo-light-mode.png" />
-  <img alt="Capsule" src="assets/logo-light-mode.png" width="50" valign="bottom" />
+  <img alt="Capsule" src="assets/logo-light-mode.png" width="70" valign="bottom" />
 </picture>
 
 # `Capsule`
 
 [![CI](https://img.shields.io/github/actions/workflow/status/capsulerun/capsule/ci.yml?branch=main&label=CI)](https://github.com/capsulerun/capsule/actions/workflows/ci.yml)
-
 
 [Getting Started](#getting-started) • [Documentation](#documentation) • [Issues](https://github.com/capsulerun/capsule/issues/new) • [Contributing](#contributing)
 
@@ -67,13 +66,6 @@ export const analyzeData = task({
 When you run `capsule run main.py` (or `main.ts`), your code is compiled into a WebAssembly module and executed in isolated sandboxes.
 
 Each task operates within its own sandbox with configurable resource limits, ensuring that failures are contained and don't cascade to other parts of your workflow. The host system controls every aspect of execution, from CPU allocation via Wasm fuel metering to memory constraints and timeout enforcement.
-
-## Ecosystem
-
-| Package | Description |
-|---------|-------------|
-| [`capsule`](https://github.com/capsulerun/capsule) | Core runtime (this repository) |
-| [`capsule-bash`](https://github.com/capsulerun/bash) | Sandboxed bash interface built from capsule |
 
 ## Getting Started
 
@@ -536,6 +528,13 @@ npm install && npm run build && npm link
 4. **Open** a Pull Request
 
 Need help? [Open an issue](https://github.com/capsulerun/capsule/issues)
+
+## Ecosystem
+
+| Package | Description |
+|---------|-------------|
+| [`capsule`](https://github.com/capsulerun/capsule) | Core runtime (this repository) |
+| [`capsule-bash`](https://github.com/capsulerun/bash) | Sandboxed bash interface built from capsule |
 
 ## Credits
 
